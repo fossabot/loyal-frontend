@@ -2,6 +2,7 @@
 
 
 import { useChat } from '@ai-sdk/react';
+import { useAnchorWallet, useConnection, useWallet } from '@solana/wallet-adapter-react';
 import { useEffect, useState } from 'react';
 
 import {
@@ -35,6 +36,7 @@ import {
   SourcesContent,
   SourcesTrigger,
 } from '@/components/ai-elements/source';
+import { fetchAllUserChats, fetchUserContext, initializeUserContext } from '@/lib/loyal/service';
 import { GrpcChatTransport } from '@/lib/query/transport';
 
 const models = [
@@ -52,6 +54,9 @@ const ChatBotDemo = () => {
   const [input, setInput] = useState('');
   const [model, setModel] = useState<string>(models[0].value);
   const [darkMode, setDarkMode] = useState(false);
+  const { connection } = useConnection();
+  const { publicKey } = useWallet();
+  const anchorWallet = useAnchorWallet();
 
   const { messages, sendMessage, status } = useChat({
     transport: new GrpcChatTransport({
@@ -71,6 +76,29 @@ const ChatBotDemo = () => {
       mediaQuery.addEventListener('change', handler);
       return () => mediaQuery.removeEventListener('change', handler);
     }, []);
+  
+  // Check if the user has a context account
+  useEffect(() => {
+    if (!anchorWallet) {
+      return;
+    }
+    fetchUserContext(connection, anchorWallet).then((context) => {
+      if (context) {
+        console.log("Context account found:", context);
+        fetchAllUserChats(connection, anchorWallet, context.nextChatId).then((chats) => {
+          console.log("Chats found:", chats);
+        });
+      } else {
+        console.log("No context account found. Offering to create one...");
+        initializeUserContext(connection, anchorWallet).then((context) => {
+          console.log("Context account created:", context);
+          fetchAllUserChats(connection, anchorWallet, context.nextChatId).then((chats) => {
+            console.log("Chats found:", chats);
+          });
+        });
+      }
+    });
+  }, [anchorWallet, connection]);    
 
   // apply dark mode
   useEffect(() => {

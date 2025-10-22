@@ -467,6 +467,12 @@
         {
           "name": "new_status",
           "type": "u8"
+        },
+        {
+          "name": "oracle_tx_id",
+          "type": {
+            "option": "pubkey"
+          }
         }
       ]
     }
@@ -575,6 +581,11 @@
       "code": 6006,
       "name": "MathOverflow",
       "msg": "Arithmetic overflow."
+    },
+    {
+      "code": 6007,
+      "name": "OracleTxIdMismatch",
+      "msg": "Oracle tx id mismatch."
     }
   ],
   "types": [
@@ -611,7 +622,11 @@
             "type": "pubkey"
           },
           {
-            "name": "tx_id",
+            "name": "user_tx_id",
+            "type": "pubkey"
+          },
+          {
+            "name": "oracle_tx_id",
             "type": "pubkey"
           }
         ]
@@ -620,7 +635,9 @@
     {
       "name": "ContextAccount",
       "docs": [
-        "Accounts"
+        "--------------------------------------------------",
+        "Accounts",
+        "--------------------------------------------------"
       ],
       "type": {
         "kind": "struct",

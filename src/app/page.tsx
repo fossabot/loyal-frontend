@@ -90,6 +90,7 @@ const ChatBotDemo = () => {
         });
       } else {
         console.log("No context account found. Offering to create one...");
+
         initializeUserContext(connection, anchorWallet).then((context) => {
           console.log("Context account created:", context);
           fetchAllUserChats(connection, anchorWallet, context.nextChatId).then((chats) => {

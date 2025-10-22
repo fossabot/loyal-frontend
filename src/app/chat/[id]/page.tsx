@@ -1,29 +1,168 @@
-import { useChat } from "@ai-sdk/react";
+'use client';
 
-import { Conversation, ConversationContent } from "@/components/ai-elements/conversation";
-import { Message, MessageContent } from "@/components/ai-elements/message";
-import { TopicsSidebar } from "@/components/topics-sidebar";
+import { useChat } from '@ai-sdk/react';
+import { use, useEffect, useMemo, useState } from 'react';
 
-export default function ChatPage({ params: { id } }) {
-  const { messages, sendMessage, status } = useChat({ id });
-  // `id` ties this session to your “topic”; persist titles in your DB.
+import {
+  Conversation,
+  ConversationContent,
+  ConversationScrollButton,
+} from '@/components/ai-elements/conversation';
+import { Loader } from '@/components/ai-elements/loader';
+import { Message, MessageContent } from '@/components/ai-elements/message';
+import { Response } from '@/components/ai-elements/response';
+import { TopicsSidebar } from '@/components/ai-elements/topics-sidebar';
+import { mapChatsToTopics } from '@/lib/chat/topic-utils';
+import { GrpcChatTransport } from '@/lib/query/transport';
+import { fetchIrysChatTurn, fetchIrysTableOfContents } from '@/lib/services/service';
+import type { IrysChatTurn } from '@/lib/services/types';
+import { useUserChats } from '@/providers/user-chats';
 
+type ChatPageProps = {
+  params: Promise<{
+    id: string;
+  }>;
+};
+
+export default function ChatPage({ params }: ChatPageProps) {
+  const { id } = use(params);
+  const [prefetchedMessages, setPrefetchedMessages] = useState<IrysChatTurn[]>([]);
+  const [isPrefetchingHistory, setIsPrefetchingHistory] = useState(false);
+
+  const {
+    userChats,
+    isLoading: isUserChatsLoading,
+  } = useUserChats();
+
+  const topics = useMemo(() => mapChatsToTopics(userChats), [userChats]);
+  const activeChat = useMemo(
+    () =>
+      userChats.find(
+        (chat) =>
+          String(chat.id) === id || chat.id.toString() === id,
+      ),
+    [id, userChats],
+  );
+
+  const { messages, status } = useChat({
+    id,
+    transport: new GrpcChatTransport({
+      baseUrl: 'http://localhost:8000',
+      headers: {
+        'Content-Type': 'application/connect+proto',
+      },
+    }),
+  });
+
+  useEffect(() => {
+    if (!activeChat) {
+      setPrefetchedMessages([]);
+      setIsPrefetchingHistory(false);
+      return;
+    }
+
+    let cancelled = false;
+
+    const hydrateChatHistory = async () => {
+      setIsPrefetchingHistory(true);
+      try {
+        const tableOfContents = await fetchIrysTableOfContents(
+          activeChat.txId.toString(),
+        );
+        if (cancelled) {
+          return;
+        }
+
+        if (tableOfContents.entries.length === 0) {
+          setPrefetchedMessages([]);
+          return;
+        }
+
+        const turns = await Promise.all(
+          tableOfContents.entries.map((entry) =>
+            fetchIrysChatTurn(entry.tx_id.toString()),
+          ),
+        );
+        console.log("Turns", turns);
+
+        if (!cancelled) {
+          setPrefetchedMessages(turns);
+        }
+      } catch (error) {
+        if (!cancelled) {
+          console.error(
+            `Failed to hydrate chat history for chat ${activeChat.id}`,
+            error,
+          );
+          setPrefetchedMessages([]);
+        }
+      } finally {
+        if (!cancelled) {
+          setIsPrefetchingHistory(false);
+        }
+      }
+    };
+
+    void hydrateChatHistory();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [activeChat]);
+
+  const shouldShowHistoryLoader =
+    (isUserChatsLoading && !activeChat) || isPrefetchingHistory;
 
   return (
-    <div className="flex">
-      <TopicsSidebar topics={/* fetch from DB */[]} />
-      <main className="flex-1 p-4">
-        <Conversation>
-          <ConversationContent>
-            {messages.map(m => (
-              <Message key={m.id} from={m.role}>
-                <MessageContent>{m.parts?.[0]?.text}</MessageContent>
-              </Message>
-            ))}
-          </ConversationContent>
-        </Conversation>
-        {/* add PromptInput from AI Elements here */}
-      </main>
+    <div className="flex h-screen">
+      <TopicsSidebar topics={topics} />
+      <div className="flex-1 overflow-hidden">
+        <div className="mx-auto flex h-full max-w-4xl flex-col p-6">
+          <Conversation className="h-full">
+            <ConversationContent>
+              {shouldShowHistoryLoader && <Loader />}
+              {!isUserChatsLoading && !activeChat && (
+                <p className="text-sm text-zinc-500">
+                  We could not find the chat you were looking for.
+                </p>
+              )}
+
+              {prefetchedMessages.map((turn, index) => (
+                <Message from={turn.role} key={`prefetched-${index}`}>
+                  <MessageContent>
+                    <Response>{turn.text}</Response>
+                    {turn.model ? (
+                      <p className="mt-1 text-xs uppercase tracking-wide text-zinc-500">
+                        Generated by {turn.model}
+                      </p>
+                    ) : null}
+                  </MessageContent>
+                </Message>
+              ))}
+
+              {messages.map((message) => (
+                <Message from={message.role} key={message.id}>
+                  <MessageContent>
+                    {message.parts.map((part, i) => {
+                      if (part.type === 'text') {
+                        return (
+                          <Response key={`${message.id}-${i}`}>
+                            {part.text}
+                          </Response>
+                        );
+                      }
+                      return null;
+                    })}
+                  </MessageContent>
+                </Message>
+              ))}
+
+              {status === 'submitted' && <Loader />}
+            </ConversationContent>
+            <ConversationScrollButton />
+          </Conversation>
+        </div>
+      </div>
     </div>
   );
 }

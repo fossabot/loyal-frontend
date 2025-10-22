@@ -49,6 +49,7 @@ export async function fetchIrysTableOfContents(
 export async function fetchIrysChatTurn(
   transactionId: string
 ): Promise<IrysChatTurn> {
+  console.log("Fetching chat turn", transactionId);
   const { data } = await fetchIrysTransactionData<ArrayBuffer>(transactionId);
   const decoded = new TextDecoder().decode(data);
 

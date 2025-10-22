@@ -5,6 +5,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 
 import { SolanaProvider } from "@/components/solana/solana-provider";
 import { Header } from "@/components/ui/header";
+import { UserChatsProvider } from "@/providers/user-chats";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -32,8 +33,10 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <SolanaProvider>
-          <Header />
-          {children}
+          <UserChatsProvider>
+            <Header />
+            {children}
+          </UserChatsProvider>
         </SolanaProvider>
       </body>
     </html>

@@ -83,7 +83,7 @@ export async function fetchUserChat(
   const provider = getLoyalOracleProvider(connection, wallet);
   const program = getLoyalOracleProgram(provider);
 
-  const chatAddress = getChatAccount(wallet, chatId)[0];
+  const chatAddress = getChatAccount(wallet, chatId);
   console.log(
     "Fetching chat account for chat id:",
     chatId,

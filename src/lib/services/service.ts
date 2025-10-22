@@ -3,6 +3,7 @@ import { AnchorWallet } from "@solana/wallet-adapter-react";
 import { Connection, PublicKey } from "@solana/web3.js";
 
 import { deriveDekFromCmk, generateCmk } from "../loyal/encryption";
+import { fetchIrysTransactionData } from "../loyal/http";
 import {
   createOrRestoreEphemeralKeypair,
   getIrysUploader,
@@ -10,6 +11,40 @@ import {
 import { createUserChat } from "../loyal/service";
 import { UserContext } from "../loyal/types";
 import { createEmptyTableOfContents } from "./helpers";
+import type { IrysTableOfContents } from "./types";
+
+export async function fetchIrysTableOfContents(
+  transactionId: string
+): Promise<IrysTableOfContents> {
+  const { data } = await fetchIrysTransactionData<ArrayBuffer>(transactionId);
+  const decoded = new TextDecoder().decode(data);
+  const parsed = JSON.parse(decoded) as {
+    irysKey?: unknown;
+    key?: unknown;
+    entries?: Array<{ tx_id?: unknown } | null | undefined>;
+  };
+
+  const irysKey =
+    typeof parsed.irysKey === "string"
+      ? parsed.irysKey
+      : typeof parsed.key === "string"
+      ? parsed.key
+      : undefined;
+
+  const entries =
+    parsed.entries?.reduce<IrysTableOfContents["entries"]>((acc, entry) => {
+      if (!entry || typeof entry.tx_id !== "string") {
+        return acc;
+      }
+
+      return [...acc, { tx_id: new PublicKey(entry.tx_id) }];
+    }, []) ?? [];
+
+  return {
+    irysKey,
+    entries,
+  };
+}
 
 export async function createAndUploadChat(
   connection: Connection,

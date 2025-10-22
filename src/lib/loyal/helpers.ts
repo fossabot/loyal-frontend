@@ -36,5 +36,5 @@ export function getChatAccount(wallet: AnchorWallet, chatId: number) {
     ],
     PROGRAM_ID
   );
-  return chatAddress;
+  return chatAddress[0];
 }

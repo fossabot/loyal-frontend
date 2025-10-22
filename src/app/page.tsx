@@ -36,6 +36,8 @@ import {
   SourcesTrigger,
 } from '@/components/ai-elements/source';
 import { TopicsSidebar } from '@/components/ai-elements/topics-sidebar';
+import { mapChatsToTopics } from '@/lib/chat/topic-utils';
+import { fetchIrysTransactionData } from '@/lib/loyal/http';
 import { fetchAllUserChats, fetchUserContext, initializeUserContext } from '@/lib/loyal/service';
 import type { UserChat, UserContext } from '@/lib/loyal/types';
 import { GrpcChatTransport } from '@/lib/query/transport';
@@ -51,45 +53,6 @@ const models = [
     value: 'deepseek/deepseek-r1',
   },
 ];
-
-const toSafeNumber = (value: unknown): number | null => {
-  if (typeof value === 'number' && Number.isFinite(value)) {
-    return value;
-  }
-  if (typeof value === 'bigint') {
-    const parsed = Number(value);
-    return Number.isFinite(parsed) ? parsed : null;
-  }
-  if (typeof value === 'string') {
-    const parsed = Number(value);
-    return Number.isFinite(parsed) ? parsed : null;
-  }
-  if (
-    typeof value === 'object' &&
-    value !== null &&
-    'toNumber' in value &&
-    typeof (value as { toNumber: () => number }).toNumber === 'function'
-  ) {
-    try {
-      const parsed = (value as { toNumber: () => number }).toNumber();
-      return Number.isFinite(parsed) ? parsed : null;
-    } catch {
-      return null;
-    }
-  }
-  return null;
-};
-
-const toIsoDateString = (value: unknown): string => {
-  const timestamp = toSafeNumber(value);
-  if (timestamp === null || timestamp <= 0) {
-    return new Date().toISOString();
-  }
-  const normalized = timestamp > 1e12 ? timestamp : timestamp * 1000;
-  return Number.isFinite(normalized)
-    ? new Date(normalized).toISOString()
-    : new Date().toISOString();
-};
 
 const ChatBotDemo = () => {
   const [input, setInput] = useState('');
@@ -111,25 +74,7 @@ const ChatBotDemo = () => {
     }),
   });
 
-  const topics = useMemo(
-    () =>
-      userChats.map((chat, index) => {
-        const chatIdNumber = toSafeNumber(chat.id);
-        const topicId =
-          chatIdNumber !== null
-            ? chatIdNumber.toString()
-            : String(chat.id ?? index);
-        const displayNumber =
-          chatIdNumber !== null ? chatIdNumber + 1 : index + 1;
-
-        return {
-          id: topicId,
-          title: `Chat ${displayNumber}`,
-          updatedAt: toIsoDateString(chat.createdAt),
-        };
-      }),
-    [userChats],
-  );
+  const topics = useMemo(() => mapChatsToTopics(userChats), [userChats]);
 
   // Initialize dark mode based on system preference
   useEffect(() => {
@@ -170,6 +115,10 @@ const ChatBotDemo = () => {
         if (!cancelled) {
           console.log('Chats found:', chats);
           setUserChats(chats);
+          const chatIds = chats.map((chat) => chat.txId.toString());
+          console.log('Chat IDs:', chatIds.join(', '));
+          const transactions = await fetchIrysTransactionData(chatIds[0]);
+          console.log('Transactions:', transactions);
         }
       } catch (error) {
         if (!cancelled) {

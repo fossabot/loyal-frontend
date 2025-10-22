@@ -1,4 +1,4 @@
-import type { PublicKey } from "@solana/web3.js";
+import type { Keypair, PublicKey } from "@solana/web3.js";
 
 export type UserContext = {
   owner: PublicKey;
@@ -19,4 +19,10 @@ export type UserChat = {
   status: ChatStatus;
   cmk: PublicKey;
   txId: PublicKey;
+};
+
+export type GeneratedSolanaKeypair = {
+  keypair: Keypair;
+  publicKeyBase58: string;
+  secretKey: Uint8Array;
 };

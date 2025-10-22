@@ -473,12 +473,6 @@ export type LoyalOracle = {
         {
           "name": "newStatus",
           "type": "u8"
-        },
-        {
-          "name": "oracleTxId",
-          "type": {
-            "option": "pubkey"
-          }
         }
       ]
     }
@@ -628,11 +622,7 @@ export type LoyalOracle = {
             "type": "pubkey"
           },
           {
-            "name": "userTxId",
-            "type": "pubkey"
-          },
-          {
-            "name": "oracleTxId",
+            "name": "txId",
             "type": "pubkey"
           }
         ]

@@ -187,3 +187,50 @@ export function hexToU8(hex: string): Uint8Array {
     out[i] = parseInt(hex.slice(2 * i, 2 * i + 2), 16);
   return out;
 }
+
+export function generateCmk(length = 32): Uint8Array {
+  if (length < 16) throw new Error("CMK must be at least 16 bytes.");
+  const cmk = new Uint8Array(length);
+  globalThis.crypto.getRandomValues(cmk);
+  return cmk;
+}
+
+export async function deriveDekFromCmk(
+  cmk: Uint8Array, // IKM, e.g. 32 random bytes
+  txId32: Uint8Array // exactly 32 bytes (same as c.tx_id.to_bytes())
+): Promise<Uint8Array> {
+  if (txId32.byteLength !== 32) throw new Error("tx_id must be 32 bytes.");
+  const subtle = getSubtle();
+
+  // Import CMK as HKDF base key
+  const baseKey = await subtle.importKey(
+    "raw",
+    toArrayBuffer(cmk),
+    "HKDF",
+    false, // non-extractable
+    ["deriveBits"]
+  );
+
+  // Build `info = "file:" || tx_id`
+  const filePrefix = new TextEncoder().encode("file:"); // 5 bytes
+  const info = new Uint8Array(5 + 32);
+  info.set(filePrefix, 0);
+  info.set(txId32, 5);
+
+  // salt=nil -> pass empty Uint8Array (RFC5869: treated as zeros)
+  const salt = new Uint8Array(0);
+
+  // Derive 256 bits (32 bytes)
+  const bits = await subtle.deriveBits(
+    {
+      name: "HKDF",
+      hash: "SHA-256",
+      salt: toArrayBuffer(salt),
+      info: toArrayBuffer(info),
+    },
+    baseKey,
+    256
+  );
+
+  return new Uint8Array(bits); // 32-byte DEK
+}

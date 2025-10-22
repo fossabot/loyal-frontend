@@ -82,6 +82,7 @@ const ChatBotDemo = () => {
     if (!anchorWallet) {
       return;
     }
+
     fetchUserContext(connection, anchorWallet).then((context) => {
       if (context) {
         console.log("Context account found:", context);

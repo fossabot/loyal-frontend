@@ -467,12 +467,6 @@
         {
           "name": "new_status",
           "type": "u8"
-        },
-        {
-          "name": "oracle_tx_id",
-          "type": {
-            "option": "pubkey"
-          }
         }
       ]
     }
@@ -622,11 +616,7 @@
             "type": "pubkey"
           },
           {
-            "name": "user_tx_id",
-            "type": "pubkey"
-          },
-          {
-            "name": "oracle_tx_id",
+            "name": "tx_id",
             "type": "pubkey"
           }
         ]

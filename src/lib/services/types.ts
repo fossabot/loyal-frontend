@@ -13,7 +13,7 @@ export type IrysTableOfContentsEntry = {
 };
 
 export type IrysTableOfContents = {
-  irysKey: string;
+  key: string | undefined;
   entries: IrysTableOfContentsEntry[];
 };
 

@@ -1,5 +1,5 @@
 import type { AnchorWallet } from "@solana/wallet-adapter-react";
-import { Connection, PublicKey } from "@solana/web3.js";
+import { Connection, Keypair, PublicKey } from "@solana/web3.js";
 
 import {
   getChatAccount,
@@ -7,7 +7,7 @@ import {
   getLoyalOracleProgram,
   getLoyalOracleProvider,
 } from "./helpers";
-import type { UserChat, UserContext } from "./types";
+import type { GeneratedSolanaKeypair, UserChat, UserContext } from "./types";
 
 /**
  * Resolves the context PDA for a wallet owner and returns account info when it exists.
@@ -157,3 +157,13 @@ export async function createUserChat(
   console.log("Your transaction signature", instruction);
   return undefined;
 }
+
+export const generateSolanaKeypair = (): GeneratedSolanaKeypair => {
+  const keypair = Keypair.generate();
+
+  return {
+    keypair,
+    publicKeyBase58: keypair.publicKey.toBase58(),
+    secretKey: keypair.secretKey,
+  };
+};

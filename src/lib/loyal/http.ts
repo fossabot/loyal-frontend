@@ -15,7 +15,7 @@ export async function fetchIrysTransactionData<T = ArrayBuffer>(
     throw new Error("Transaction ID is required to fetch data.");
   }
 
-  return irysHttpClient.get<T>(`/${transactionId}`, {
+  return irysHttpClient.get<T>(`/mutable/${transactionId}`, {
     responseType: "arraybuffer",
     ...config,
   });

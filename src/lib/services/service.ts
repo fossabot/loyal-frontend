@@ -11,7 +11,7 @@ import {
 import { createUserChat } from "../loyal/service";
 import { UserContext } from "../loyal/types";
 import { createEmptyTableOfContents } from "./helpers";
-import type { IrysTableOfContents } from "./types";
+import type { IrysChatTurn, IrysTableOfContents } from "./types";
 
 export async function fetchIrysTableOfContents(
   transactionId: string
@@ -46,6 +46,44 @@ export async function fetchIrysTableOfContents(
   };
 }
 
+export async function fetchIrysChatTurn(
+  transactionId: string
+): Promise<IrysChatTurn> {
+  const { data } = await fetchIrysTransactionData<ArrayBuffer>(transactionId);
+  const decoded = new TextDecoder().decode(data);
+
+  const parsed = JSON.parse(decoded) as {
+    role?: unknown;
+    text?: unknown;
+    model?: unknown;
+    createdAt?: unknown;
+  };
+
+  if (parsed.role !== "user" && parsed.role !== "assistant") {
+    throw new Error("Invalid chat turn role received from Irys.");
+  }
+
+  if (typeof parsed.text !== "string") {
+    throw new Error("Missing chat turn text from Irys.");
+  }
+
+  if (typeof parsed.createdAt !== "string") {
+    throw new Error("Missing chat turn createdAt from Irys.");
+  }
+
+  const chatTurn: IrysChatTurn = {
+    role: parsed.role,
+    text: parsed.text,
+    createdAt: parsed.createdAt,
+  };
+
+  if (typeof parsed.model === "string") {
+    chatTurn.model = parsed.model;
+  }
+
+  return chatTurn;
+}
+
 export async function createAndUploadChat(
   connection: Connection,
   wallet: AnchorWallet,
@@ -65,6 +103,9 @@ export async function createAndUploadChat(
 
   // 2. deriving encryption for the first time
   const receiptId = receipt.id;
+
+  console.log("Receipt of table of contents", receipt);
+
   const cmk = generateCmk();
   const receiptIdBytes = bs58.decode(receiptId);
   const dek = await deriveDekFromCmk(cmk, receiptIdBytes);
@@ -87,7 +128,14 @@ export async function createAndUploadChat(
     { name: "Content-Type", value: "application/json" },
     { name: "Root-TX", value: receiptId },
   ];
-  await irysUploader.upload(JSON.stringify(emptyTableOfContents), { tags });
+
+  console.log("Uploading table of contents", emptyTableOfContents);
+
+  const result = await irysUploader.upload(
+    JSON.stringify(emptyTableOfContents),
+    { tags }
+  );
+  console.log("Result", result);
 
   // 5. create new onchain chat entity
   await createUserChat(
@@ -95,6 +143,6 @@ export async function createAndUploadChat(
     wallet,
     context,
     new PublicKey(cmk),
-    new PublicKey(queryId)
+    new PublicKey(receiptId)
   );
 }

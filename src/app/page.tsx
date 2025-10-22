@@ -37,11 +37,10 @@ import {
 } from '@/components/ai-elements/source';
 import { TopicsSidebar } from '@/components/ai-elements/topics-sidebar';
 import { mapChatsToTopics } from '@/lib/chat/topic-utils';
-import { fetchIrysTransactionData } from '@/lib/loyal/http';
 import { fetchAllUserChats, fetchUserContext, initializeUserContext } from '@/lib/loyal/service';
 import type { UserChat, UserContext } from '@/lib/loyal/types';
 import { GrpcChatTransport } from '@/lib/query/transport';
-import { createAndUploadChat } from '@/lib/services/service';
+import { createAndUploadChat, fetchIrysChatTurn, fetchIrysTableOfContents } from '@/lib/services/service';
 
 const models = [
   {
@@ -117,8 +116,10 @@ const ChatBotDemo = () => {
           setUserChats(chats);
           const chatIds = chats.map((chat) => chat.txId.toString());
           console.log('Chat IDs:', chatIds.join(', '));
-          const transactions = await fetchIrysTransactionData(chatIds[0]);
+          const transactions = await fetchIrysTableOfContents(chatIds[3]);
           console.log('Transactions:', transactions);
+          const chatTurn = await fetchIrysChatTurn(chatIds[0]);
+          console.log('Chat turn:', chatTurn);
         }
       } catch (error) {
         if (!cancelled) {

@@ -408,6 +408,28 @@ export default function LandingPage() {
             transform: isChatMode ? "translateY(-100vh)" : "translateY(0)",
           }}
         >
+          {/* Demo warning */}
+          <div
+            style={{
+              position: "absolute",
+              top: "2rem",
+              left: "50%",
+              transform: "translateX(-50%)",
+              color: "#ff4444",
+              fontSize: "0.875rem",
+              fontWeight: 500,
+              letterSpacing: "0.025em",
+              fontFamily: "system-ui, -apple-system, sans-serif",
+              padding: "0.5rem 1rem",
+              background: "rgba(255, 68, 68, 0.1)",
+              border: "1px solid rgba(255, 68, 68, 0.3)",
+              borderRadius: "8px",
+              backdropFilter: "blur(10px)",
+            }}
+          >
+            This is an early demo, expect changes
+          </div>
+
           <h1
             style={{
               fontSize: "clamp(2rem, 5vw, 4.25rem)",

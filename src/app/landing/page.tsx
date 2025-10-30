@@ -4,7 +4,7 @@ import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
 import localFont from "next/font/local";
 import Image from "next/image";
-import { useEffect,useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { CircleChevronRightIcon } from "@/components/ui/circle-chevron-right";
 import { CopyIcon, type CopyIconHandle } from "@/components/ui/copy";
@@ -122,7 +122,7 @@ export default function LandingPage() {
   // Auto-resize textarea when input changes
   useEffect(() => {
     if (inputRef.current) {
-      inputRef.current.style.height = 'auto';
+      inputRef.current.style.height = "auto";
       inputRef.current.style.height = `${inputRef.current.scrollHeight}px`;
     }
   }, [input]);
@@ -133,7 +133,8 @@ export default function LandingPage() {
       // Use a small delay to ensure DOM is updated
       setTimeout(() => {
         if (messagesContainerRef.current) {
-          messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
+          messagesContainerRef.current.scrollTop =
+            messagesContainerRef.current.scrollHeight;
         }
       }, 50);
     }
@@ -149,7 +150,7 @@ export default function LandingPage() {
       // Reset textarea height and ensure focus
       setTimeout(() => {
         if (inputRef.current) {
-          inputRef.current.style.height = 'auto';
+          inputRef.current.style.height = "auto";
           inputRef.current.focus();
         }
       }, 50);
@@ -171,7 +172,7 @@ export default function LandingPage() {
         iconHandle?.stopAnimation();
       }, 2000);
     } catch (err) {
-      console.error('Failed to copy text: ', err);
+      console.error("Failed to copy text: ", err);
     }
   };
 
@@ -250,11 +251,13 @@ export default function LandingPage() {
           }}
           onMouseEnter={(e) => {
             e.currentTarget.style.background = "rgba(255, 255, 255, 0.12)";
-            e.currentTarget.style.border = "1px solid rgba(255, 255, 255, 0.25)";
+            e.currentTarget.style.border =
+              "1px solid rgba(255, 255, 255, 0.25)";
           }}
           onMouseLeave={(e) => {
             e.currentTarget.style.background = "rgba(255, 255, 255, 0.08)";
-            e.currentTarget.style.border = "1px solid rgba(255, 255, 255, 0.15)";
+            e.currentTarget.style.border =
+              "1px solid rgba(255, 255, 255, 0.15)";
           }}
         >
           <MenuIcon
@@ -281,9 +284,7 @@ export default function LandingPage() {
             zIndex: 40,
             display: "flex",
             flexDirection: "column",
-            boxShadow: isSidebarOpen
-              ? "0 0 60px rgba(0, 0, 0, 0.5)"
-              : "none",
+            boxShadow: isSidebarOpen ? "0 0 60px rgba(0, 0, 0, 0.5)" : "none",
           }}
         >
           {/* Sidebar Header */}
@@ -353,8 +354,7 @@ export default function LandingPage() {
                   transition: "all 0.3s ease",
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.background =
-                    "rgba(255, 255, 255, 0.1)";
+                  e.currentTarget.style.background = "rgba(255, 255, 255, 0.1)";
                   e.currentTarget.style.border =
                     "1px solid rgba(255, 255, 255, 0.15)";
                 }}
@@ -427,7 +427,7 @@ export default function LandingPage() {
               backdropFilter: "blur(10px)",
             }}
           >
-            This is an early demo, expect changes
+            This is an early features demo, design and UI are WIP
           </div>
 
           <h1
@@ -463,8 +463,7 @@ export default function LandingPage() {
             transform: "translateX(-50%)",
             width: isChatMode ? "min(920px, 90%)" : "min(600px, 90%)",
             maxHeight: isChatMode ? "100vh" : "auto",
-            transition:
-              "all 0.8s cubic-bezier(0.4, 0, 0.2, 1)",
+            transition: "all 0.8s cubic-bezier(0.4, 0, 0.2, 1)",
             display: "flex",
             flexDirection: "column",
             gap: "1rem",
@@ -479,31 +478,33 @@ export default function LandingPage() {
         >
           {/* Chat messages */}
           {isChatMode && (
-              <div
-                ref={messagesContainerRef}
-                className="chat-messages-container"
-                style={{
-                  flex: 1,
-                  overflowY: "auto",
-                  overflowX: "hidden",
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "1rem",
-                  padding: "2rem 1rem 2rem 0",
-                  animation: "fadeIn 0.5s ease-in",
-                  position: "relative",
-                  maskImage: "linear-gradient(to bottom, transparent 0%, black 1.5rem, black calc(100% - 1.5rem), transparent 100%)",
-                  WebkitMaskImage: "linear-gradient(to bottom, transparent 0%, black 1.5rem, black calc(100% - 1.5rem), transparent 100%)",
-                }}
-                onClick={() => {
-                  // Focus input when clicking on the message area
-                  inputRef.current?.focus();
-                }}
-              >
+            <div
+              ref={messagesContainerRef}
+              className="chat-messages-container"
+              style={{
+                flex: 1,
+                overflowY: "auto",
+                overflowX: "hidden",
+                display: "flex",
+                flexDirection: "column",
+                gap: "1rem",
+                padding: "2rem 1rem 2rem 0",
+                animation: "fadeIn 0.5s ease-in",
+                position: "relative",
+                maskImage:
+                  "linear-gradient(to bottom, transparent 0%, black 1.5rem, black calc(100% - 1.5rem), transparent 100%)",
+                WebkitMaskImage:
+                  "linear-gradient(to bottom, transparent 0%, black 1.5rem, black calc(100% - 1.5rem), transparent 100%)",
+              }}
+              onClick={() => {
+                // Focus input when clicking on the message area
+                inputRef.current?.focus();
+              }}
+            >
               {messages.map((message) => {
                 const messageText = message.parts
-                  .filter(part => part.type === "text")
-                  .map(part => part.text)
+                  .filter((part) => part.type === "text")
+                  .map((part) => part.text)
                   .join("");
 
                 return (
@@ -534,7 +535,7 @@ export default function LandingPage() {
                     {message.parts.map((part, index) =>
                       part.type === "text" ? (
                         <span key={index}>{part.text}</span>
-                      ) : null,
+                      ) : null
                     )}
 
                     {/* Copy button */}
@@ -545,15 +546,17 @@ export default function LandingPage() {
                         top: "1rem",
                         right: "0.75rem",
                         padding: "0.25rem",
-                        background: copiedMessageId === message.id
-                          ? "rgba(34, 197, 94, 0.2)"
-                          : "transparent",
+                        background:
+                          copiedMessageId === message.id
+                            ? "rgba(34, 197, 94, 0.2)"
+                            : "transparent",
                         border: "none",
                         borderRadius: "8px",
                         cursor: "pointer",
-                        color: copiedMessageId === message.id
-                          ? "#22c55e"
-                          : "rgba(255, 255, 255, 0.5)",
+                        color:
+                          copiedMessageId === message.id
+                            ? "#22c55e"
+                            : "rgba(255, 255, 255, 0.5)",
                         transition: "all 0.2s ease",
                         display: "flex",
                         alignItems: "center",
@@ -561,17 +564,24 @@ export default function LandingPage() {
                       }}
                       onMouseEnter={(e) => {
                         if (copiedMessageId !== message.id) {
-                          e.currentTarget.style.color = "rgba(255, 255, 255, 0.8)";
-                          e.currentTarget.style.background = "rgba(255, 255, 255, 0.1)";
+                          e.currentTarget.style.color =
+                            "rgba(255, 255, 255, 0.8)";
+                          e.currentTarget.style.background =
+                            "rgba(255, 255, 255, 0.1)";
                         }
                       }}
                       onMouseLeave={(e) => {
                         if (copiedMessageId !== message.id) {
-                          e.currentTarget.style.color = "rgba(255, 255, 255, 0.5)";
+                          e.currentTarget.style.color =
+                            "rgba(255, 255, 255, 0.5)";
                           e.currentTarget.style.background = "transparent";
                         }
                       }}
-                      title={copiedMessageId === message.id ? "Copied!" : "Copy message"}
+                      title={
+                        copiedMessageId === message.id
+                          ? "Copied!"
+                          : "Copy message"
+                      }
                     >
                       <CopyIcon
                         ref={(el) => {
@@ -631,7 +641,7 @@ export default function LandingPage() {
                 setInput(e.target.value);
                 // Auto-resize textarea
                 if (inputRef.current) {
-                  inputRef.current.style.height = 'auto';
+                  inputRef.current.style.height = "auto";
                   inputRef.current.style.height = `${inputRef.current.scrollHeight}px`;
                 }
               }}
@@ -716,8 +726,7 @@ export default function LandingPage() {
                 }
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.background =
-                  "rgba(255, 255, 255, 0.15)";
+                e.currentTarget.style.background = "rgba(255, 255, 255, 0.15)";
                 e.currentTarget.style.transform = "translateY(0)";
                 e.currentTarget.style.boxShadow =
                   "0 8px 32px 0 rgba(0, 0, 0, 0.37), inset 0 1px 1px rgba(255, 255, 255, 0.1)";
@@ -726,9 +735,10 @@ export default function LandingPage() {
               <CircleChevronRightIcon
                 size={32}
                 style={{
-                  animation: (status === "streaming" || status === "submitted")
-                    ? "pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite"
-                    : "none"
+                  animation:
+                    status === "streaming" || status === "submitted"
+                      ? "pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite"
+                      : "none",
                 }}
               />
             </button>
@@ -791,7 +801,8 @@ export default function LandingPage() {
         }
 
         @keyframes pulse {
-          0%, 100% {
+          0%,
+          100% {
             opacity: 1;
           }
           50% {
@@ -809,8 +820,8 @@ export default function LandingPage() {
           display: none;
         }
         textarea {
-          -ms-overflow-style: none;  /* IE and Edge */
-          scrollbar-width: none;  /* Firefox */
+          -ms-overflow-style: none; /* IE and Edge */
+          scrollbar-width: none; /* Firefox */
         }
 
         /* Custom scrollbar for chat messages */

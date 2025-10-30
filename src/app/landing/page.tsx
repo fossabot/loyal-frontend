@@ -432,7 +432,7 @@ export default function LandingPage() {
             display: "flex",
             flexDirection: "column",
             gap: "1rem",
-            padding: isChatMode ? "2rem" : "0",
+            padding: isChatMode ? "2rem 1rem 2rem 2rem" : "0",
           }}
           onClick={(e) => {
             // Focus input when clicking on the container (but not on other elements)
@@ -444,14 +444,17 @@ export default function LandingPage() {
           {/* Chat messages */}
           {isChatMode && (
             <div
+              className="chat-messages-container"
               style={{
                 flex: 1,
                 overflowY: "auto",
+                overflowX: "hidden",
                 display: "flex",
                 flexDirection: "column",
                 gap: "1rem",
-                padding: "0.5rem 0 1rem 0",
+                padding: "0.5rem 1rem 1rem 0",
                 animation: "fadeIn 0.5s ease-in",
+                position: "relative",
               }}
               onClick={() => {
                 // Focus input when clicking on the message area
@@ -747,15 +750,41 @@ export default function LandingPage() {
           color: rgba(255, 255, 255, 0.5);
         }
 
-        /* Hide scrollbar for Chrome, Safari and Opera */
+        /* Hide scrollbar for textarea */
         textarea::-webkit-scrollbar {
           display: none;
         }
-
-        /* Hide scrollbar for IE, Edge and Firefox */
         textarea {
           -ms-overflow-style: none;  /* IE and Edge */
           scrollbar-width: none;  /* Firefox */
+        }
+
+        /* Custom scrollbar for chat messages */
+        .chat-messages-container::-webkit-scrollbar {
+          width: 8px;
+        }
+
+        .chat-messages-container::-webkit-scrollbar-track {
+          background: rgba(255, 255, 255, 0.05);
+          border-radius: 10px;
+          margin: 10px 0;
+        }
+
+        .chat-messages-container::-webkit-scrollbar-thumb {
+          background: rgba(255, 255, 255, 0.2);
+          border-radius: 10px;
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          backdrop-filter: blur(10px);
+        }
+
+        .chat-messages-container::-webkit-scrollbar-thumb:hover {
+          background: rgba(255, 255, 255, 0.3);
+        }
+
+        /* Firefox custom scrollbar */
+        .chat-messages-container {
+          scrollbar-width: thin;
+          scrollbar-color: rgba(255, 255, 255, 0.2) rgba(255, 255, 255, 0.05);
         }
       `}</style>
     </main>

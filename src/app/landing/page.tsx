@@ -39,6 +39,8 @@ export default function LandingPage() {
   const menuIconRef = useRef<MenuIconHandle>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const copyIconRefs = useRef<Map<string, CopyIconHandle>>(new Map());
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
 
   // Control menu icon animation based on sidebar state
   useEffect(() => {
@@ -124,6 +126,18 @@ export default function LandingPage() {
       inputRef.current.style.height = `${inputRef.current.scrollHeight}px`;
     }
   }, [input]);
+
+  // Auto-scroll to bottom when new messages arrive
+  useEffect(() => {
+    if (messagesEndRef.current && messagesContainerRef.current) {
+      // Use a small delay to ensure DOM is updated
+      setTimeout(() => {
+        if (messagesContainerRef.current) {
+          messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
+        }
+      }, 50);
+    }
+  }, [messages]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -443,24 +457,27 @@ export default function LandingPage() {
         >
           {/* Chat messages */}
           {isChatMode && (
-            <div
-              className="chat-messages-container"
-              style={{
-                flex: 1,
-                overflowY: "auto",
-                overflowX: "hidden",
-                display: "flex",
-                flexDirection: "column",
-                gap: "1rem",
-                padding: "0.5rem 1rem 1rem 0",
-                animation: "fadeIn 0.5s ease-in",
-                position: "relative",
-              }}
-              onClick={() => {
-                // Focus input when clicking on the message area
-                inputRef.current?.focus();
-              }}
-            >
+              <div
+                ref={messagesContainerRef}
+                className="chat-messages-container"
+                style={{
+                  flex: 1,
+                  overflowY: "auto",
+                  overflowX: "hidden",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "1rem",
+                  padding: "2rem 1rem 2rem 0",
+                  animation: "fadeIn 0.5s ease-in",
+                  position: "relative",
+                  maskImage: "linear-gradient(to bottom, transparent 0%, black 1.5rem, black calc(100% - 1.5rem), transparent 100%)",
+                  WebkitMaskImage: "linear-gradient(to bottom, transparent 0%, black 1.5rem, black calc(100% - 1.5rem), transparent 100%)",
+                }}
+                onClick={() => {
+                  // Focus input when clicking on the message area
+                  inputRef.current?.focus();
+                }}
+              >
               {messages.map((message) => {
                 const messageText = message.parts
                   .filter(part => part.type === "text")
@@ -488,6 +505,8 @@ export default function LandingPage() {
                       maxWidth: "80%",
                       transition: "all 0.2s ease",
                       overflow: "visible",
+                      animation: "slideInUp 0.3s ease-out",
+                      animationFillMode: "both",
                     }}
                   >
                     {message.parts.map((part, index) =>
@@ -568,6 +587,7 @@ export default function LandingPage() {
                   </div>
                 );
               })}
+              <div ref={messagesEndRef} style={{ height: "1rem" }} />
             </div>
           )}
 
@@ -579,6 +599,7 @@ export default function LandingPage() {
               width: "100%",
               display: "flex",
               gap: "0.75rem",
+              marginTop: "0.5rem",
             }}
           >
             <textarea
@@ -720,6 +741,17 @@ export default function LandingPage() {
           from {
             opacity: 0;
             transform: translateY(-8px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        @keyframes slideInUp {
+          from {
+            opacity: 0;
+            transform: translateY(20px);
           }
           to {
             opacity: 1;

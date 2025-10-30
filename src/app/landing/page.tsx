@@ -117,6 +117,14 @@ export default function LandingPage() {
     }
   }, [messages, isChatMode]);
 
+  // Auto-resize textarea when input changes
+  useEffect(() => {
+    if (inputRef.current) {
+      inputRef.current.style.height = 'auto';
+      inputRef.current.style.height = `${inputRef.current.scrollHeight}px`;
+    }
+  }, [input]);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (input.trim() && status === "ready") {
@@ -124,9 +132,12 @@ export default function LandingPage() {
       setInput("");
       setIsChatMode(true);
 
-      // Ensure focus remains on input after sending message
+      // Reset textarea height and ensure focus
       setTimeout(() => {
-        inputRef.current?.focus();
+        if (inputRef.current) {
+          inputRef.current.style.height = 'auto';
+          inputRef.current.focus();
+        }
       }, 50);
     }
   };
@@ -570,7 +581,14 @@ export default function LandingPage() {
             <textarea
               ref={inputRef}
               value={input}
-              onChange={(e) => setInput(e.target.value)}
+              onChange={(e) => {
+                setInput(e.target.value);
+                // Auto-resize textarea
+                if (inputRef.current) {
+                  inputRef.current.style.height = 'auto';
+                  inputRef.current.style.height = `${inputRef.current.scrollHeight}px`;
+                }
+              }}
               disabled={status !== "ready"}
               placeholder="Ask me anything..."
               autoFocus
@@ -598,6 +616,10 @@ export default function LandingPage() {
                 resize: "none",
                 fontFamily: "inherit",
                 lineHeight: "1.5",
+                overflowX: "hidden",
+                overflowY: "auto",
+                minHeight: "auto",
+                maxHeight: "200px",
               }}
               onFocus={(e) => {
                 e.target.style.background = "rgba(255, 255, 255, 0.12)";
@@ -723,6 +745,17 @@ export default function LandingPage() {
         input::placeholder,
         textarea::placeholder {
           color: rgba(255, 255, 255, 0.5);
+        }
+
+        /* Hide scrollbar for Chrome, Safari and Opera */
+        textarea::-webkit-scrollbar {
+          display: none;
+        }
+
+        /* Hide scrollbar for IE, Edge and Firefox */
+        textarea {
+          -ms-overflow-style: none;  /* IE and Edge */
+          scrollbar-width: none;  /* Firefox */
         }
       `}</style>
     </main>

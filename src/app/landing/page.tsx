@@ -8,7 +8,7 @@ import { useEffect, useRef, useState } from "react";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { useWalletModal } from "@solana/wallet-adapter-react-ui";
 
-import { CircleChevronRightIcon } from "@/components/ui/circle-chevron-right";
+import { ChevronRightIcon } from "@/components/ui/chevron-right";
 import { CopyIcon, type CopyIconHandle } from "@/components/ui/copy";
 import { MenuIcon, type MenuIconHandle } from "@/components/ui/menu";
 import { PlusIcon, type PlusIconHandle } from "@/components/ui/plus";
@@ -804,125 +804,125 @@ export default function LandingPage() {
             </div>
           )}
 
-          {/* Input form - liquid glass style */}
+          {/* Input form - liquid glass style with integrated send button */}
           <form
             onSubmit={handleSubmit}
             style={{
               position: "relative",
               width: "100%",
-              display: "flex",
-              gap: "0.75rem",
               marginTop: "0.5rem",
             }}
           >
-            <textarea
-              ref={inputRef}
-              value={input}
-              onChange={(e) => {
-                setInput(e.target.value);
-                // Auto-resize textarea
-                if (inputRef.current) {
-                  inputRef.current.style.height = "auto";
-                  inputRef.current.style.height = `${inputRef.current.scrollHeight}px`;
-                }
-              }}
-              disabled={status !== "ready" || (isChatMode && !connected)}
-              placeholder={isChatMode && !connected ? "Please reconnect wallet to continue..." : "Ask me anything..."}
-              autoFocus
-              tabIndex={0}
-              rows={1}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && !e.shiftKey) {
-                  e.preventDefault();
-                  handleSubmit(e);
-                }
-              }}
+            <div
               style={{
-                flex: 1,
-                padding: "1.25rem 1.75rem",
-                fontSize: "1rem",
-                color: "#fff",
+                position: "relative",
+                display: "flex",
+                alignItems: "flex-end",
                 background: "rgba(255, 255, 255, 0.08)",
                 backdropFilter: "blur(20px)",
                 border: "1px solid rgba(255, 255, 255, 0.15)",
                 borderRadius: "20px",
-                outline: "none",
-                transition: "all 0.5s cubic-bezier(0.4, 0, 0.2, 1)",
                 boxShadow:
                   "0 8px 32px 0 rgba(0, 0, 0, 0.37), inset 0 1px 1px rgba(255, 255, 255, 0.1)",
-                resize: "none",
-                fontFamily: "inherit",
-                lineHeight: "1.5",
-                overflowX: "hidden",
-                overflowY: "auto",
-                minHeight: "auto",
-                maxHeight: "200px",
+                transition: "all 0.5s cubic-bezier(0.4, 0, 0.2, 1)",
               }}
               onFocus={(e) => {
-                e.target.style.background = "rgba(255, 255, 255, 0.12)";
-                e.target.style.border = "1px solid rgba(255, 255, 255, 0.25)";
+                e.currentTarget.style.background = "rgba(255, 255, 255, 0.12)";
+                e.currentTarget.style.border = "1px solid rgba(255, 255, 255, 0.25)";
               }}
               onBlur={(e) => {
-                e.target.style.background = "rgba(255, 255, 255, 0.08)";
-                e.target.style.border = "1px solid rgba(255, 255, 255, 0.15)";
-              }}
-            />
-            <button
-              type="submit"
-              disabled={status !== "ready" || !input.trim() || (isChatMode && !connected)}
-              style={{
-                padding: "0",
-                width: "auto",
-                aspectRatio: "1",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                color: "#fff",
-                background:
-                  status !== "ready" || !input.trim() || (isChatMode && !connected)
-                    ? "rgba(255, 255, 255, 0.05)"
-                    : "rgba(255, 255, 255, 0.15)",
-                backdropFilter: "blur(20px)",
-                border: "1px solid rgba(255, 255, 255, 0.2)",
-                borderRadius: "20px",
-                cursor:
-                  status !== "ready" || !input.trim() || (isChatMode && !connected)
-                    ? "not-allowed"
-                    : "pointer",
-                outline: "none",
-                transition: "all 0.3s ease",
-                boxShadow:
-                  "0 8px 32px 0 rgba(0, 0, 0, 0.37), inset 0 1px 1px rgba(255, 255, 255, 0.1)",
-                opacity: status !== "ready" || !input.trim() || (isChatMode && !connected) ? 0.5 : 1,
-                alignSelf: "stretch",
-                minWidth: "60px",
-              }}
-              onMouseEnter={(e) => {
-                if (status === "ready" && input.trim() && (!isChatMode || connected)) {
-                  e.currentTarget.style.background =
-                    "rgba(255, 255, 255, 0.25)";
-                  e.currentTarget.style.transform = "translateY(-2px)";
-                  e.currentTarget.style.boxShadow =
-                    "0 12px 40px 0 rgba(0, 0, 0, 0.5), inset 0 1px 1px rgba(255, 255, 255, 0.15)";
-                }
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = "rgba(255, 255, 255, 0.15)";
-                e.currentTarget.style.transform = "translateY(0)";
-                e.currentTarget.style.boxShadow =
-                  "0 8px 32px 0 rgba(0, 0, 0, 0.37), inset 0 1px 1px rgba(255, 255, 255, 0.1)";
+                e.currentTarget.style.background = "rgba(255, 255, 255, 0.08)";
+                e.currentTarget.style.border = "1px solid rgba(255, 255, 255, 0.15)";
               }}
             >
-              <CircleChevronRightIcon
-                size={32}
+              <textarea
+                ref={inputRef}
+                value={input}
+                onChange={(e) => {
+                  setInput(e.target.value);
+                  // Auto-resize textarea
+                  if (inputRef.current) {
+                    inputRef.current.style.height = "auto";
+                    inputRef.current.style.height = `${inputRef.current.scrollHeight}px`;
+                  }
+                }}
+                disabled={status !== "ready" || (isChatMode && !connected)}
+                placeholder={isChatMode && !connected ? "Please reconnect wallet to continue..." : "Ask me anything..."}
+                autoFocus
+                tabIndex={0}
+                rows={1}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    handleSubmit(e);
+                  }
+                }}
                 style={{
-                  animation:
-                    status === "streaming" || status === "submitted"
-                      ? "pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite"
-                      : "none",
+                  flex: 1,
+                  padding: "1.25rem 1.75rem",
+                  paddingRight: "3.5rem", // Make room for the send button
+                  fontSize: "1rem",
+                  color: "#fff",
+                  background: "transparent",
+                  border: "none",
+                  outline: "none",
+                  resize: "none",
+                  fontFamily: "inherit",
+                  lineHeight: "1.5",
+                  overflowX: "hidden",
+                  overflowY: "auto",
+                  minHeight: "auto",
+                  maxHeight: "200px",
                 }}
               />
-            </button>
+              <button
+                type="submit"
+                disabled={status !== "ready" || !input.trim() || (isChatMode && !connected)}
+                style={{
+                  position: "absolute",
+                  right: "0.75rem",
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                  padding: "0.5rem",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  color: "#fff",
+                  background: "transparent",
+                  border: "none",
+                  borderRadius: "12px",
+                  cursor:
+                    status !== "ready" || !input.trim() || (isChatMode && !connected)
+                      ? "not-allowed"
+                      : "pointer",
+                  outline: "none",
+                  transition: "all 0.3s ease",
+                  opacity: status !== "ready" || !input.trim() || (isChatMode && !connected) ? 0.3 : 0.7,
+                }}
+                onMouseEnter={(e) => {
+                  if (status === "ready" && input.trim() && (!isChatMode || connected)) {
+                    e.currentTarget.style.opacity = "1";
+                    e.currentTarget.style.background = "rgba(255, 255, 255, 0.1)";
+                    e.currentTarget.style.transform = "translateY(-50%) scale(1.1)";
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.opacity = "0.7";
+                  e.currentTarget.style.background = "transparent";
+                  e.currentTarget.style.transform = "translateY(-50%) scale(1)";
+                }}
+              >
+                <ChevronRightIcon
+                  size={24}
+                  style={{
+                    animation:
+                      status === "streaming" || status === "submitted"
+                        ? "pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite"
+                        : "none",
+                  }}
+                />
+              </button>
+            </div>
           </form>
         </div>
       </div>

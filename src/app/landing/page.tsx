@@ -66,7 +66,7 @@ const ChatBotDemo = () => {
     refreshUserChats,
   } = useUserChats();
 
-  const { messages, sendMessage, status, setMessages, reload } = useChat({
+  const { messages, sendMessage, status, setMessages } = useChat({
     transport: new GrpcChatTransport({
       baseUrl: 'http://localhost:8000',
       headers: {

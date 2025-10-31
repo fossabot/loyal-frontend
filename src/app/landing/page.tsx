@@ -5,6 +5,8 @@ import { DefaultChatTransport } from "ai";
 import localFont from "next/font/local";
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
+import { useWallet } from "@solana/wallet-adapter-react";
+import { useWalletModal } from "@solana/wallet-adapter-react-ui";
 
 import { CircleChevronRightIcon } from "@/components/ui/circle-chevron-right";
 import { CopyIcon, type CopyIconHandle } from "@/components/ui/copy";
@@ -43,6 +45,11 @@ export default function LandingPage() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
 
+  // Wallet hooks
+  const { connected } = useWallet();
+  const { setVisible } = useWalletModal();
+  const [pendingMessage, setPendingMessage] = useState<string | null>(null);
+
   // Control menu icon animation based on sidebar state
   useEffect(() => {
     if (isSidebarOpen) {
@@ -51,6 +58,24 @@ export default function LandingPage() {
       menuIconRef.current?.stopAnimation();
     }
   }, [isSidebarOpen]);
+
+  // Handle sending pending message after wallet connection
+  useEffect(() => {
+    if (connected && pendingMessage && status === "ready") {
+      sendMessage({ text: pendingMessage });
+      setInput("");
+      setPendingMessage(null);
+      setIsChatMode(true);
+
+      // Reset textarea height and ensure focus
+      setTimeout(() => {
+        if (inputRef.current) {
+          inputRef.current.style.height = "auto";
+          inputRef.current.focus();
+        }
+      }, 50);
+    }
+  }, [connected, pendingMessage, status, sendMessage]);
 
   // Auto-focus on initial load
   useEffect(() => {
@@ -143,6 +168,18 @@ export default function LandingPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Always check if wallet is connected before sending any message
+    if (!connected) {
+      // Save the message to send after connection
+      if (input.trim()) {
+        setPendingMessage(input);
+      }
+      // Open wallet connection modal
+      setVisible(true);
+      return;
+    }
+
     if (input.trim() && status === "ready") {
       sendMessage({ text: input });
       setInput("");
@@ -666,8 +703,8 @@ export default function LandingPage() {
                   inputRef.current.style.height = `${inputRef.current.scrollHeight}px`;
                 }
               }}
-              disabled={status !== "ready"}
-              placeholder="Ask me anything..."
+              disabled={status !== "ready" || (isChatMode && !connected)}
+              placeholder={isChatMode && !connected ? "Please reconnect wallet to continue..." : "Ask me anything..."}
               autoFocus
               tabIndex={0}
               rows={1}
@@ -709,7 +746,7 @@ export default function LandingPage() {
             />
             <button
               type="submit"
-              disabled={status !== "ready" || !input.trim()}
+              disabled={status !== "ready" || !input.trim() || (isChatMode && !connected)}
               style={{
                 padding: "0",
                 width: "auto",
@@ -719,26 +756,26 @@ export default function LandingPage() {
                 justifyContent: "center",
                 color: "#fff",
                 background:
-                  status !== "ready" || !input.trim()
+                  status !== "ready" || !input.trim() || (isChatMode && !connected)
                     ? "rgba(255, 255, 255, 0.05)"
                     : "rgba(255, 255, 255, 0.15)",
                 backdropFilter: "blur(20px)",
                 border: "1px solid rgba(255, 255, 255, 0.2)",
                 borderRadius: "20px",
                 cursor:
-                  status !== "ready" || !input.trim()
+                  status !== "ready" || !input.trim() || (isChatMode && !connected)
                     ? "not-allowed"
                     : "pointer",
                 outline: "none",
                 transition: "all 0.3s ease",
                 boxShadow:
                   "0 8px 32px 0 rgba(0, 0, 0, 0.37), inset 0 1px 1px rgba(255, 255, 255, 0.1)",
-                opacity: status !== "ready" || !input.trim() ? 0.5 : 1,
+                opacity: status !== "ready" || !input.trim() || (isChatMode && !connected) ? 0.5 : 1,
                 alignSelf: "stretch",
                 minWidth: "60px",
               }}
               onMouseEnter={(e) => {
-                if (status === "ready" && input.trim()) {
+                if (status === "ready" && input.trim() && (!isChatMode || connected)) {
                   e.currentTarget.style.background =
                     "rgba(255, 255, 255, 0.25)";
                   e.currentTarget.style.transform = "translateY(-2px)";
@@ -766,6 +803,109 @@ export default function LandingPage() {
           </form>
         </div>
       </div>
+
+      {/* Wallet disconnection warning overlay */}
+      {isChatMode && !connected && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            zIndex: 90,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "1rem",
+            backgroundColor: "rgba(0, 0, 0, 0.85)",
+            backdropFilter: "blur(12px)",
+            animation: "fadeIn 0.3s ease-out",
+          }}
+        >
+          <div
+            style={{
+              maxWidth: "500px",
+              width: "100%",
+              background: "rgba(255, 68, 68, 0.1)",
+              backdropFilter: "blur(20px)",
+              border: "1px solid rgba(255, 68, 68, 0.3)",
+              borderRadius: "20px",
+              padding: "2rem",
+              boxShadow:
+                "0 20px 60px 0 rgba(255, 68, 68, 0.2), " +
+                "inset 0 2px 4px rgba(255, 255, 255, 0.1)",
+              textAlign: "center",
+            }}
+          >
+            <div
+              style={{
+                fontSize: "3rem",
+                marginBottom: "1rem",
+                animation: "pulse 2s ease-in-out infinite",
+              }}
+            >
+              ⚠️
+            </div>
+            <h3
+              style={{
+                fontSize: "1.5rem",
+                fontWeight: 600,
+                color: "#fff",
+                marginBottom: "1rem",
+                fontFamily: "system-ui, -apple-system, sans-serif",
+              }}
+            >
+              Wallet Disconnected
+            </h3>
+            <p
+              style={{
+                color: "rgba(255, 255, 255, 0.9)",
+                fontSize: "1rem",
+                lineHeight: 1.6,
+                marginBottom: "1.5rem",
+                fontFamily: "system-ui, -apple-system, sans-serif",
+              }}
+            >
+              Your wallet has been disconnected. Please reconnect to continue your conversation.
+            </p>
+            <button
+              onClick={() => setVisible(true)}
+              style={{
+                padding: "0.875rem 2rem",
+                fontSize: "1rem",
+                fontWeight: 600,
+                color: "#fff",
+                background: "rgba(255, 68, 68, 0.2)",
+                backdropFilter: "blur(10px)",
+                border: "1px solid rgba(255, 68, 68, 0.4)",
+                borderRadius: "12px",
+                cursor: "pointer",
+                transition: "all 0.3s ease",
+                boxShadow:
+                  "0 4px 20px 0 rgba(255, 68, 68, 0.2), " +
+                  "inset 0 1px 2px rgba(255, 255, 255, 0.1)",
+                fontFamily: "system-ui, -apple-system, sans-serif",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = "rgba(255, 68, 68, 0.3)";
+                e.currentTarget.style.border = "1px solid rgba(255, 68, 68, 0.5)";
+                e.currentTarget.style.transform = "translateY(-1px)";
+                e.currentTarget.style.boxShadow =
+                  "0 6px 24px 0 rgba(255, 68, 68, 0.3), " +
+                  "inset 0 1px 2px rgba(255, 255, 255, 0.15)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = "rgba(255, 68, 68, 0.2)";
+                e.currentTarget.style.border = "1px solid rgba(255, 68, 68, 0.4)";
+                e.currentTarget.style.transform = "translateY(0)";
+                e.currentTarget.style.boxShadow =
+                  "0 4px 20px 0 rgba(255, 68, 68, 0.2), " +
+                  "inset 0 1px 2px rgba(255, 255, 255, 0.1)";
+              }}
+            >
+              Reconnect Wallet
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Modal for testers message */}
       {isModalOpen && (

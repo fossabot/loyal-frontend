@@ -36,6 +36,7 @@ export default function LandingPage() {
   const [isChatMode, setIsChatMode] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [copiedMessageId, setCopiedMessageId] = useState<string | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const menuIconRef = useRef<MenuIconHandle>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const copyIconRefs = useRef<Map<string, CopyIconHandle>>(new Map());
@@ -409,7 +410,8 @@ export default function LandingPage() {
           }}
         >
           {/* Demo warning */}
-          <div
+          <button
+            onClick={() => setIsModalOpen(true)}
             style={{
               position: "absolute",
               top: "2rem",
@@ -425,10 +427,29 @@ export default function LandingPage() {
               border: "1px solid rgba(255, 68, 68, 0.3)",
               borderRadius: "8px",
               backdropFilter: "blur(10px)",
+              cursor: "pointer",
+              transition: "all 0.3s ease",
+              outline: "none",
+              animation: "subtlePulse 2s ease-in-out infinite",
+              boxShadow: "0 2px 10px rgba(255, 68, 68, 0.2)",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.animation = "none";
+              e.currentTarget.style.background = "rgba(255, 68, 68, 0.15)";
+              e.currentTarget.style.border = "1px solid rgba(255, 68, 68, 0.4)";
+              e.currentTarget.style.transform = "translateX(-50%) scale(1.05)";
+              e.currentTarget.style.boxShadow = "0 4px 20px rgba(255, 68, 68, 0.3)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.animation = "subtlePulse 2s ease-in-out infinite";
+              e.currentTarget.style.background = "rgba(255, 68, 68, 0.1)";
+              e.currentTarget.style.border = "1px solid rgba(255, 68, 68, 0.3)";
+              e.currentTarget.style.transform = "translateX(-50%) scale(1)";
+              e.currentTarget.style.boxShadow = "0 2px 10px rgba(255, 68, 68, 0.2)";
             }}
           >
-            This is an early features demo, design and UI are WIP
-          </div>
+            Important message for testers
+          </button>
 
           <h1
             style={{
@@ -746,6 +767,155 @@ export default function LandingPage() {
         </div>
       </div>
 
+      {/* Modal for testers message */}
+      {isModalOpen && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            zIndex: 100,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "1rem",
+            animation: "fadeIn 0.3s ease-out",
+          }}
+          onClick={() => setIsModalOpen(false)}
+        >
+          {/* Backdrop */}
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              backgroundColor: "rgba(0, 0, 0, 0.8)",
+              backdropFilter: "blur(10px)",
+            }}
+          />
+
+          {/* Modal content */}
+          <div
+            style={{
+              position: "relative",
+              maxWidth: "600px",
+              width: "100%",
+              maxHeight: "90vh",
+              overflowY: "auto",
+              background: "rgba(255, 255, 255, 0.08)",
+              backdropFilter: "blur(30px)",
+              border: "1px solid rgba(255, 255, 255, 0.15)",
+              borderRadius: "24px",
+              padding: "2.5rem",
+              boxShadow:
+                "0 20px 60px 0 rgba(0, 0, 0, 0.5), " +
+                "inset 0 2px 4px rgba(255, 255, 255, 0.1), " +
+                "inset 0 -1px 2px rgba(0, 0, 0, 0.3)",
+              animation: "slideInUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)",
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal header */}
+            <h2
+              style={{
+                fontSize: "1.75rem",
+                fontWeight: 600,
+                color: "#fff",
+                marginBottom: "1.5rem",
+                lineHeight: 1.3,
+                fontFamily: "system-ui, -apple-system, sans-serif",
+              }}
+            >
+              Thank you for joining the first test batch!
+            </h2>
+
+            {/* Modal body */}
+            <div
+              style={{
+                color: "rgba(255, 255, 255, 0.9)",
+                fontSize: "1rem",
+                lineHeight: 1.7,
+                fontFamily: "system-ui, -apple-system, sans-serif",
+                display: "flex",
+                flexDirection: "column",
+                gap: "1rem",
+              }}
+            >
+              <p style={{ margin: 0 }}>
+                Please note: Loyal is a test product for evaluation purposes
+                only. Functionality may be incomplete, may change without
+                notice, and may contain errors.
+              </p>
+
+              <p style={{ margin: 0 }}>
+                <strong style={{ color: "#fff", fontWeight: 600 }}>
+                  What makes Loyal different from regular LLM chats:
+                </strong>{" "}
+                your queries run in fully private, confidential compute—even the
+                Loyal team cannot access them. Conversation state is written
+                on-chain and anchored to a per-user Solana PDA.
+              </p>
+
+              <p style={{ margin: 0 }}>
+                This app may look like a simple chat, but under the hood you're
+                talking to a fully on-chain AI. In the coming weeks, we'll ship
+                more AI apps built on this Loyal backbone.
+              </p>
+
+              <p style={{ margin: 0 }}>
+                For this test run, there's no per-query fee—only wallet
+                verification is required.
+              </p>
+
+              <p style={{ margin: 0 }}>
+                Please report any bugs to our discord testing channel.
+              </p>
+            </div>
+
+            {/* Close button */}
+            <button
+              onClick={() => setIsModalOpen(false)}
+              style={{
+                marginTop: "2rem",
+                width: "100%",
+                padding: "1rem 1.5rem",
+                fontSize: "1rem",
+                fontWeight: 600,
+                color: "#fff",
+                background: "rgba(255, 255, 255, 0.15)",
+                backdropFilter: "blur(10px)",
+                border: "1px solid rgba(255, 255, 255, 0.2)",
+                borderRadius: "12px",
+                cursor: "pointer",
+                transition: "all 0.3s ease",
+                boxShadow:
+                  "0 4px 20px 0 rgba(0, 0, 0, 0.3), " +
+                  "inset 0 1px 2px rgba(255, 255, 255, 0.1)",
+                fontFamily: "system-ui, -apple-system, sans-serif",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = "rgba(255, 255, 255, 0.2)";
+                e.currentTarget.style.border =
+                  "1px solid rgba(255, 255, 255, 0.3)";
+                e.currentTarget.style.transform = "translateY(-1px)";
+                e.currentTarget.style.boxShadow =
+                  "0 6px 24px 0 rgba(0, 0, 0, 0.4), " +
+                  "inset 0 1px 2px rgba(255, 255, 255, 0.15)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = "rgba(255, 255, 255, 0.15)";
+                e.currentTarget.style.border =
+                  "1px solid rgba(255, 255, 255, 0.2)";
+                e.currentTarget.style.transform = "translateY(0)";
+                e.currentTarget.style.boxShadow =
+                  "0 4px 20px 0 rgba(0, 0, 0, 0.3), " +
+                  "inset 0 1px 2px rgba(255, 255, 255, 0.1)";
+              }}
+            >
+              I understand
+            </button>
+          </div>
+        </div>
+      )}
+
       <style jsx>{`
         @keyframes fadeIn {
           from {
@@ -807,6 +977,17 @@ export default function LandingPage() {
           }
           50% {
             opacity: 0.5;
+          }
+        }
+
+        @keyframes subtlePulse {
+          0%, 100% {
+            transform: translateX(-50%) scale(1);
+            box-shadow: 0 2px 10px rgba(255, 68, 68, 0.2);
+          }
+          50% {
+            transform: translateX(-50%) scale(1.03);
+            box-shadow: 0 4px 15px rgba(255, 68, 68, 0.35);
           }
         }
 

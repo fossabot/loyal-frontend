@@ -42,12 +42,14 @@ export default function LandingPage() {
   const [copiedMessageId, setCopiedMessageId] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [hoveredChatId, setHoveredChatId] = useState<string | null>(null);
+  const [hoveredNavIndex, setHoveredNavIndex] = useState<number | null>(null);
   const menuIconRef = useRef<MenuIconHandle>(null);
   const plusIconRef = useRef<PlusIconHandle>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const copyIconRefs = useRef<Map<string, CopyIconHandle>>(new Map());
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
+  const navItemRefs = useRef<(HTMLButtonElement | null)[]>([]);
 
   // Wallet hooks
   const { connected } = useWallet();
@@ -272,13 +274,13 @@ export default function LandingPage() {
         overflow: "hidden",
       }}
     >
+      {/* Desktop margin wrapper - only pushes content on desktop */}
       <div
+        className={`transition-all duration-400 ${isSidebarOpen ? "md:ml-[300px]" : ""}`}
         style={{
           position: "relative",
           width: "100%",
           height: "100vh",
-          marginLeft: isSidebarOpen ? "300px" : "0",
-          transition: "margin-left 0.4s cubic-bezier(0.4, 0, 0.2, 1)",
         }}
       >
         <Image
@@ -309,7 +311,7 @@ export default function LandingPage() {
             position: "fixed",
             top: "1.5rem",
             left: "1.5rem",
-            zIndex: 50,
+            zIndex: 60,
             width: "3rem",
             height: "3rem",
             display: "flex",
@@ -408,6 +410,22 @@ export default function LandingPage() {
           </button>
         </div>
 
+        {/* Mobile backdrop overlay */}
+        {isSidebarOpen && (
+          <div
+            className="md:hidden"
+            onClick={() => setIsSidebarOpen(false)}
+            style={{
+              position: "fixed",
+              inset: 0,
+              background: "rgba(0, 0, 0, 0.7)",
+              backdropFilter: "blur(4px)",
+              zIndex: 39,
+              animation: "fadeIn 0.3s ease-out",
+            }}
+          />
+        )}
+
         {/* Sidebar */}
         <div
           style={{
@@ -421,7 +439,7 @@ export default function LandingPage() {
             borderRight: "1px solid rgba(255, 255, 255, 0.1)",
             transform: isSidebarOpen ? "translateX(0)" : "translateX(-100%)",
             transition: "transform 0.4s cubic-bezier(0.4, 0, 0.2, 1)",
-            zIndex: 40,
+            zIndex: 50,
             display: "flex",
             flexDirection: "column",
             boxShadow: isSidebarOpen ? "0 0 60px rgba(0, 0, 0, 0.5)" : "none",
@@ -473,6 +491,61 @@ export default function LandingPage() {
             >
               + New Chat
             </button>
+          </div>
+
+          {/* Navigation Menu - Mobile only */}
+          <div
+            className="md:hidden"
+            style={{
+              padding: "1rem 1.5rem",
+              borderBottom: "1px solid rgba(255, 255, 255, 0.1)",
+              display: "flex",
+              flexDirection: "column",
+              gap: "0.5rem",
+            }}
+          >
+            {[
+              { label: "For testers", onClick: () => setIsModalOpen(true) },
+              { label: "Blog", href: "#" },
+              { label: "Docs", href: "#" },
+              { label: "About", href: "#" },
+              { label: "Manifesto", href: "#" },
+              { label: "Roadmap", href: "#" },
+            ].map((item) => (
+              <button
+                key={item.label}
+                onClick={item.onClick}
+                style={{
+                  width: "100%",
+                  padding: "0.625rem 1rem",
+                  background: "rgba(255, 255, 255, 0.05)",
+                  backdropFilter: "blur(10px)",
+                  border: "1px solid rgba(255, 255, 255, 0.1)",
+                  borderRadius: "10px",
+                  color: "rgba(255, 255, 255, 0.85)",
+                  fontSize: "0.875rem",
+                  fontWeight: 500,
+                  cursor: "pointer",
+                  transition: "all 0.3s ease",
+                  textAlign: "left",
+                  fontFamily: "system-ui, -apple-system, sans-serif",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = "rgba(255, 255, 255, 0.12)";
+                  e.currentTarget.style.border =
+                    "1px solid rgba(255, 255, 255, 0.25)";
+                  e.currentTarget.style.color = "rgba(255, 255, 255, 1)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = "rgba(255, 255, 255, 0.05)";
+                  e.currentTarget.style.border =
+                    "1px solid rgba(255, 255, 255, 0.1)";
+                  e.currentTarget.style.color = "rgba(255, 255, 255, 0.85)";
+                }}
+              >
+                {item.label}
+              </button>
+            ))}
           </div>
 
           {/* Previous Chats List */}
@@ -617,46 +690,83 @@ export default function LandingPage() {
             transform: isChatMode ? "translateY(-100vh)" : "translateY(0)",
           }}
         >
-          {/* Demo warning */}
-          <button
-            onClick={() => setIsModalOpen(true)}
+          {/* Navigation Bar - Desktop only */}
+          <nav
+            className="hidden md:flex"
             style={{
               position: "absolute",
-              top: "2rem",
+              top: "1.4375rem", // 23px (2rem = 32px - 9px = 23px)
               left: "50%",
               transform: "translateX(-50%)",
-              color: "#ff4444",
-              fontSize: "0.875rem",
-              fontWeight: 500,
-              letterSpacing: "0.025em",
+              alignItems: "center",
+              gap: "0.25rem",
+              background: "rgba(255, 255, 255, 0.08)",
+              backdropFilter: "blur(20px)",
+              border: "1px solid rgba(255, 255, 255, 0.15)",
+              borderRadius: "20px",
+              padding: "0.5rem 0.75rem",
+              boxShadow:
+                "0 8px 32px 0 rgba(0, 0, 0, 0.37), inset 0 1px 1px rgba(255, 255, 255, 0.1)",
               fontFamily: "system-ui, -apple-system, sans-serif",
-              padding: "0.5rem 1rem",
-              background: "rgba(255, 68, 68, 0.1)",
-              border: "1px solid rgba(255, 68, 68, 0.3)",
-              borderRadius: "8px",
-              backdropFilter: "blur(10px)",
-              cursor: "pointer",
-              transition: "all 0.3s ease",
-              outline: "none",
-              boxShadow: "0 2px 10px rgba(255, 68, 68, 0.2)",
             }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = "rgba(255, 68, 68, 0.15)";
-              e.currentTarget.style.border = "1px solid rgba(255, 68, 68, 0.4)";
-              e.currentTarget.style.transform = "translateX(-50%) scale(1.05)";
-              e.currentTarget.style.boxShadow =
-                "0 4px 20px rgba(255, 68, 68, 0.3)";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = "rgba(255, 68, 68, 0.1)";
-              e.currentTarget.style.border = "1px solid rgba(255, 68, 68, 0.3)";
-              e.currentTarget.style.transform = "translateX(-50%) scale(1)";
-              e.currentTarget.style.boxShadow =
-                "0 2px 10px rgba(255, 68, 68, 0.2)";
-            }}
+            onMouseLeave={() => setHoveredNavIndex(null)}
           >
-            Important message for testers
-          </button>
+            {/* Sliding liquid glass indicator */}
+            {hoveredNavIndex !== null && navItemRefs.current[hoveredNavIndex] && (
+              <div
+                style={{
+                  position: "absolute",
+                  top: "50%",
+                  left: navItemRefs.current[hoveredNavIndex]?.offsetLeft || 0,
+                  width: navItemRefs.current[hoveredNavIndex]?.offsetWidth || 0,
+                  height: navItemRefs.current[hoveredNavIndex]?.offsetHeight || 0,
+                  transform: "translateY(-50%)",
+                  background: "rgba(255, 255, 255, 0.12)",
+                  border: "1px solid rgba(255, 255, 255, 0.25)",
+                  borderRadius: "14px",
+                  boxShadow: "0 4px 12px rgba(0, 0, 0, 0.2)",
+                  transition: "all 0.4s cubic-bezier(0.4, 0, 0.2, 1)",
+                  pointerEvents: "none",
+                  zIndex: 0,
+                }}
+              />
+            )}
+            {[
+              { label: "For testers", onClick: () => setIsModalOpen(true) },
+              { label: "Blog", href: "#" },
+              { label: "Docs", href: "#" },
+              { label: "About", href: "#" },
+              { label: "Manifesto", href: "#" },
+              { label: "Roadmap", href: "#" },
+            ].map((item, index) => (
+              <button
+                key={item.label}
+                ref={(el) => {
+                  navItemRefs.current[index] = el;
+                }}
+                onClick={item.onClick}
+                onMouseEnter={() => setHoveredNavIndex(index)}
+                style={{
+                  position: "relative",
+                  color: hoveredNavIndex === index ? "rgba(255, 255, 255, 1)" : "rgba(255, 255, 255, 0.85)",
+                  fontSize: "0.875rem", // Increased from 0.8125rem (13px) to 0.875rem (14px)
+                  fontWeight: 500,
+                  letterSpacing: "0.015em", // Slightly tighter to compensate for larger font
+                  padding: "0.375rem 0.75rem",
+                  background: "transparent",
+                  border: "1px solid transparent",
+                  borderRadius: "14px",
+                  cursor: "pointer",
+                  transition: "color 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+                  outline: "none",
+                  animation: `fadeIn 0.5s ease-out ${index * 0.1}s both`,
+                  zIndex: 1,
+                }}
+              >
+                {item.label}
+              </button>
+            ))}
+          </nav>
 
           <h1
             style={{

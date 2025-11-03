@@ -58,7 +58,7 @@ export default function LandingPage() {
   // Network status monitoring and recovery
   useEffect(() => {
     const handleOnline = () => {
-      console.log('Network connection restored');
+      console.log("Network connection restored");
       setIsOnline(true);
 
       // Re-enable and refocus the input after network recovery
@@ -66,25 +66,25 @@ export default function LandingPage() {
         if (inputRef.current) {
           inputRef.current.disabled = false;
           inputRef.current.focus();
-          console.log('Input re-enabled after network recovery');
+          console.log("Input re-enabled after network recovery");
         }
       }, 100);
     };
 
     const handleOffline = () => {
-      console.log('Network connection lost');
+      console.log("Network connection lost");
       setIsOnline(false);
     };
 
     // Set initial state
     setIsOnline(navigator.onLine);
 
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
 
     return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
     };
   }, []);
 
@@ -389,11 +389,13 @@ export default function LandingPage() {
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.background = "rgba(255, 255, 255, 0.12)";
-              e.currentTarget.style.border = "1px solid rgba(255, 255, 255, 0.25)";
+              e.currentTarget.style.border =
+                "1px solid rgba(255, 255, 255, 0.25)";
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.background = "rgba(255, 255, 255, 0.08)";
-              e.currentTarget.style.border = "1px solid rgba(255, 255, 255, 0.15)";
+              e.currentTarget.style.border =
+                "1px solid rgba(255, 255, 255, 0.15)";
             }}
             title="New chat"
           >
@@ -524,7 +526,8 @@ export default function LandingPage() {
                       backdropFilter: "blur(20px)",
                       border: "1px solid rgba(255, 255, 255, 0.2)",
                       borderRadius: "10px",
-                      boxShadow: "0 8px 24px 0 rgba(0, 0, 0, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.15)",
+                      boxShadow:
+                        "0 8px 24px 0 rgba(0, 0, 0, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.15)",
                       fontSize: "0.75rem",
                       fontWeight: 500,
                       color: "rgba(255, 255, 255, 0.9)",
@@ -536,11 +539,21 @@ export default function LandingPage() {
                       letterSpacing: "0.025em",
                     }}
                   >
-                    <div style={{ display: "flex", alignItems: "center", gap: "0.3rem" }}>
-                      <span style={{
-                        fontSize: "0.85rem",
-                        opacity: 0.8,
-                      }}>⚠️</span>
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "0.3rem",
+                      }}
+                    >
+                      <span
+                        style={{
+                          fontSize: "0.85rem",
+                          opacity: 0.8,
+                        }}
+                      >
+                        ⚠️
+                      </span>
                       Preview. Storage is WIP
                     </div>
                     {/* Tooltip arrow pointing up */}
@@ -631,13 +644,15 @@ export default function LandingPage() {
               e.currentTarget.style.background = "rgba(255, 68, 68, 0.15)";
               e.currentTarget.style.border = "1px solid rgba(255, 68, 68, 0.4)";
               e.currentTarget.style.transform = "translateX(-50%) scale(1.05)";
-              e.currentTarget.style.boxShadow = "0 4px 20px rgba(255, 68, 68, 0.3)";
+              e.currentTarget.style.boxShadow =
+                "0 4px 20px rgba(255, 68, 68, 0.3)";
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.background = "rgba(255, 68, 68, 0.1)";
               e.currentTarget.style.border = "1px solid rgba(255, 68, 68, 0.3)";
               e.currentTarget.style.transform = "translateX(-50%) scale(1)";
-              e.currentTarget.style.boxShadow = "0 2px 10px rgba(255, 68, 68, 0.2)";
+              e.currentTarget.style.boxShadow =
+                "0 2px 10px rgba(255, 68, 68, 0.2)";
             }}
           >
             Important message for testers
@@ -663,62 +678,66 @@ export default function LandingPage() {
             }}
           >
             Loyal is built for those who want to ask questions with no
-            reprucussions.
+            repercussions.
           </p>
         </div>
 
         {/* Chat Header - Shows first message as title - FIXED TO TOP OF VIEWPORT */}
         {isChatMode && messages.length > 0 && (
-            <div
+          <div
+            style={{
+              position: "fixed",
+              top: "1.5rem", // Same level as control buttons
+              left: isSidebarOpen ? "320px" : "1.5rem", // Full width from left edge
+              right: "1.5rem", // Full width to right edge
+              height: "3rem", // Same height as control buttons
+              display: "flex",
+              alignItems: "center",
+              background: "rgba(255, 255, 255, 0.08)",
+              backdropFilter: "blur(20px)",
+              border: "1px solid rgba(255, 255, 255, 0.15)",
+              borderRadius: "24px",
+              boxShadow:
+                "0 8px 32px 0 rgba(0, 0, 0, 0.37), inset 0 1px 1px rgba(255, 255, 255, 0.1)",
+              zIndex: 5, // Very LOW z-index so all buttons appear on top
+              animation: "fadeIn 0.5s ease-out",
+              animationFillMode: "both",
+              animationDelay: "0.2s",
+              padding: "0 1.5rem",
+              transition: "left 0.4s cubic-bezier(0.4, 0, 0.2, 1)",
+            }}
+          >
+            {/* Chat title - no chevron button */}
+            <h2
               style={{
-                position: "fixed",
-                top: "1.5rem",  // Same level as control buttons
-                left: isSidebarOpen ? "320px" : "1.5rem",  // Full width from left edge
-                right: "1.5rem",  // Full width to right edge
-                height: "3rem",  // Same height as control buttons
-                display: "flex",
-                alignItems: "center",
-                background: "rgba(255, 255, 255, 0.08)",
-                backdropFilter: "blur(20px)",
-                border: "1px solid rgba(255, 255, 255, 0.15)",
-                borderRadius: "24px",
-                boxShadow: "0 8px 32px 0 rgba(0, 0, 0, 0.37), inset 0 1px 1px rgba(255, 255, 255, 0.1)",
-                zIndex: 5,  // Very LOW z-index so all buttons appear on top
-                animation: "fadeIn 0.5s ease-out",
-                animationFillMode: "both",
-                animationDelay: "0.2s",
-                padding: "0 1.5rem",
-                transition: "left 0.4s cubic-bezier(0.4, 0, 0.2, 1)",
+                fontSize: "0.95rem",
+                fontWeight: 400,
+                color: "rgba(255, 255, 255, 0.85)",
+                fontFamily: "system-ui, -apple-system, sans-serif",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+                width: "100%",
+                letterSpacing: "0.01em",
+                margin: 0,
+                textAlign: "center",
               }}
             >
-              {/* Chat title - no chevron button */}
-              <h2
-                style={{
-                  fontSize: "0.95rem",
-                  fontWeight: 400,
-                  color: "rgba(255, 255, 255, 0.85)",
-                  fontFamily: "system-ui, -apple-system, sans-serif",
-                  overflow: "hidden",
-                  textOverflow: "ellipsis",
-                  whiteSpace: "nowrap",
-                  width: "100%",
-                  letterSpacing: "0.01em",
-                  margin: 0,
-                  textAlign: "center",
-                }}
-              >
-                {messages[0]?.role === "user"
-                  ? messages[0].parts
-                      .filter((part) => part.type === "text")
-                      .map((part) => part.text)
-                      .join("")
-                      .slice(0, 80) + (messages[0].parts
-                        .filter((part) => part.type === "text")
-                        .map((part) => part.text)
-                        .join("").length > 80 ? "..." : "")
-                  : "Chat"}
-              </h2>
-            </div>
+              {messages[0]?.role === "user"
+                ? messages[0].parts
+                    .filter((part) => part.type === "text")
+                    .map((part) => part.text)
+                    .join("")
+                    .slice(0, 80) +
+                  (messages[0].parts
+                    .filter((part) => part.type === "text")
+                    .map((part) => part.text)
+                    .join("").length > 80
+                    ? "..."
+                    : "")
+                : "Chat"}
+            </h2>
+          </div>
         )}
 
         {/* Input container */}
@@ -755,7 +774,8 @@ export default function LandingPage() {
                 display: "flex",
                 flexDirection: "column",
                 gap: "1rem",
-                padding: messages.length > 0 ? "5rem 1rem 2rem 0" : "2rem 1rem 2rem 0",
+                padding:
+                  messages.length > 0 ? "5rem 1rem 2rem 0" : "2rem 1rem 2rem 0",
                 animation: "fadeIn 0.5s ease-in",
                 position: "relative",
                 maskImage:
@@ -783,7 +803,7 @@ export default function LandingPage() {
                   Date.now() - (messages.length - messageIndex - 1) * 60000
                 ).toLocaleTimeString([], {
                   hour: "2-digit",
-                  minute: "2-digit"
+                  minute: "2-digit",
                 });
 
                 return (
@@ -853,7 +873,9 @@ export default function LandingPage() {
 
                       {/* Copy button */}
                       <button
-                        onClick={() => handleCopyMessage(message.id, messageText)}
+                        onClick={() =>
+                          handleCopyMessage(message.id, messageText)
+                        }
                         style={{
                           padding: "0.25rem",
                           background:
@@ -960,11 +982,13 @@ export default function LandingPage() {
               }}
               onFocus={(e) => {
                 e.currentTarget.style.background = "rgba(255, 255, 255, 0.12)";
-                e.currentTarget.style.border = "1px solid rgba(255, 255, 255, 0.25)";
+                e.currentTarget.style.border =
+                  "1px solid rgba(255, 255, 255, 0.25)";
               }}
               onBlur={(e) => {
                 e.currentTarget.style.background = "rgba(255, 255, 255, 0.08)";
-                e.currentTarget.style.border = "1px solid rgba(255, 255, 255, 0.15)";
+                e.currentTarget.style.border =
+                  "1px solid rgba(255, 255, 255, 0.15)";
               }}
             >
               <textarea
@@ -978,13 +1002,15 @@ export default function LandingPage() {
                     inputRef.current.style.height = `${inputRef.current.scrollHeight}px`;
                   }
                 }}
-                disabled={!isOnline || status !== "ready" || (isChatMode && !connected)}
+                disabled={
+                  !isOnline || status !== "ready" || (isChatMode && !connected)
+                }
                 placeholder={
                   !isOnline
                     ? "No internet connection..."
-                    : (isChatMode && !connected)
-                      ? "Please reconnect wallet to continue..."
-                      : "Ask me anything..."
+                    : isChatMode && !connected
+                    ? "Please reconnect wallet to continue..."
+                    : "Ask me anything..."
                 }
                 autoFocus
                 tabIndex={0}
@@ -1015,7 +1041,12 @@ export default function LandingPage() {
               />
               <button
                 type="submit"
-                disabled={!isOnline || status !== "ready" || !input.trim() || (isChatMode && !connected)}
+                disabled={
+                  !isOnline ||
+                  status !== "ready" ||
+                  !input.trim() ||
+                  (isChatMode && !connected)
+                }
                 style={{
                   position: "absolute",
                   right: "0.75rem",
@@ -1030,18 +1061,34 @@ export default function LandingPage() {
                   border: "none",
                   borderRadius: "12px",
                   cursor:
-                    !isOnline || status !== "ready" || !input.trim() || (isChatMode && !connected)
+                    !isOnline ||
+                    status !== "ready" ||
+                    !input.trim() ||
+                    (isChatMode && !connected)
                       ? "not-allowed"
                       : "pointer",
                   outline: "none",
                   transition: "all 0.3s ease",
-                  opacity: !isOnline || status !== "ready" || !input.trim() || (isChatMode && !connected) ? 0.3 : 0.7,
+                  opacity:
+                    !isOnline ||
+                    status !== "ready" ||
+                    !input.trim() ||
+                    (isChatMode && !connected)
+                      ? 0.3
+                      : 0.7,
                 }}
                 onMouseEnter={(e) => {
-                  if (isOnline && status === "ready" && input.trim() && (!isChatMode || connected)) {
+                  if (
+                    isOnline &&
+                    status === "ready" &&
+                    input.trim() &&
+                    (!isChatMode || connected)
+                  ) {
                     e.currentTarget.style.opacity = "1";
-                    e.currentTarget.style.background = "rgba(255, 255, 255, 0.1)";
-                    e.currentTarget.style.transform = "translateY(-50%) scale(1.1)";
+                    e.currentTarget.style.background =
+                      "rgba(255, 255, 255, 0.1)";
+                    e.currentTarget.style.transform =
+                      "translateY(-50%) scale(1.1)";
                   }
                 }}
                 onMouseLeave={(e) => {
@@ -1126,7 +1173,8 @@ export default function LandingPage() {
                 fontFamily: "system-ui, -apple-system, sans-serif",
               }}
             >
-              Your internet connection has been lost. The input will be automatically restored when you&apos;re back online.
+              Your internet connection has been lost. The input will be
+              automatically restored when you&apos;re back online.
             </p>
             <div
               style={{
@@ -1214,7 +1262,8 @@ export default function LandingPage() {
                 fontFamily: "system-ui, -apple-system, sans-serif",
               }}
             >
-              Your wallet has been disconnected. Please reconnect to continue your conversation.
+              Your wallet has been disconnected. Please reconnect to continue
+              your conversation.
             </p>
             <button
               onClick={() => setVisible(true)}
@@ -1236,7 +1285,8 @@ export default function LandingPage() {
               }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.background = "rgba(255, 68, 68, 0.3)";
-                e.currentTarget.style.border = "1px solid rgba(255, 68, 68, 0.5)";
+                e.currentTarget.style.border =
+                  "1px solid rgba(255, 68, 68, 0.5)";
                 e.currentTarget.style.transform = "translateY(-1px)";
                 e.currentTarget.style.boxShadow =
                   "0 6px 24px 0 rgba(255, 68, 68, 0.3), " +
@@ -1244,7 +1294,8 @@ export default function LandingPage() {
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.background = "rgba(255, 68, 68, 0.2)";
-                e.currentTarget.style.border = "1px solid rgba(255, 68, 68, 0.4)";
+                e.currentTarget.style.border =
+                  "1px solid rgba(255, 68, 68, 0.4)";
                 e.currentTarget.style.transform = "translateY(0)";
                 e.currentTarget.style.boxShadow =
                   "0 4px 20px 0 rgba(255, 68, 68, 0.2), " +
@@ -1345,9 +1396,9 @@ export default function LandingPage() {
               </p>
 
               <p style={{ margin: 0 }}>
-                This app may look like a simple chat, but under the hood you&apos;re
-                talking to a fully on-chain AI. In the coming weeks, we&apos;ll ship
-                more AI apps built on this Loyal backbone.
+                This app may look like a simple chat, but under the hood
+                you&apos;re talking to a fully on-chain AI. In the coming weeks,
+                we&apos;ll ship more AI apps built on this Loyal backbone.
               </p>
 
               <p style={{ margin: 0 }}>
@@ -1440,7 +1491,6 @@ export default function LandingPage() {
           }
         }
 
-
         @keyframes slideInUp {
           from {
             opacity: 0;
@@ -1472,7 +1522,8 @@ export default function LandingPage() {
         }
 
         @keyframes subtlePulse {
-          0%, 100% {
+          0%,
+          100% {
             transform: translateX(-50%) scale(1);
             box-shadow: 0 2px 10px rgba(255, 68, 68, 0.2);
           }

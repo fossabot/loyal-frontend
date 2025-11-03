@@ -53,6 +53,40 @@ export default function LandingPage() {
   const { connected } = useWallet();
   const { setVisible } = useWalletModal();
   const [pendingMessage, setPendingMessage] = useState<string | null>(null);
+  const [isOnline, setIsOnline] = useState(true);
+
+  // Network status monitoring and recovery
+  useEffect(() => {
+    const handleOnline = () => {
+      console.log('Network connection restored');
+      setIsOnline(true);
+
+      // Re-enable and refocus the input after network recovery
+      setTimeout(() => {
+        if (inputRef.current) {
+          inputRef.current.disabled = false;
+          inputRef.current.focus();
+          console.log('Input re-enabled after network recovery');
+        }
+      }, 100);
+    };
+
+    const handleOffline = () => {
+      console.log('Network connection lost');
+      setIsOnline(false);
+    };
+
+    // Set initial state
+    setIsOnline(navigator.onLine);
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
 
   // Control menu icon animation based on sidebar state
   useEffect(() => {
@@ -944,8 +978,14 @@ export default function LandingPage() {
                     inputRef.current.style.height = `${inputRef.current.scrollHeight}px`;
                   }
                 }}
-                disabled={status !== "ready" || (isChatMode && !connected)}
-                placeholder={isChatMode && !connected ? "Please reconnect wallet to continue..." : "Ask me anything..."}
+                disabled={!isOnline || status !== "ready" || (isChatMode && !connected)}
+                placeholder={
+                  !isOnline
+                    ? "No internet connection..."
+                    : (isChatMode && !connected)
+                      ? "Please reconnect wallet to continue..."
+                      : "Ask me anything..."
+                }
                 autoFocus
                 tabIndex={0}
                 rows={1}
@@ -975,7 +1015,7 @@ export default function LandingPage() {
               />
               <button
                 type="submit"
-                disabled={status !== "ready" || !input.trim() || (isChatMode && !connected)}
+                disabled={!isOnline || status !== "ready" || !input.trim() || (isChatMode && !connected)}
                 style={{
                   position: "absolute",
                   right: "0.75rem",
@@ -990,15 +1030,15 @@ export default function LandingPage() {
                   border: "none",
                   borderRadius: "12px",
                   cursor:
-                    status !== "ready" || !input.trim() || (isChatMode && !connected)
+                    !isOnline || status !== "ready" || !input.trim() || (isChatMode && !connected)
                       ? "not-allowed"
                       : "pointer",
                   outline: "none",
                   transition: "all 0.3s ease",
-                  opacity: status !== "ready" || !input.trim() || (isChatMode && !connected) ? 0.3 : 0.7,
+                  opacity: !isOnline || status !== "ready" || !input.trim() || (isChatMode && !connected) ? 0.3 : 0.7,
                 }}
                 onMouseEnter={(e) => {
-                  if (status === "ready" && input.trim() && (!isChatMode || connected)) {
+                  if (isOnline && status === "ready" && input.trim() && (!isChatMode || connected)) {
                     e.currentTarget.style.opacity = "1";
                     e.currentTarget.style.background = "rgba(255, 255, 255, 0.1)";
                     e.currentTarget.style.transform = "translateY(-50%) scale(1.1)";
@@ -1024,6 +1064,95 @@ export default function LandingPage() {
           </form>
         </div>
       </div>
+
+      {/* Network offline overlay */}
+      {!isOnline && (
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: "rgba(0, 0, 0, 0.8)",
+            backdropFilter: "blur(10px)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 9999,
+            animation: "fadeIn 0.3s ease-out",
+          }}
+        >
+          <div
+            style={{
+              maxWidth: "400px",
+              background: "rgba(255, 140, 0, 0.1)",
+              backdropFilter: "blur(20px)",
+              border: "1px solid rgba(255, 140, 0, 0.3)",
+              borderRadius: "20px",
+              padding: "2rem",
+              boxShadow:
+                "0 20px 60px 0 rgba(255, 140, 0, 0.2), " +
+                "inset 0 2px 4px rgba(255, 255, 255, 0.1)",
+              textAlign: "center",
+            }}
+          >
+            <div
+              style={{
+                fontSize: "3rem",
+                marginBottom: "1rem",
+                animation: "pulse 2s ease-in-out infinite",
+              }}
+            >
+              📡
+            </div>
+            <h3
+              style={{
+                fontSize: "1.5rem",
+                fontWeight: 600,
+                color: "#fff",
+                marginBottom: "1rem",
+                fontFamily: "system-ui, -apple-system, sans-serif",
+              }}
+            >
+              No Internet Connection
+            </h3>
+            <p
+              style={{
+                color: "rgba(255, 255, 255, 0.9)",
+                fontSize: "1rem",
+                lineHeight: 1.6,
+                marginBottom: "1.5rem",
+                fontFamily: "system-ui, -apple-system, sans-serif",
+              }}
+            >
+              Your internet connection has been lost. The input will be automatically restored when you&apos;re back online.
+            </p>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "0.5rem",
+                color: "rgba(255, 255, 255, 0.7)",
+                fontSize: "0.875rem",
+                fontFamily: "system-ui, -apple-system, sans-serif",
+              }}
+            >
+              <div
+                style={{
+                  width: "8px",
+                  height: "8px",
+                  background: "rgba(255, 140, 0, 0.8)",
+                  borderRadius: "50%",
+                  animation: "pulse 1.5s ease-in-out infinite",
+                }}
+              />
+              Waiting for connection...
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Wallet disconnection warning overlay */}
       {isChatMode && !connected && (

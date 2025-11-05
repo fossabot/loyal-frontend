@@ -1046,7 +1046,6 @@ export default function LandingPage() {
                 fontWeight: 400,
                 lineHeight: 1.1,
                 maxWidth: "100%",
-                whiteSpace: "nowrap",
               }}
             >
               <em>Private</em> intelligence for <em>private</em> people

@@ -8,6 +8,7 @@ import {
 } from "@tabler/icons-react";
 import { motion } from "motion/react";
 import localFont from "next/font/local";
+import { useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import { BentoGrid, BentoGridItem } from "./ui/bento-grid";
 
@@ -28,6 +29,28 @@ const instrumentSerif = localFont({
 });
 
 export function BentoGridSection() {
+  const [activeTab, setActiveTab] = useState(0);
+  const [hoveredTab, setHoveredTab] = useState<number | null>(null);
+  const tabRefs = useRef<(HTMLButtonElement | null)[]>([]);
+
+  const tabs = [
+    { label: "Features", content: items },
+    { label: "Technology", content: items }, // Replace with different content later
+    { label: "Security", content: items }, // Replace with different content later
+  ];
+
+  const getIndicatorStyle = () => {
+    const index = hoveredTab !== null ? hoveredTab : activeTab;
+    const tab = tabRefs.current[index];
+    if (!tab) return { left: 0, width: 0, opacity: 0 };
+
+    return {
+      left: tab.offsetLeft,
+      width: tab.offsetWidth,
+      opacity: 1,
+    };
+  };
+
   return (
     <section
       id="about-section"
@@ -66,8 +89,99 @@ export function BentoGridSection() {
           Discover the power of private AI conversations with cutting-edge
           technology
         </p>
+
+        {/* Tabs Navigation */}
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            marginBottom: "2.5rem",
+          }}
+        >
+          <div
+            onMouseLeave={() => setHoveredTab(null)}
+            style={{
+              position: "relative",
+              display: "inline-flex",
+              gap: "0.25rem",
+              background: "rgba(255, 255, 255, 0.08)",
+              backdropFilter: "blur(20px)",
+              border: "1px solid rgba(255, 255, 255, 0.15)",
+              borderRadius: "16px",
+              padding: "0.375rem 0.5rem",
+              boxShadow:
+                "0 8px 32px 0 rgba(0, 0, 0, 0.37), inset 0 1px 1px rgba(255, 255, 255, 0.1)",
+            }}
+          >
+            {/* Sliding indicator - shows only on hover */}
+            {hoveredTab !== null && hoveredTab !== activeTab && (
+              <div
+                style={{
+                  position: "absolute",
+                  top: "0.375rem",
+                  bottom: "0.375rem",
+                  left: getIndicatorStyle().left,
+                  width: getIndicatorStyle().width,
+                  background: "rgba(255, 255, 255, 0.08)",
+                  borderRadius: "12px",
+                  transition: "all 0.4s cubic-bezier(0.4, 0, 0.2, 1)",
+                  pointerEvents: "none",
+                  zIndex: 0,
+                }}
+              />
+            )}
+
+            {/* Active tab indicator */}
+            <div
+              style={{
+                position: "absolute",
+                top: "0.375rem",
+                bottom: "0.375rem",
+                left: tabRefs.current[activeTab]?.offsetLeft ?? 0,
+                width: tabRefs.current[activeTab]?.offsetWidth ?? 0,
+                background: "rgba(255, 255, 255, 0.15)",
+                borderRadius: "12px",
+                transition: "all 0.4s cubic-bezier(0.4, 0, 0.2, 1)",
+                pointerEvents: "none",
+                zIndex: 0,
+                boxShadow: "inset 0 1px 2px rgba(255, 255, 255, 0.2)",
+              }}
+            />
+
+            {tabs.map((tab, index) => (
+              <button
+                key={tab.label}
+                onClick={() => setActiveTab(index)}
+                onMouseEnter={() => setHoveredTab(index)}
+                ref={(el) => {
+                  tabRefs.current[index] = el;
+                }}
+                style={{
+                  position: "relative",
+                  padding: "0.375rem 1rem",
+                  fontSize: "0.8125rem",
+                  fontWeight: activeTab === index ? 600 : 500,
+                  color:
+                    activeTab === index
+                      ? "rgba(255, 255, 255, 1)"
+                      : "rgba(255, 255, 255, 0.55)",
+                  background: "transparent",
+                  border: "none",
+                  borderRadius: "12px",
+                  cursor: "pointer",
+                  transition: "all 0.3s ease",
+                  zIndex: 1,
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
         <BentoGrid className="mx-auto max-w-4xl md:auto-rows-[20rem]">
-          {items.map((item, i) => (
+          {tabs[activeTab].content.map((item, i) => (
             <BentoGridItem
               className={cn("[&>p:text-lg]", item.className)}
               description={item.description}

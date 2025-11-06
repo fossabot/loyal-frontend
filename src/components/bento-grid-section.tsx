@@ -8,7 +8,7 @@ import {
 } from "@tabler/icons-react";
 import { motion } from "motion/react";
 import localFont from "next/font/local";
-import { useRef, useState } from "react";
+import { memo, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import { BentoGrid, BentoGridItem } from "./ui/bento-grid";
 
@@ -28,7 +28,7 @@ const instrumentSerif = localFont({
   display: "swap",
 });
 
-export function BentoGridSection() {
+function BentoGridSectionComponent() {
   const [activeTab, setActiveTab] = useState(0);
   const [hoveredTab, setHoveredTab] = useState<number | null>(null);
   const tabRefs = useRef<(HTMLButtonElement | null)[]>([]);
@@ -196,6 +196,8 @@ export function BentoGridSection() {
     </section>
   );
 }
+
+export const BentoGridSection = memo(BentoGridSectionComponent);
 
 const SkeletonOne = () => {
   const variants = {

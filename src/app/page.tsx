@@ -10,6 +10,7 @@ import localFont from "next/font/local";
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { BentoGridSection } from "@/components/bento-grid-section";
+import { RoadmapSection } from "@/components/roadmap-section";
 import { MarkdownRenderer } from "@/components/markdown-renderer";
 import { ChevronRightIcon } from "@/components/ui/chevron-right";
 import { CopyIcon, type CopyIconHandle } from "@/components/ui/copy";
@@ -77,6 +78,9 @@ export default function LandingPage() {
   const [isOnline, setIsOnline] = useState(true);
   const [showScrollButton, setShowScrollButton] = useState(false);
   const [isScrolledToAbout, setIsScrolledToAbout] = useState(false);
+  const [isScrolledToRoadmap, setIsScrolledToRoadmap] = useState(false);
+  const prevScrolledToAbout = useRef(false);
+  const prevScrolledToRoadmap = useRef(false);
 
   // Network status monitoring and recovery
   useEffect(() => {
@@ -262,10 +266,18 @@ export default function LandingPage() {
 
     const handlePageScroll = () => {
       const aboutSection = document.getElementById("about-section");
+      const roadmapSection = document.getElementById("roadmap-section");
+
       if (aboutSection) {
         const rect = aboutSection.getBoundingClientRect();
         const isInView = rect.top <= 100 && rect.bottom >= 100;
         setIsScrolledToAbout(isInView);
+      }
+
+      if (roadmapSection) {
+        const rect = roadmapSection.getBoundingClientRect();
+        const isInView = rect.top <= 100 && rect.bottom >= 100;
+        setIsScrolledToRoadmap(isInView);
       }
     };
 
@@ -277,20 +289,29 @@ export default function LandingPage() {
     };
   }, [isChatMode]);
 
-  // Reset hover state when About button changes to/from icon mode
+  // Reset hover state when About or Roadmap button changes to/from icon mode
   // This forces the hover indicator to recalculate its position after DOM updates
   useEffect(() => {
-    if (hoveredNavIndex === 0) {
-      // Index 0 is now the About button (after removing "For testers")
+    // Only recalculate if the state actually changed (not just on every render)
+    const aboutChanged = prevScrolledToAbout.current !== isScrolledToAbout;
+    const roadmapChanged = prevScrolledToRoadmap.current !== isScrolledToRoadmap;
+
+    if ((aboutChanged || roadmapChanged) && (hoveredNavIndex === 0 || hoveredNavIndex === 1)) {
+      // Index 0 is About, Index 1 is Roadmap
+      const currentIndex = hoveredNavIndex;
       setHoveredNavIndex(null);
       // Use double requestAnimationFrame to ensure layout has been recalculated
       requestAnimationFrame(() => {
         requestAnimationFrame(() => {
-          setHoveredNavIndex(0);
+          setHoveredNavIndex(currentIndex);
         });
       });
     }
-  }, [isScrolledToAbout]);
+
+    prevScrolledToAbout.current = isScrolledToAbout;
+    prevScrolledToRoadmap.current = isScrolledToRoadmap;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isScrolledToAbout, isScrolledToRoadmap]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -367,6 +388,20 @@ export default function LandingPage() {
       top: 0,
       behavior: "smooth",
     });
+  };
+
+  const handleScrollToRoadmap = () => {
+    const roadmapSection = document.getElementById("roadmap-section");
+    if (roadmapSection) {
+      const navHeight = 80;
+      const elementPosition = roadmapSection.getBoundingClientRect().top;
+      const offsetPosition = elementPosition + window.scrollY - navHeight;
+
+      window.scrollTo({
+        top: offsetPosition,
+        behavior: "smooth",
+      });
+    }
   };
 
   // Mock data for previous chats - replace with real data later
@@ -500,7 +535,13 @@ export default function LandingPage() {
                   : handleScrollToAbout,
                 isAbout: true,
               },
-              { label: "Roadmap", href: "#" },
+              {
+                label: "Roadmap",
+                onClick: isScrolledToRoadmap
+                  ? handleBackToTop
+                  : handleScrollToRoadmap,
+                isRoadmap: true,
+              },
               { label: "Blog", href: "#" },
               { label: "Docs", href: "#" },
             ].map((item, index) => (
@@ -535,7 +576,8 @@ export default function LandingPage() {
                   justifyContent: "center",
                   gap: "0.375rem",
                   filter:
-                    item.isAbout && isScrolledToAbout
+                    (item.isAbout && isScrolledToAbout) ||
+                    (item.isRoadmap && isScrolledToRoadmap)
                       ? "drop-shadow(0 0 8px rgba(255, 255, 255, 0.6))"
                       : "none",
                   overflow: "hidden",
@@ -546,35 +588,52 @@ export default function LandingPage() {
                     display: "inline-flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    opacity: item.isAbout && isScrolledToAbout ? 1 : 0,
+                    opacity:
+                      (item.isAbout && isScrolledToAbout) ||
+                      (item.isRoadmap && isScrolledToRoadmap)
+                        ? 1
+                        : 0,
                     transform:
-                      item.isAbout && isScrolledToAbout
+                      (item.isAbout && isScrolledToAbout) ||
+                      (item.isRoadmap && isScrolledToRoadmap)
                         ? "scale(1) translateY(0)"
                         : "scale(0.8) translateY(4px)",
                     transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
                     position:
-                      item.isAbout && isScrolledToAbout
+                      (item.isAbout && isScrolledToAbout) ||
+                      (item.isRoadmap && isScrolledToRoadmap)
                         ? "relative"
                         : "absolute",
                     pointerEvents:
-                      item.isAbout && isScrolledToAbout ? "auto" : "none",
+                      (item.isAbout && isScrolledToAbout) ||
+                      (item.isRoadmap && isScrolledToRoadmap)
+                        ? "auto"
+                        : "none",
                   }}
                 >
-                  {item.isAbout && <ArrowUpToLine size={18} />}
+                  {(item.isAbout || item.isRoadmap) && (
+                    <ArrowUpToLine size={18} />
+                  )}
                 </span>
                 <span
                   style={{
                     display: "inline-flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    opacity: item.isAbout && isScrolledToAbout ? 0 : 1,
+                    opacity:
+                      (item.isAbout && isScrolledToAbout) ||
+                      (item.isRoadmap && isScrolledToRoadmap)
+                        ? 0
+                        : 1,
                     transform:
-                      item.isAbout && isScrolledToAbout
+                      (item.isAbout && isScrolledToAbout) ||
+                      (item.isRoadmap && isScrolledToRoadmap)
                         ? "scale(0.8) translateY(-4px)"
                         : "scale(1) translateY(0)",
                     transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
                     position:
-                      item.isAbout && isScrolledToAbout
+                      (item.isAbout && isScrolledToAbout) ||
+                      (item.isRoadmap && isScrolledToRoadmap)
                         ? "absolute"
                         : "relative",
                     pointerEvents:
@@ -1679,6 +1738,9 @@ export default function LandingPage() {
 
         {/* BentoGrid Section - Only show when not in chat mode */}
         {!isChatMode && <BentoGridSection />}
+
+        {/* Roadmap Section - Only show when not in chat mode */}
+        {!isChatMode && <RoadmapSection />}
       </div>
 
       {/* Network offline overlay */}

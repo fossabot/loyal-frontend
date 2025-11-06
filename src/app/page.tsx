@@ -1042,42 +1042,119 @@ export default function LandingPage() {
               className={ibmPlexSans.className}
               onClick={() => setIsModalOpen(true)}
               onMouseEnter={(e) => {
-                e.currentTarget.style.background = "rgba(239, 68, 68, 0.25)";
-                e.currentTarget.style.border = "1px solid rgba(239, 68, 68, 0.6)";
-                e.currentTarget.style.transform = "translateY(-2px)";
-                e.currentTarget.style.boxShadow =
-                  "0 8px 24px 0 rgba(239, 68, 68, 0.4), inset 0 1px 2px rgba(255, 255, 255, 0.15)";
+                const radialGlow = e.currentTarget.querySelector(
+                  ".radial-glow"
+                ) as HTMLElement;
+                const bottomGlow = e.currentTarget.querySelector(
+                  ".bottom-glow"
+                ) as HTMLElement;
+                const innerDiv = e.currentTarget.querySelector(
+                  ".inner-button"
+                ) as HTMLElement;
+                if (radialGlow) radialGlow.style.opacity = "1";
+                if (bottomGlow) bottomGlow.style.opacity = "0.4";
+                if (innerDiv) innerDiv.style.background = "rgba(255, 255, 255, 0.08)";
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.background = "rgba(239, 68, 68, 0.15)";
-                e.currentTarget.style.border = "1px solid rgba(239, 68, 68, 0.4)";
-                e.currentTarget.style.transform = "translateY(0)";
-                e.currentTarget.style.boxShadow =
-                  "0 4px 16px 0 rgba(239, 68, 68, 0.3), inset 0 1px 1px rgba(255, 255, 255, 0.1)";
+                const radialGlow = e.currentTarget.querySelector(
+                  ".radial-glow"
+                ) as HTMLElement;
+                const bottomGlow = e.currentTarget.querySelector(
+                  ".bottom-glow"
+                ) as HTMLElement;
+                const innerDiv = e.currentTarget.querySelector(
+                  ".inner-button"
+                ) as HTMLElement;
+                if (radialGlow) radialGlow.style.opacity = "0";
+                if (bottomGlow) bottomGlow.style.opacity = "0";
+                if (innerDiv) innerDiv.style.background = "rgba(255, 255, 255, 0.03)";
               }}
               style={{
-                padding: "0.375rem 0.875rem",
+                position: "relative",
+                background: "transparent",
+                borderRadius: "9999px",
+                padding: "1px",
                 fontSize: "0.75rem",
-                fontWeight: 500,
-                letterSpacing: "0.02em",
+                fontWeight: 600,
+                lineHeight: "1.5",
                 color: "#fff",
-                background: "rgba(239, 68, 68, 0.15)",
-                backdropFilter: "blur(20px)",
-                border: "1px solid rgba(239, 68, 68, 0.4)",
-                borderRadius: "999px",
+                display: "inline-block",
                 cursor: "pointer",
-                transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-                boxShadow:
-                  "0 4px 16px 0 rgba(239, 68, 68, 0.3), inset 0 1px 1px rgba(255, 255, 255, 0.1)",
-                animation: "fadeIn 0.6s ease-out",
+                border: "none",
+                boxShadow: "0 25px 50px -12px rgba(239, 68, 68, 0.3)",
                 marginBottom: "0.75rem",
-                display: "flex",
-                alignItems: "center",
-                gap: "0.375rem",
+                animation: "fadeIn 0.6s ease-out",
               }}
             >
-              For testers
-              <ChevronRightIcon size={16} />
+              <span
+                style={{
+                  position: "absolute",
+                  inset: 0,
+                  borderRadius: "9999px",
+                  padding: "1px",
+                  background:
+                    "linear-gradient(to right, rgba(220, 38, 38, 0.4), rgba(239, 68, 68, 0.5), rgba(248, 113, 113, 0.4))",
+                  WebkitMask:
+                    "linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)",
+                  WebkitMaskComposite: "xor",
+                  maskComposite: "exclude",
+                }}
+              >
+                <span
+                  className="radial-glow"
+                  style={{
+                    position: "absolute",
+                    inset: 0,
+                    borderRadius: "9999px",
+                    backgroundImage:
+                      "radial-gradient(75% 100% at 50% 0%, rgba(239, 68, 68, 0.6) 0%, rgba(239, 68, 68, 0) 75%)",
+                    opacity: 0,
+                    transition: "opacity 0.5s",
+                  }}
+                />
+              </span>
+              <div
+                className="inner-button"
+                style={{
+                  position: "relative",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "0.5rem",
+                  zIndex: 10,
+                  borderRadius: "9999px",
+                  background: "rgba(255, 255, 255, 0.03)",
+                  backdropFilter: "blur(20px)",
+                  WebkitBackdropFilter: "blur(20px)",
+                  padding: "0.4rem 1rem",
+                  boxShadow: "inset 0 0 0 1px rgba(255, 255, 255, 0.1)",
+                  transition: "background 0.3s ease",
+                }}
+              >
+                <span
+                  style={{
+                    marginTop: "-1px",
+                    fontWeight: "300",
+                    fontSize: "1.1em",
+                  }}
+                >
+                  Message for testers
+                </span>
+                <ChevronRightIcon size={12} />
+              </div>
+              <span
+                className="bottom-glow"
+                style={{
+                  position: "absolute",
+                  bottom: 0,
+                  left: "1.125rem",
+                  height: "1px",
+                  width: "calc(100% - 2.25rem)",
+                  backgroundImage:
+                    "linear-gradient(to right, rgba(239, 68, 68, 0) 0%, rgba(239, 68, 68, 0.9) 50%, rgba(239, 68, 68, 0) 100%)",
+                  opacity: 0,
+                  transition: "opacity 0.5s",
+                }}
+              />
             </button>
 
             <h1

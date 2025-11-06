@@ -280,13 +280,13 @@ export default function LandingPage() {
   // Reset hover state when About button changes to/from icon mode
   // This forces the hover indicator to recalculate its position after DOM updates
   useEffect(() => {
-    if (hoveredNavIndex === 1) {
-      // Index 1 is the About button
+    if (hoveredNavIndex === 0) {
+      // Index 0 is now the About button (after removing "For testers")
       setHoveredNavIndex(null);
       // Use double requestAnimationFrame to ensure layout has been recalculated
       requestAnimationFrame(() => {
         requestAnimationFrame(() => {
-          setHoveredNavIndex(1);
+          setHoveredNavIndex(0);
         });
       });
     }

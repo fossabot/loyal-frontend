@@ -1,16 +1,22 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-
+import type { SkillTextSegment } from "@/lib/skills-text";
 import {
   SKILL_PREFIX,
   SKILL_SUFFIX,
   SKILL_TRAILING_SPACE,
   splitSkillSegments,
 } from "@/lib/skills-text";
-import type { SkillTextSegment } from "@/lib/skills-text";
 import type { LoyalSkill } from "@/types/skills";
 import { AVAILABLE_SKILLS } from "@/types/skills";
+
+const ACTION_SKILLS = AVAILABLE_SKILLS.filter(
+  (skill) => skill.category !== "recipient"
+);
+const RECIPIENT_SKILLS = AVAILABLE_SKILLS.filter(
+  (skill) => skill.category === "recipient"
+);
 
 type UseSkillInvocationProps = {
   textareaRef: React.RefObject<HTMLTextAreaElement | null>;
@@ -40,9 +46,28 @@ export const useSkillInvocation = ({
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0 });
   const [selectedSkillIndex, setSelectedSkillIndex] = useState(0);
-  const [filteredSkills, setFilteredSkills] = useState<LoyalSkill[]>([]);
+  const [filteredSkills, setFilteredSkills] =
+    useState<LoyalSkill[]>(ACTION_SKILLS);
+  const [pendingRecipientSelection, setPendingRecipientSelection] =
+    useState(false);
+  const [recipientTriggerIndex, setRecipientTriggerIndex] = useState<
+    number | null
+  >(null);
   const [slashIndex, setSlashIndex] = useState<number | null>(null);
   const [skillSegments, setSkillSegments] = useState<SkillTextSegment[]>([]);
+
+  const calculateDropdownPosition = useCallback((textBeforeCursor: string) => {
+    const lines = textBeforeCursor.split("\n");
+    const currentLine = lines.length;
+    const lineHeight = 24;
+    const charWidth = 8;
+    const lastLineLength = lines.at(-1)?.length ?? 0;
+
+    return {
+      top: currentLine * lineHeight,
+      left: lastLineLength * charWidth,
+    };
+  }, []);
 
   const applyTextMutation = useCallback(
     (newValue: string, caretPosition: number) => {
@@ -69,10 +94,7 @@ export const useSkillInvocation = ({
   );
 
   const getSkillRangeAtIndex = useCallback(
-    (
-      text: string,
-      index: number
-    ): { start: number; end: number } | null => {
+    (text: string, index: number): { start: number; end: number } | null => {
       if (index < 0 || index > text.length) {
         return null;
       }
@@ -138,6 +160,10 @@ export const useSkillInvocation = ({
   }, [syncSegments]);
 
   const detectSlash = useCallback(() => {
+    if (pendingRecipientSelection) {
+      return;
+    }
+
     const textarea = textareaRef.current;
     if (!textarea) {
       return;
@@ -152,23 +178,16 @@ export const useSkillInvocation = ({
       const textAfterSlash = textBeforeCursor.slice(lastSlashIndex + 1);
 
       if (!textAfterSlash.includes(" ")) {
-        const filtered = AVAILABLE_SKILLS.filter((skill) =>
+        const filtered = ACTION_SKILLS.filter((skill) =>
           skill.label.toLowerCase().startsWith(textAfterSlash.toLowerCase())
         );
 
         if (filtered.length > 0) {
-          const lines = textBeforeCursor.split("\n");
-          const currentLine = lines.length;
-          const lineHeight = 24;
-          const charWidth = 8;
-          const lastLineLength = lines.at(-1)?.length ?? 0;
-
-          const top = currentLine * lineHeight;
-          const left = lastLineLength * charWidth;
+          const position = calculateDropdownPosition(textBeforeCursor);
 
           setSlashIndex(lastSlashIndex);
           setFilteredSkills(filtered);
-          setDropdownPosition({ top, left });
+          setDropdownPosition(position);
           setIsDropdownOpen(true);
           setSelectedSkillIndex(0);
           return;
@@ -178,40 +197,161 @@ export const useSkillInvocation = ({
 
     setIsDropdownOpen(false);
     setSlashIndex(null);
-  }, [textareaRef]);
+    setRecipientTriggerIndex(null);
+    setFilteredSkills(ACTION_SKILLS);
+  }, [calculateDropdownPosition, pendingRecipientSelection, textareaRef]);
+
+  const updateRecipientSuggestions = useCallback(() => {
+    const textarea = textareaRef.current;
+    if (!textarea) {
+      return;
+    }
+
+    const text = textarea.value;
+    const cursorPos = textarea.selectionStart;
+    const textBeforeCursor = text.slice(0, cursorPos);
+
+    if (pendingRecipientSelection) {
+      const triggerIndex = recipientTriggerIndex ?? cursorPos;
+      if (recipientTriggerIndex === null) {
+        setRecipientTriggerIndex(cursorPos);
+      }
+
+      const rawQuery = text.slice(triggerIndex, cursorPos);
+      if (rawQuery.includes(" ") || rawQuery.includes("\n")) {
+        setPendingRecipientSelection(false);
+        setRecipientTriggerIndex(null);
+        setFilteredSkills(ACTION_SKILLS);
+        setIsDropdownOpen(false);
+        return;
+      }
+
+      const normalizedQuery = rawQuery.replace(/^@/, "").toLowerCase();
+      const filtered = normalizedQuery
+        ? RECIPIENT_SKILLS.filter((recipient) =>
+            recipient.label
+              .toLowerCase()
+              .replace("@", "")
+              .startsWith(normalizedQuery)
+          )
+        : RECIPIENT_SKILLS;
+
+      setFilteredSkills(filtered.length ? filtered : RECIPIENT_SKILLS);
+      setSelectedSkillIndex(0);
+      setIsDropdownOpen(true);
+      setDropdownPosition(
+        calculateDropdownPosition(text.slice(0, triggerIndex))
+      );
+      return;
+    }
+
+    const lastAt = textBeforeCursor.lastIndexOf("@");
+    if (lastAt !== -1) {
+      const fragment = textBeforeCursor.slice(lastAt + 1);
+      if (!(fragment.includes(" ") || fragment.includes("\n"))) {
+        const normalizedQuery = fragment.toLowerCase();
+        const filtered = normalizedQuery
+          ? RECIPIENT_SKILLS.filter((recipient) =>
+              recipient.label
+                .toLowerCase()
+                .replace("@", "")
+                .startsWith(normalizedQuery)
+            )
+          : RECIPIENT_SKILLS;
+
+        setPendingRecipientSelection(true);
+        setRecipientTriggerIndex(lastAt);
+        setFilteredSkills(filtered.length ? filtered : RECIPIENT_SKILLS);
+        setSelectedSkillIndex(0);
+        setDropdownPosition(calculateDropdownPosition(text.slice(0, lastAt)));
+        setIsDropdownOpen(true);
+        return;
+      }
+    }
+
+    setPendingRecipientSelection(false);
+    setRecipientTriggerIndex(null);
+  }, [
+    calculateDropdownPosition,
+    pendingRecipientSelection,
+    recipientTriggerIndex,
+    textareaRef,
+  ]);
 
   const selectSkill = useCallback(
     (skill: LoyalSkill) => {
       const textarea = textareaRef.current;
-      if (!textarea || slashIndex === null) {
+      if (!textarea) {
         return;
       }
 
       const text = textarea.value;
       const cursorPos = textarea.selectionStart;
 
+      if (pendingRecipientSelection) {
+        const token = `${SKILL_PREFIX}${skill.label}${SKILL_SUFFIX}${SKILL_TRAILING_SPACE}`;
+        const newText =
+          text.slice(0, cursorPos) + token + text.slice(cursorPos);
+
+        setIsDropdownOpen(false);
+        setPendingRecipientSelection(false);
+        setRecipientTriggerIndex(null);
+        setSlashIndex(null);
+        setFilteredSkills(ACTION_SKILLS);
+        applyTextMutation(newText, cursorPos + token.length);
+        return;
+      }
+
+      if (slashIndex === null) {
+        return;
+      }
+
       const before = text.slice(0, slashIndex);
       const after = text.slice(cursorPos);
-      const skillToken = `${SKILL_PREFIX}${skill.label}${SKILL_SUFFIX}${SKILL_TRAILING_SPACE}`;
-      const newText = before + skillToken + after;
+      const baseToken = `${SKILL_PREFIX}${skill.label}${SKILL_SUFFIX}${SKILL_TRAILING_SPACE}`;
+      const combinedToken = baseToken;
+      const newText = before + combinedToken + after;
 
-      setIsDropdownOpen(false);
-      setSlashIndex(null);
       onSkillSelect?.(skill, slashIndex);
 
-      const tokenLength = skillToken.length;
-      const newCursorPos = slashIndex + tokenLength;
-
+      const newCursorPos = slashIndex + combinedToken.length;
       applyTextMutation(newText, newCursorPos);
+
+      if (skill.id === "send" && RECIPIENT_SKILLS.length > 0) {
+        const position = calculateDropdownPosition(
+          newText.slice(0, newCursorPos)
+        );
+        setFilteredSkills(RECIPIENT_SKILLS);
+        setSelectedSkillIndex(0);
+        setPendingRecipientSelection(true);
+        setRecipientTriggerIndex(newCursorPos);
+        setIsDropdownOpen(true);
+        setDropdownPosition(position);
+        setSlashIndex(null);
+      } else {
+        setIsDropdownOpen(false);
+        setSlashIndex(null);
+        setFilteredSkills(ACTION_SKILLS);
+        setPendingRecipientSelection(false);
+        setRecipientTriggerIndex(null);
+      }
     },
-    [textareaRef, slashIndex, onSkillSelect, applyTextMutation]
+    [
+      textareaRef,
+      slashIndex,
+      onSkillSelect,
+      applyTextMutation,
+      pendingRecipientSelection,
+      calculateDropdownPosition,
+    ]
   );
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLTextAreaElement>): boolean => {
       if (isDropdownOpen) {
         switch (e.key) {
-          case "Tab": {
+          case "Tab":
+          case "Enter": {
             e.preventDefault();
             if (filteredSkills.length > 0) {
               selectSkill(filteredSkills[selectedSkillIndex]);
@@ -222,6 +362,8 @@ export const useSkillInvocation = ({
             e.preventDefault();
             setIsDropdownOpen(false);
             setSlashIndex(null);
+            setPendingRecipientSelection(false);
+            setFilteredSkills(ACTION_SKILLS);
             return true;
           }
           case "ArrowDown": {
@@ -244,10 +386,7 @@ export const useSkillInvocation = ({
 
       if (e.key === "Backspace" || e.key === "Delete") {
         const textarea = textareaRef.current;
-        if (
-          textarea &&
-          textarea.selectionStart === textarea.selectionEnd
-        ) {
+        if (textarea && textarea.selectionStart === textarea.selectionEnd) {
           const targetIndex =
             e.key === "Backspace"
               ? textarea.selectionStart - 1
@@ -276,17 +415,19 @@ export const useSkillInvocation = ({
   const handleInput = useCallback(
     (_event: React.FormEvent<HTMLTextAreaElement>) => {
       detectSlash();
+      updateRecipientSuggestions();
       const textarea = textareaRef.current;
       if (textarea) {
         setSkillSegments(splitSkillSegments(textarea.value));
       }
     },
-    [detectSlash, textareaRef]
+    [detectSlash, updateRecipientSuggestions, textareaRef]
   );
 
   useEffect(() => {
     detectSlash();
-  }, [detectSlash]);
+    updateRecipientSuggestions();
+  }, [detectSlash, updateRecipientSuggestions]);
 
   return {
     isDropdownOpen,

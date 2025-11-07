@@ -199,6 +199,7 @@ export const SkillsTextarea = forwardRef<
           position={dropdownPosition}
           selectedIndex={selectedSkillIndex}
           skills={filteredSkills}
+          textareaRef={internalRef}
         />
       )}
     </div>

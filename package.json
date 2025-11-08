@@ -27,7 +27,7 @@
     "@nillion/nilai-ts": "^0.2.0",
     "@nillion/nuc": "^1.0.0",
     "@nillion/secretvaults": "^1.0.0",
-    "@radix-ui/react-avatar": "^1.1.10",
+    "@radix-ui/react-avatar": "^1.1.11",
     "@radix-ui/react-collapsible": "^1.1.12",
     "@radix-ui/react-hover-card": "^1.1.15",
     "@radix-ui/react-scroll-area": "^1.2.10",

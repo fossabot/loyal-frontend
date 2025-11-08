@@ -11,6 +11,7 @@ import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { BentoGridSection } from "@/components/bento-grid-section";
 import { Footer } from "@/components/footer";
+import { LoyalTokenTicker } from "@/components/loyal-token-ticker";
 import { MarkdownRenderer } from "@/components/markdown-renderer";
 import { RoadmapSection } from "@/components/roadmap-section";
 import { SkillsTextarea } from "@/components/skills-textarea";
@@ -630,7 +631,8 @@ export default function LandingPage() {
                 key={item.label}
                 onClick={
                   item.href
-                    ? () => window.open(item.href, "_blank", "noopener,noreferrer")
+                    ? () =>
+                        window.open(item.href, "_blank", "noopener,noreferrer")
                     : item.onClick
                 }
                 onMouseEnter={() => setHoveredNavIndex(index)}
@@ -740,6 +742,30 @@ export default function LandingPage() {
               </button>
             ))}
           </nav>
+
+          {/* Token Ticker */}
+          <div
+            style={{
+              position: "fixed",
+              top: "4.5rem",
+              left: "50%",
+              transform: "translateX(-50%)",
+              zIndex: 50,
+              opacity: isChatMode ? 0 : 1,
+              pointerEvents: isChatMode ? "none" : "auto",
+              transition: "opacity 0.3s ease",
+              background: "rgba(255, 255, 255, 0.05)",
+              backdropFilter: "blur(20px)",
+              border: "1px solid rgba(255, 255, 255, 0.1)",
+              borderTop: "none",
+              borderRadius: "0 0 10px 10px",
+              padding: "0.6rem 0.625rem 0.4rem",
+              boxShadow:
+                "0 8px 32px 0 rgba(0, 0, 0, 0.37), inset 0 1px 1px rgba(255, 255, 255, 0.1)",
+            }}
+          >
+            <LoyalTokenTicker />
+          </div>
 
           {/* Menu Button - Always Visible */}
           <button

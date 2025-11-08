@@ -523,6 +523,36 @@ function RoadmapSectionComponent() {
                 );
               })}
             </div>
+
+            {/* Left fade overlay */}
+            <div
+              style={{
+                position: "absolute",
+                left: 0,
+                top: 0,
+                bottom: 0,
+                width: "8rem",
+                background:
+                  "linear-gradient(to right, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 0) 100%)",
+                pointerEvents: "none",
+                zIndex: 15,
+              }}
+            />
+
+            {/* Right fade overlay */}
+            <div
+              style={{
+                position: "absolute",
+                right: 0,
+                top: 0,
+                bottom: 0,
+                width: "8rem",
+                background:
+                  "linear-gradient(to left, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 0) 100%)",
+                pointerEvents: "none",
+                zIndex: 15,
+              }}
+            />
           </div>
 
           {/* Pagination dots */}

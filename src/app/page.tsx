@@ -623,12 +623,16 @@ export default function LandingPage() {
                 isLinks: true,
               },
               { label: "Blog", href: "#" },
-              { label: "Docs", href: "#" },
+              { label: "Docs", href: "https://docs.askloyal.com/" },
             ].map((item, index) => (
               <button
                 className={ibmPlexSans.className}
                 key={item.label}
-                onClick={item.onClick}
+                onClick={
+                  item.href
+                    ? () => window.open(item.href, "_blank", "noopener,noreferrer")
+                    : item.onClick
+                }
                 onMouseEnter={() => setHoveredNavIndex(index)}
                 ref={(el) => {
                   navItemRefs.current[index] = el;
@@ -975,7 +979,7 @@ export default function LandingPage() {
                   isLinks: true,
                 },
                 { label: "Blog", href: "#" },
-                { label: "Docs", href: "#" },
+                { label: "Docs", href: "https://docs.askloyal.com/" },
               ].map((item) => (
                 <button
                   key={item.label}

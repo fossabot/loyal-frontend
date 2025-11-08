@@ -286,19 +286,21 @@
 
   /* Enhanced Liquid Glass Modal Styling */
   .wallet-adapter-modal-wrapper {
-    background: rgba(0, 0, 0, 0.85) !important;
-    backdrop-filter: blur(12px) !important;
+    background: transparent !important;
+    backdrop-filter: blur(16px) !important;
+    -webkit-backdrop-filter: blur(16px) !important;
+    box-shadow: none !important;
   }
 
   /* ONLY style the actual modal dialog, not wrapper or container */
   .wallet-adapter-modal {
-    background: rgba(255, 255, 255, 0.08) !important;
+    background: rgba(0, 0, 0, 0.7) !important;
     backdrop-filter: blur(20px) !important;
     -webkit-backdrop-filter: blur(20px) !important;
     border: 1px solid rgba(255, 255, 255, 0.15) !important;
     border-radius: 32px !important;
     box-shadow:
-      0 8px 32px 0 rgba(0, 0, 0, 0.37),
+      0 8px 32px 0 rgba(0, 0, 0, 0.5),
       inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
     padding: 2rem 3rem !important;
   }

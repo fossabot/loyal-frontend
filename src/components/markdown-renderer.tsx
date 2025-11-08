@@ -299,6 +299,8 @@ export function MarkdownRenderer({
               paddingLeft: "1.5rem",
               margin: "0.75rem 0",
               color: "rgba(255, 255, 255, 0.9)",
+              listStyleType: "disc",
+              listStylePosition: "outside",
             }}
             {...props}
           >
@@ -315,11 +317,30 @@ export function MarkdownRenderer({
               paddingLeft: "1.5rem",
               margin: "0.75rem 0",
               color: "rgba(255, 255, 255, 0.9)",
+              listStyleType: "decimal",
+              listStylePosition: "outside",
             }}
             {...props}
           >
             {children}
           </ol>
+        );
+      },
+
+      // List items
+      li({ children, ...props }: React.HTMLProps<HTMLLIElement>) {
+        return (
+          <li
+            style={{
+              marginBottom: "0.5rem",
+              lineHeight: 1.6,
+              color: "rgba(255, 255, 255, 0.9)",
+              display: "list-item",
+            }}
+            {...props}
+          >
+            {children}
+          </li>
         );
       },
 

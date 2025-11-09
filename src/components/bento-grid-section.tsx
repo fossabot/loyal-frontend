@@ -1660,14 +1660,14 @@ const SkeletonSix = () => {
                 ? { y: 0, opacity: 1, scale: 1 }
                 : { y: -20, opacity: 0, scale: 0.8 }
             }
-            className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-red-400 via-red-500 to-red-600 shadow-lg"
+            className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-neutral-400 via-neutral-500 to-neutral-600 shadow-lg"
             key={`coin-${index}`}
             transition={{
               delay: index * COIN_DELAY_PER_INDEX,
               duration: COIN_ANIMATION_DURATION,
             }}
           >
-            <div className="h-5 w-5 rounded-full border-2 border-red-300/40" />
+            <div className="h-5 w-5 rounded-full border-2 border-neutral-300/40" />
           </motion.div>
         ))}
       </div>
@@ -1678,7 +1678,7 @@ const SkeletonSix = () => {
           <span className="font-mono text-neutral-400 text-xs">Query</span>
           <motion.span
             animate={{ scale: [1, PRICE_SCALE_MAX, 1] }}
-            className="font-mono font-semibold text-neutral-300"
+            className="font-mono font-semibold text-red-500"
             key={count}
             transition={{ duration: PRICE_ANIMATION_DURATION }}
           >
@@ -1695,7 +1695,7 @@ const SkeletonSix = () => {
             >
               <motion.div
                 animate={idx <= count ? { scaleX: width } : { scaleX: 0 }}
-                className="h-full origin-left bg-gradient-to-r from-neutral-400 to-neutral-500"
+                className={`h-full origin-left ${idx === 1 ? "bg-gradient-to-r from-red-400 to-red-500" : "bg-gradient-to-r from-neutral-400 to-neutral-500"}`}
                 transition={{ duration: BAR_ANIMATION_DURATION }}
               />
             </div>

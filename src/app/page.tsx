@@ -624,7 +624,6 @@ export default function LandingPage() {
                   : handleScrollToLinks,
                 isLinks: true,
               },
-              { label: "Blog", href: "#" },
               { label: "Docs", href: "https://docs.askloyal.com/" },
             ].map((item, index) => (
               <button
@@ -1020,7 +1019,6 @@ export default function LandingPage() {
                   },
                   isLinks: true,
                 },
-                { label: "Blog", href: "#" },
                 { label: "Docs", href: "https://docs.askloyal.com/" },
               ].map((item) => (
                 <button

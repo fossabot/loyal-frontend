@@ -6,7 +6,6 @@ import {
   Ticker,
   TickerIcon,
   TickerPrice,
-  TickerPriceChange,
   TickerSymbol,
 } from "@/components/kibo-ui/ticker";
 
@@ -16,9 +15,6 @@ type TokenData = {
   symbol: string;
   icon: string;
   usdPrice: number;
-  stats1h: {
-    priceChange: number;
-  };
 };
 
 export function LoyalTokenTicker() {
@@ -39,9 +35,6 @@ export function LoyalTokenTicker() {
             symbol: token.symbol,
             icon: token.icon,
             usdPrice: token.usdPrice,
-            stats1h: {
-              priceChange: token.stats1h.priceChange,
-            },
           });
         }
       } catch (error) {
@@ -73,12 +66,24 @@ export function LoyalTokenTicker() {
           style={{ width: "40px" }}
         />
         <div
+<<<<<<< ours
           className="h-2.5 animate-pulse rounded bg-white/10 md:h-3"
           style={{ width: "30px" }}
         />
         <div
           className="h-2.5 animate-pulse rounded bg-white/10 md:h-3"
           style={{ width: "35px" }}
+||||||| ancestor
+          className="h-3 animate-pulse rounded bg-white/10"
+          style={{ width: "35px" }}
+        />
+        <div
+          className="h-3 animate-pulse rounded bg-white/10"
+          style={{ width: "40px" }}
+=======
+          className="h-2.5 animate-pulse rounded bg-white/10 md:h-3"
+          style={{ width: "30px" }}
+>>>>>>> theirs
         />
       </div>
     );
@@ -116,11 +121,20 @@ export function LoyalTokenTicker() {
         className="text-[10px] text-white/80 md:text-xs"
         price={tokenData.usdPrice}
       />
+<<<<<<< ours
       <TickerPriceChange
         change={tokenData.stats1h.priceChange}
         className="text-[10px] md:text-xs"
         isPercent
       />
+||||||| ancestor
+      <TickerPriceChange
+        change={tokenData.stats1h.priceChange}
+        className="text-xs"
+        isPercent
+      />
+=======
+>>>>>>> theirs
     </Ticker>
   );
 }

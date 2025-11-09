@@ -20,27 +20,57 @@ type TokenData = {
 export function LoyalTokenTicker() {
   const [tokenData, setTokenData] = useState<TokenData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [retryCount, setRetryCount] = useState(0);
 
   useEffect(() => {
+    let mounted = true;
+
     const fetchTokenData = async () => {
       try {
+        // Add timeout to prevent hanging requests
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10_000); // 10 second timeout
+
         const response = await fetch(
-          `https://lite-api.jup.ag/tokens/v2/search?query=${LOYAL_TOKEN_ADDRESS}`
+          `https://lite-api.jup.ag/tokens/v2/search?query=${LOYAL_TOKEN_ADDRESS}`,
+          { signal: controller.signal }
         );
+
+        clearTimeout(timeoutId);
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
         const data = await response.json();
 
-        if (data && data.length > 0) {
+        if (mounted && data && data.length > 0) {
           const token = data[0];
           setTokenData({
             symbol: token.symbol,
             icon: token.icon,
             usdPrice: token.usdPrice,
           });
+          setLoading(false);
+          setRetryCount(0); // Reset retry count on success
+        } else if (mounted && retryCount < 3) {
+          // Retry if no data and haven't retried too many times
+          setTimeout(() => {
+            setRetryCount((prev) => prev + 1);
+          }, 2000); // Retry after 2 seconds
+        } else if (mounted) {
+          setLoading(false);
         }
       } catch (error) {
         console.error("Failed to fetch token data:", error);
-      } finally {
-        setLoading(false);
+        if (mounted && retryCount < 3) {
+          // Retry on error
+          setTimeout(() => {
+            setRetryCount((prev) => prev + 1);
+          }, 2000);
+        } else if (mounted) {
+          setLoading(false);
+        }
       }
     };
 
@@ -49,10 +79,13 @@ export function LoyalTokenTicker() {
     // Refresh every 60 seconds
     const interval = setInterval(fetchTokenData, 60_000);
 
-    return () => clearInterval(interval);
-  }, []);
+    return () => {
+      mounted = false;
+      clearInterval(interval);
+    };
+  }, [retryCount]);
 
-  if (loading) {
+  if (loading || !tokenData) {
     return (
       <div className="flex items-center gap-1">
         {/* Icon skeleton */}
@@ -71,10 +104,6 @@ export function LoyalTokenTicker() {
         />
       </div>
     );
-  }
-
-  if (!tokenData) {
-    return null;
   }
 
   return (

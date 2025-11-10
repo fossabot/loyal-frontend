@@ -1,36 +1,97 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Loyal
+
+Fully private, on-chain AI platform built on Solana.
+
+## What is Loyal?
+
+Loyal is a web application that provides AI chat capabilities with end-to-end encryption and on-chain data storage. Every message is encrypted and facilitated on-chain with AI running in confidential compute environments. Neither Loyal developers nor compute node owners can access your data.
+
+## Key Features
+
+- **Fully Private AI**: Messages encrypted client-side, processed in confidential VMs
+- **On-Chain Storage**: Conversation state anchored to Solana PDAs
+- **Solana Wallet Integration**: Sign in with Phantom, Solflare, and other Solana wallets
+- **User-Owned Data**: Your wallet = your data, no centralization
+- **Automated Workflows**: AI-powered task automation on Solana
+
+## Tech Stack
+
+- **Framework**: Next.js 15 (App Router, React 19)
+- **Blockchain**: Solana (web3.js, Anchor)
+- **Encryption**: WebCrypto API, Nillion integration
+- **Storage**: Irys (Arweave)
+- **Styling**: Tailwind CSS, Framer Motion
+- **Code Quality**: Ultracite (Biome preset)
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
+
+- Node.js 20+
+- Bun, npm, yarn, or pnpm
+
+### Installation
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
+# Install dependencies
+bun install
+
+# Run development server
 bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) to view the app.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Environment Variables
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Create a `.env.local` file with required API keys (see `.env.example`).
 
-## Learn More
+## Development
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+# Development server
+bun dev
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+# Build for production
+bun run build
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+# Start production server
+bun start
 
-## Deploy on Vercel
+# Lint code
+bun run ultracite
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Project Structure
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```
+src/
+├── app/              # Next.js app router pages
+├── components/       # React components
+├── lib/              # Core libraries
+│   ├── loyal/       # Loyal-specific logic (encryption, chat)
+│   └── proto/       # gRPC protocol definitions
+├── hooks/           # React hooks
+└── data/            # Static data and content
+```
+
+## Links
+
+- **Website**: [askloyal.com](https://askloyal.com)
+- **Docs**: [docs.askloyal.com](https://docs.askloyal.com)
+- **Discord**: [discord.askloyal.com](https://discord.askloyal.com)
+
+## Status
+
+⚠️ **Early Stage Product**: This is an open test version. Features may be incomplete or contain errors.
+
+## License
+
+This project is licensed under the GNU Affero General Public License v3.0 (AGPL-3.0) - see the [LICENSE.md](LICENSE.md) file for details.
+
+### What this means
+
+- ✅ You can use, modify, and distribute this software
+- ✅ If you run a modified version on a server, you must make the source code available to users
+- ✅ Any modifications must also be licensed under AGPL-3.0
+- ✅ This ensures the software remains free and open source

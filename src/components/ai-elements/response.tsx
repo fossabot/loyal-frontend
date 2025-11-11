@@ -4,8 +4,8 @@ import "katex/dist/katex.min.css";
 
 import type { HTMLAttributes } from "react";
 import { memo, useMemo } from "react";
-import { Streamdown } from "streamdown";
 import type { Components } from "react-markdown";
+import { Streamdown } from "streamdown";
 
 import { cn } from "@/lib/utils";
 
@@ -271,31 +271,9 @@ const customComponents: Partial<Components> = {
       {...props}
     />
   ),
-  // Override code blocks to wrap them with glassmorphic styling
-  pre: ({ children, ...props }) => (
-    <div
-      style={{
-        background: "rgba(0, 0, 0, 0.4)",
-        backdropFilter: "blur(10px)",
-        border: "1px solid rgba(255, 255, 255, 0.1)",
-        borderRadius: "12px",
-        overflow: "hidden",
-        margin: "1rem 0",
-      }}
-    >
-      <pre
-        style={{
-          margin: 0,
-          padding: "1rem",
-          background: "transparent",
-          overflowX: "auto",
-        }}
-        {...props}
-      >
-        {children}
-      </pre>
-    </div>
-  ),
+  // Code blocks use global CSS styling for dark glassmorphic theme
+  pre: ({ children, ...props }) => <pre {...props}>{children}</pre>,
+  code: ({ children, ...props }) => <code {...props}>{children}</code>,
 };
 
 export const Response = memo(

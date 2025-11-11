@@ -21,6 +21,7 @@ import { ChevronRightIcon } from "@/components/ui/chevron-right";
 import { CopyIcon, type CopyIconHandle } from "@/components/ui/copy";
 import { MenuIcon, type MenuIconHandle } from "@/components/ui/menu";
 import { PlusIcon, type PlusIconHandle } from "@/components/ui/plus";
+import { useChatMode } from "@/contexts/chat-mode-context";
 import { useSwap } from "@/hooks/use-swap";
 import type { LoyalSkill } from "@/types/skills";
 
@@ -76,7 +77,16 @@ export default function LandingPage() {
       toCurrency: string | null;
     };
   } | null>(null);
-  const [isChatMode, setIsChatMode] = useState(false);
+  const [isChatModeLocal, setIsChatModeLocal] = useState(false);
+  const { setIsChatMode } = useChatMode();
+
+  // Sync local state with context
+  useEffect(() => {
+    setIsChatMode(isChatModeLocal);
+  }, [isChatModeLocal, setIsChatMode]);
+
+  // Use local state for component logic
+  const isChatMode = isChatModeLocal;
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [copiedMessageId, setCopiedMessageId] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -188,7 +198,7 @@ export default function LandingPage() {
       setInput([]);
       setPendingText("");
       setPendingMessage(null);
-      setIsChatMode(true);
+      setIsChatModeLocal(true);
 
       // Ensure focus
       setTimeout(() => {
@@ -435,7 +445,7 @@ export default function LandingPage() {
       return;
     }
 
-    setIsChatMode(true);
+    setIsChatModeLocal(true);
 
     // Check if this is a completed swap
     // Use ref for immediate access (avoids race condition with Enter key)
@@ -1027,7 +1037,7 @@ export default function LandingPage() {
           >
             <button
               onClick={() => {
-                setIsChatMode(false);
+                setIsChatModeLocal(false);
                 setInput([]);
                 // Clear all messages to start a completely new chat
                 setMessages([]);
@@ -1118,7 +1128,7 @@ export default function LandingPage() {
             >
               <button
                 onClick={() => {
-                  setIsChatMode(false);
+                  setIsChatModeLocal(false);
                   setInput([]);
                   // Clear all messages for a new chat
                   setMessages([]);

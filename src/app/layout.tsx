@@ -3,6 +3,7 @@ import "./globals.css";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 
+import { ChatModeProvider } from "@/contexts/chat-mode-context";
 import { SolanaProvider } from "@/components/solana/solana-provider";
 import { Header } from "@/components/ui/header";
 import { UserChatsProvider } from "@/providers/user-chats";
@@ -76,8 +77,10 @@ export default function RootLayout({
       >
         <SolanaProvider>
           <UserChatsProvider>
-            <Header />
-            {children}
+            <ChatModeProvider>
+              <Header />
+              {children}
+            </ChatModeProvider>
           </UserChatsProvider>
         </SolanaProvider>
       </body>

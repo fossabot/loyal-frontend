@@ -1596,9 +1596,13 @@ export default function LandingPage() {
             {isChatMode && (
               <div
                 className="chat-messages-container"
-                onClick={() => {
-                  // Focus input when clicking on the message area
-                  inputRef.current?.focus();
+                onClick={(e) => {
+                  // Only focus input if no text is selected
+                  const selection = window.getSelection();
+                  if (!selection || selection.toString().length === 0) {
+                    // Focus input when clicking on the message area
+                    inputRef.current?.focus();
+                  }
                 }}
                 ref={messagesContainerRef}
                 style={{

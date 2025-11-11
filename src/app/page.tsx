@@ -1982,7 +1982,9 @@ export default function LandingPage() {
                     isOnline
                       ? isChatMode && !connected
                         ? "Please reconnect wallet to continue..."
-                        : "Ask me anything (type / for skills)..."
+                        : isChatMode
+                          ? ""
+                          : "Ask me anything (type / for skills)..."
                       : "No internet connection..."
                   }
                   ref={inputRef}

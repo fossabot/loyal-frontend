@@ -405,7 +405,9 @@ const SkillsInput = React.forwardRef<HTMLTextAreaElement, SkillsInputProps>(
         return "";
       }
 
-      return props.placeholder || "Ask me anything (type / for skills)...";
+      return props.placeholder !== undefined
+        ? props.placeholder
+        : "Ask me anything (type / for skills)...";
     };
 
     // Get skill color based on category

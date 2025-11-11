@@ -344,6 +344,17 @@ const SkillsInput = React.forwardRef<HTMLInputElement, SkillsInputProps>(
     };
 
     const getPlaceholder = (): string => {
+      // Show swap-specific placeholders during swap flow
+      if (swapStep === "from_currency") {
+        return "Select FROM currency (SOL, USDC, etc.)...";
+      }
+      if (swapStep === "amount" && !swapData.amount) {
+        return "Type amount (e.g., 10) then press Enter...";
+      }
+      if (swapStep === "to_currency") {
+        return "Select TO currency...";
+      }
+
       // Hide placeholder if there's any content (skills, swap data, or pending text)
       const hasContent =
         value.length > 0 ||
@@ -352,13 +363,7 @@ const SkillsInput = React.forwardRef<HTMLInputElement, SkillsInputProps>(
         swapData.toCurrency ||
         pendingInput.length > 0;
 
-      // If there's content, only show placeholders during specific swap steps
       if (hasContent) {
-        // Show placeholder only during amount input step
-        if (swapStep === "amount" && !swapData.amount) {
-          return "Type amount (e.g., 10) then press Enter...";
-        }
-        // For all other cases with content, hide placeholder
         return "";
       }
 
@@ -532,46 +537,6 @@ const SkillsInput = React.forwardRef<HTMLInputElement, SkillsInputProps>(
             value={pendingInput}
           />
         </div>
-        {swapStep === "amount" && !swapData.amount && (
-          <div
-            style={{
-              position: "absolute",
-              top: "50%",
-              left: "50%",
-              transform: "translate(-50%, -50%)",
-              padding: "0.75rem 1rem",
-              background: "rgba(0, 0, 0, 0.75)",
-              backdropFilter: "blur(20px)",
-              WebkitBackdropFilter: "blur(20px)",
-              border: "1px solid rgba(255, 255, 255, 0.25)",
-              borderRadius: "1.25rem",
-              color: "rgba(255, 255, 255, 0.9)",
-              fontSize: "0.875rem",
-              fontWeight: 500,
-              pointerEvents: "none",
-              zIndex: 10,
-              whiteSpace: "nowrap",
-              boxShadow:
-                "0 8px 32px 0 rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.1), inset 0 1px 1px rgba(255, 255, 255, 0.15)",
-            }}
-          >
-            Enter amount then{" "}
-            <kbd
-              style={{
-                padding: "0.25rem 0.5rem",
-                background: "rgba(255, 255, 255, 0.1)",
-                borderRadius: "0.25rem",
-                border: "1px solid rgba(255, 255, 255, 0.2)",
-                fontFamily: "inherit",
-                fontSize: "0.625rem",
-                fontWeight: 500,
-                color: "rgba(255, 255, 255, 0.7)",
-              }}
-            >
-              ↵
-            </kbd>
-          </div>
-        )}
         {isDropdownOpen && (
           <SkillDropdown
             onSelect={addSkill}

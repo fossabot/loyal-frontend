@@ -501,11 +501,11 @@ export default function LandingPage() {
         ]);
       }
 
-      // Clear input and swap data
+      // Clear input (but keep swap data for approval)
       setInput([]);
       setPendingText("");
-      setPendingSwapData(null);
-      pendingSwapDataRef.current = null;
+      // Note: Don't clear pendingSwapData here - it's needed for approval
+      // It will be cleared in handleSwapApprove or handleSwapCancel
     } else {
       // Regular message - send to LLM
       if (status === "ready") {
@@ -657,12 +657,14 @@ export default function LandingPage() {
     } finally {
       setShowSwapWidget(false);
       setPendingSwapData(null);
+      pendingSwapDataRef.current = null;
     }
   };
 
   const handleSwapCancel = () => {
     setShowSwapWidget(false);
     setPendingSwapData(null);
+    pendingSwapDataRef.current = null;
   };
 
   // Mock data for previous chats - replace with real data later

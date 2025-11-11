@@ -1,5 +1,6 @@
 "use client";
 
+import { ArrowDown, Check, Loader2, Repeat2 } from "lucide-react";
 import { useState } from "react";
 import type { SwapQuote } from "@/hooks/use-swap";
 
@@ -33,17 +34,18 @@ export function SwapTransactionWidget({
   return (
     <div
       style={{
-        background: "rgba(20, 20, 20, 0.6)",
+        background: "rgba(15, 15, 15, 0.85)",
         borderWidth: "1px",
         borderStyle: "solid",
-        borderColor: "rgba(255, 255, 255, 0.1)",
-        backdropFilter: "blur(20px)",
-        WebkitBackdropFilter: "blur(20px)",
+        borderColor: "rgba(255, 255, 255, 0.12)",
+        backdropFilter: "blur(24px) saturate(180%)",
+        WebkitBackdropFilter: "blur(24px) saturate(180%)",
         boxShadow:
-          "0 8px 32px 0 rgba(0, 0, 0, 0.37), inset 0 1px 0 0 rgba(255, 255, 255, 0.05)",
-        borderRadius: "16px",
-        padding: "1.5rem",
-        maxWidth: "400px",
+          "0 8px 32px rgba(0, 0, 0, 0.4), 0 2px 8px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.08)",
+        borderRadius: "20px",
+        padding: "1.75rem",
+        maxWidth: "420px",
+        width: "100%",
         color: "rgba(255, 255, 255, 0.9)",
       }}
     >
@@ -52,25 +54,30 @@ export function SwapTransactionWidget({
         style={{
           display: "flex",
           alignItems: "center",
-          gap: "0.75rem",
-          marginBottom: "1.25rem",
+          gap: "0.875rem",
+          marginBottom: "1.5rem",
+          paddingBottom: "1rem",
+          borderBottom: "1px solid rgba(255, 255, 255, 0.08)",
         }}
       >
         <div
           style={{
-            width: "40px",
-            height: "40px",
-            borderRadius: "12px",
+            width: "44px",
+            height: "44px",
+            borderRadius: "14px",
             background:
-              "linear-gradient(135deg, rgba(147, 197, 253, 0.2) 0%, rgba(99, 102, 241, 0.2) 100%)",
-            border: "1px solid rgba(147, 197, 253, 0.3)",
+              "linear-gradient(135deg, rgba(147, 197, 253, 0.15) 0%, rgba(99, 102, 241, 0.15) 100%)",
+            border: "1px solid rgba(147, 197, 253, 0.25)",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            fontSize: "1.25rem",
+            boxShadow: "0 2px 8px rgba(147, 197, 253, 0.15)",
           }}
         >
-          🔄
+          <Repeat2
+            size={24}
+            style={{ color: "rgba(147, 197, 253, 0.9)" }}
+          />
         </div>
         <div>
           <h3
@@ -79,15 +86,17 @@ export function SwapTransactionWidget({
               fontWeight: 600,
               margin: 0,
               color: "rgba(255, 255, 255, 0.95)",
+              letterSpacing: "-0.01em",
             }}
           >
             Swap Preview
           </h3>
           <p
             style={{
-              fontSize: "0.875rem",
-              color: "rgba(255, 255, 255, 0.6)",
+              fontSize: "0.8125rem",
+              color: "rgba(255, 255, 255, 0.5)",
               margin: 0,
+              marginTop: "0.125rem",
             }}
           >
             Review transaction details
@@ -98,11 +107,12 @@ export function SwapTransactionWidget({
       {/* Transaction Details */}
       <div
         style={{
-          background: "rgba(255, 255, 255, 0.03)",
+          background: "rgba(255, 255, 255, 0.04)",
           border: "1px solid rgba(255, 255, 255, 0.08)",
-          borderRadius: "12px",
-          padding: "1rem",
+          borderRadius: "16px",
+          padding: "1.25rem",
           marginBottom: "1rem",
+          boxShadow: "inset 0 1px 2px rgba(0, 0, 0, 0.1)",
         }}
       >
         {/* From Token */}
@@ -111,13 +121,16 @@ export function SwapTransactionWidget({
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
-            marginBottom: "0.75rem",
+            marginBottom: "1rem",
           }}
         >
           <span
             style={{
-              fontSize: "0.875rem",
-              color: "rgba(255, 255, 255, 0.6)",
+              fontSize: "0.8125rem",
+              color: "rgba(255, 255, 255, 0.5)",
+              fontWeight: 500,
+              textTransform: "uppercase",
+              letterSpacing: "0.05em",
             }}
           >
             You pay
@@ -125,9 +138,10 @@ export function SwapTransactionWidget({
           <div style={{ textAlign: "right" }}>
             <div
               style={{
-                fontSize: "1rem",
+                fontSize: "1.125rem",
                 fontWeight: 600,
                 color: "rgba(255, 255, 255, 0.95)",
+                letterSpacing: "-0.01em",
               }}
             >
               {quote.inputAmount} {quote.inputToken}
@@ -140,23 +154,26 @@ export function SwapTransactionWidget({
           style={{
             display: "flex",
             justifyContent: "center",
-            margin: "0.5rem 0",
+            margin: "0.75rem 0",
           }}
         >
           <div
             style={{
-              width: "32px",
-              height: "32px",
-              borderRadius: "8px",
-              background: "rgba(147, 197, 253, 0.1)",
+              width: "36px",
+              height: "36px",
+              borderRadius: "10px",
+              background:
+                "linear-gradient(135deg, rgba(147, 197, 253, 0.12) 0%, rgba(99, 102, 241, 0.12) 100%)",
               border: "1px solid rgba(147, 197, 253, 0.2)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              fontSize: "1rem",
             }}
           >
-            ↓
+            <ArrowDown
+              size={20}
+              style={{ color: "rgba(147, 197, 253, 0.9)" }}
+            />
           </div>
         </div>
 
@@ -170,8 +187,11 @@ export function SwapTransactionWidget({
         >
           <span
             style={{
-              fontSize: "0.875rem",
-              color: "rgba(255, 255, 255, 0.6)",
+              fontSize: "0.8125rem",
+              color: "rgba(255, 255, 255, 0.5)",
+              fontWeight: 500,
+              textTransform: "uppercase",
+              letterSpacing: "0.05em",
             }}
           >
             You receive
@@ -179,9 +199,10 @@ export function SwapTransactionWidget({
           <div style={{ textAlign: "right" }}>
             <div
               style={{
-                fontSize: "1rem",
+                fontSize: "1.125rem",
                 fontWeight: 600,
                 color: "rgba(147, 197, 253, 1)",
+                letterSpacing: "-0.01em",
               }}
             >
               {quote.outputAmount} {quote.outputToken}
@@ -195,10 +216,10 @@ export function SwapTransactionWidget({
         <div
           style={{
             background: "rgba(255, 255, 255, 0.02)",
-            border: "1px solid rgba(255, 255, 255, 0.05)",
-            borderRadius: "8px",
-            padding: "0.75rem",
-            marginBottom: "1rem",
+            border: "1px solid rgba(255, 255, 255, 0.06)",
+            borderRadius: "12px",
+            padding: "0.875rem 1rem",
+            marginBottom: "1.25rem",
           }}
         >
           {quote.priceImpact && (
@@ -206,14 +227,24 @@ export function SwapTransactionWidget({
               style={{
                 display: "flex",
                 justifyContent: "space-between",
-                fontSize: "0.875rem",
+                fontSize: "0.8125rem",
                 marginBottom: quote.fee ? "0.5rem" : 0,
               }}
             >
-              <span style={{ color: "rgba(255, 255, 255, 0.5)" }}>
+              <span
+                style={{
+                  color: "rgba(255, 255, 255, 0.45)",
+                  fontWeight: 500,
+                }}
+              >
                 Price Impact
               </span>
-              <span style={{ color: "rgba(255, 255, 255, 0.8)" }}>
+              <span
+                style={{
+                  color: "rgba(255, 255, 255, 0.85)",
+                  fontWeight: 600,
+                }}
+              >
                 {quote.priceImpact}
               </span>
             </div>
@@ -223,11 +254,23 @@ export function SwapTransactionWidget({
               style={{
                 display: "flex",
                 justifyContent: "space-between",
-                fontSize: "0.875rem",
+                fontSize: "0.8125rem",
               }}
             >
-              <span style={{ color: "rgba(255, 255, 255, 0.5)" }}>Fee</span>
-              <span style={{ color: "rgba(255, 255, 255, 0.8)" }}>
+              <span
+                style={{
+                  color: "rgba(255, 255, 255, 0.45)",
+                  fontWeight: 500,
+                }}
+              >
+                Fee
+              </span>
+              <span
+                style={{
+                  color: "rgba(255, 255, 255, 0.85)",
+                  fontWeight: 600,
+                }}
+              >
                 {quote.fee}
               </span>
             </div>
@@ -243,25 +286,32 @@ export function SwapTransactionWidget({
           onMouseEnter={(e) => {
             if (!isExecuting) {
               e.currentTarget.style.background = "rgba(255, 255, 255, 0.08)";
-              e.currentTarget.style.borderColor = "rgba(255, 255, 255, 0.25)";
+              e.currentTarget.style.borderColor = "rgba(255, 255, 255, 0.2)";
+              e.currentTarget.style.transform = "translateY(-1px)";
+              e.currentTarget.style.boxShadow =
+                "0 4px 12px rgba(0, 0, 0, 0.15)";
             }
           }}
           onMouseLeave={(e) => {
-            e.currentTarget.style.background = "rgba(255, 255, 255, 0.05)";
-            e.currentTarget.style.borderColor = "rgba(255, 255, 255, 0.15)";
+            e.currentTarget.style.background = "rgba(255, 255, 255, 0.04)";
+            e.currentTarget.style.borderColor = "rgba(255, 255, 255, 0.12)";
+            e.currentTarget.style.transform = "translateY(0)";
+            e.currentTarget.style.boxShadow = "0 2px 4px rgba(0, 0, 0, 0.1)";
           }}
           style={{
             flex: 1,
-            padding: "0.75rem 1.5rem",
-            borderRadius: "12px",
+            padding: "0.875rem 1.5rem",
+            borderRadius: "14px",
             fontSize: "0.875rem",
-            fontWeight: 500,
-            border: "1px solid rgba(255, 255, 255, 0.15)",
-            background: "rgba(255, 255, 255, 0.05)",
-            color: "rgba(255, 255, 255, 0.8)",
+            fontWeight: 600,
+            border: "1px solid rgba(255, 255, 255, 0.12)",
+            background: "rgba(255, 255, 255, 0.04)",
+            color: "rgba(255, 255, 255, 0.75)",
             cursor: isExecuting ? "not-allowed" : "pointer",
-            transition: "all 0.2s ease",
+            transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
             opacity: isExecuting ? BUTTON_DISABLED_OPACITY : 1,
+            boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
+            letterSpacing: "0.01em",
           }}
           type="button"
         >
@@ -273,46 +323,50 @@ export function SwapTransactionWidget({
           onMouseEnter={(e) => {
             if (!(isExecuting || loading)) {
               e.currentTarget.style.background =
-                "linear-gradient(135deg, rgba(147, 197, 253, 0.25) 0%, rgba(99, 102, 241, 0.25) 100%)";
+                "linear-gradient(135deg, rgba(147, 197, 253, 0.28) 0%, rgba(99, 102, 241, 0.28) 100%)";
               e.currentTarget.style.borderColor = "rgba(147, 197, 253, 0.5)";
               e.currentTarget.style.transform = "translateY(-2px)";
+              e.currentTarget.style.boxShadow =
+                "0 8px 24px rgba(147, 197, 253, 0.25), 0 4px 8px rgba(0, 0, 0, 0.15)";
             }
           }}
           onMouseLeave={(e) => {
             e.currentTarget.style.background =
-              "linear-gradient(135deg, rgba(147, 197, 253, 0.15) 0%, rgba(99, 102, 241, 0.15) 100%)";
-            e.currentTarget.style.borderColor = "rgba(147, 197, 253, 0.3)";
+              "linear-gradient(135deg, rgba(147, 197, 253, 0.18) 0%, rgba(99, 102, 241, 0.18) 100%)";
+            e.currentTarget.style.borderColor = "rgba(147, 197, 253, 0.35)";
             e.currentTarget.style.transform = "translateY(0)";
+            e.currentTarget.style.boxShadow =
+              "0 4px 12px rgba(147, 197, 253, 0.15), 0 2px 4px rgba(0, 0, 0, 0.1)";
           }}
           style={{
             flex: 1,
-            padding: "0.75rem 1.5rem",
-            borderRadius: "12px",
+            padding: "0.875rem 1.5rem",
+            borderRadius: "14px",
             fontSize: "0.875rem",
-            fontWeight: 500,
-            border: "1px solid rgba(147, 197, 253, 0.3)",
+            fontWeight: 600,
+            border: "1px solid rgba(147, 197, 253, 0.35)",
             background:
-              "linear-gradient(135deg, rgba(147, 197, 253, 0.15) 0%, rgba(99, 102, 241, 0.15) 100%)",
+              "linear-gradient(135deg, rgba(147, 197, 253, 0.18) 0%, rgba(99, 102, 241, 0.18) 100%)",
             color: "rgba(147, 197, 253, 1)",
             cursor: isExecuting || loading ? "not-allowed" : "pointer",
-            transition: "all 0.2s ease",
+            transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
             opacity: isExecuting || loading ? BUTTON_LOADING_OPACITY : 1,
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
             gap: "0.5rem",
+            boxShadow:
+              "0 4px 12px rgba(147, 197, 253, 0.15), 0 2px 4px rgba(0, 0, 0, 0.1)",
+            letterSpacing: "0.01em",
+            whiteSpace: "nowrap",
           }}
           type="button"
         >
           {isExecuting || loading ? (
             <>
-              <div
+              <Loader2
+                size={16}
                 style={{
-                  width: "16px",
-                  height: "16px",
-                  border: "2px solid rgba(147, 197, 253, 0.3)",
-                  borderTopColor: "rgba(147, 197, 253, 1)",
-                  borderRadius: "50%",
                   animation: "spin 0.8s linear infinite",
                 }}
               />
@@ -321,7 +375,7 @@ export function SwapTransactionWidget({
           ) : (
             <>
               <span>Approve & Sign</span>
-              <span>✓</span>
+              <Check size={16} />
             </>
           )}
         </button>

@@ -1,17 +1,5 @@
 "use client";
 
-import { BentoGridSection } from "@/components/bento-grid-section";
-import { Footer } from "@/components/footer";
-import { LoyalTokenTicker } from "@/components/loyal-token-ticker";
-import { MarkdownRenderer } from "@/components/markdown-renderer";
-import { RoadmapSection } from "@/components/roadmap-section";
-import { SkillsTextarea } from "@/components/skills-textarea";
-import AnimatedBadge from "@/components/ui/animated-badge";
-import { ChevronRightIcon } from "@/components/ui/chevron-right";
-import { CopyIcon, type CopyIconHandle } from "@/components/ui/copy";
-import { MenuIcon, type MenuIconHandle } from "@/components/ui/menu";
-import { PlusIcon, type PlusIconHandle } from "@/components/ui/plus";
-import { stripSkillMarkers } from "@/lib/skills-text";
 import { useChat } from "@ai-sdk/react";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { useWalletModal } from "@solana/wallet-adapter-react-ui";
@@ -21,6 +9,21 @@ import { IBM_Plex_Sans, Plus_Jakarta_Sans } from "next/font/google";
 import localFont from "next/font/local";
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
+import { BentoGridSection } from "@/components/bento-grid-section";
+import { Footer } from "@/components/footer";
+import { LoyalTokenTicker } from "@/components/loyal-token-ticker";
+import { MarkdownRenderer } from "@/components/markdown-renderer";
+import { RoadmapSection } from "@/components/roadmap-section";
+import { SkillsInput } from "@/components/skills-input";
+import type { LoyalSkill } from "@/types/skills";
+import { SwapTransactionWidget } from "@/components/swap-transaction-widget";
+import AnimatedBadge from "@/components/ui/animated-badge";
+import { ChevronRightIcon } from "@/components/ui/chevron-right";
+import { CopyIcon, type CopyIconHandle } from "@/components/ui/copy";
+import { MenuIcon, type MenuIconHandle } from "@/components/ui/menu";
+import { PlusIcon, type PlusIconHandle } from "@/components/ui/plus";
+import { useSwap } from "@/hooks/use-swap";
+// import { detectSwapSkill, stripSkillMarkers } from "@/lib/skills-text";
 
 const instrumentSerif = localFont({
   src: [
@@ -61,7 +64,17 @@ export default function LandingPage() {
       api: "/api/chat",
     }),
   });
-  const [input, setInput] = useState("");
+  const [input, setInput] = useState<LoyalSkill[]>([]);
+  const [pendingText, setPendingText] = useState("");
+  const [swapFlowState, setSwapFlowState] = useState<{
+    isActive: boolean;
+    isComplete: boolean;
+    swapData: {
+      fromCurrency: string | null;
+      amount: string | null;
+      toCurrency: string | null;
+    };
+  } | null>(null);
   const [isChatMode, setIsChatMode] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [copiedMessageId, setCopiedMessageId] = useState<string | null>(null);
@@ -71,7 +84,7 @@ export default function LandingPage() {
   const [hoveredNavIndex, setHoveredNavIndex] = useState<number | null>(null);
   const menuIconRef = useRef<MenuIconHandle>(null);
   const plusIconRef = useRef<PlusIconHandle>(null);
-  const inputRef = useRef<HTMLTextAreaElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
   const copyIconRefs = useRef<Map<string, CopyIconHandle>>(new Map());
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
@@ -89,8 +102,33 @@ export default function LandingPage() {
   const prevScrolledToAbout = useRef(false);
   const prevScrolledToRoadmap = useRef(false);
   const prevScrolledToLinks = useRef(false);
-  const sanitizedInput = stripSkillMarkers(input).trim();
-  const hasUsableInput = sanitizedInput.length > 0;
+
+  // Smart input validation: enable send when:
+  // 1. There's regular text OR skills (but not in the middle of a skill flow)
+  // 2. OR swap flow is complete
+  const hasUsableInput =
+    (pendingText.trim().length > 0 || input.length > 0) &&
+    (!swapFlowState?.isActive || swapFlowState?.isComplete);
+
+  // Swap functionality
+  const {
+    getQuote,
+    executeSwap,
+    quote,
+    loading: swapLoading,
+    error: swapError,
+  } = useSwap();
+  const [showSwapWidget, setShowSwapWidget] = useState(false);
+  const [pendingSwapData, setPendingSwapData] = useState<{
+    amount: string;
+    fromCurrency: string;
+    toCurrency: string;
+  } | null>(null);
+  const pendingSwapDataRef = useRef<{
+    amount: string;
+    fromCurrency: string;
+    toCurrency: string;
+  } | null>(null);
 
   // Network status monitoring and recovery
   useEffect(() => {
@@ -146,21 +184,14 @@ export default function LandingPage() {
   useEffect(() => {
     if (connected && pendingMessage && status === "ready") {
       sendMessage({ text: pendingMessage });
-      setInput("");
+      setInput([]);
+      setPendingText("");
       setPendingMessage(null);
-
-      // Manually clear textarea value
-      if (inputRef.current) {
-        inputRef.current.value = "";
-        inputRef.current.style.height = "auto";
-      }
-
       setIsChatMode(true);
 
-      // Reset textarea height and ensure focus
+      // Ensure focus
       setTimeout(() => {
         if (inputRef.current) {
-          inputRef.current.style.height = "auto";
           inputRef.current.focus();
         }
       }, 50);
@@ -236,13 +267,6 @@ export default function LandingPage() {
   }, [messages, isChatMode]);
 
   // Auto-resize textarea when input changes
-  useEffect(() => {
-    if (inputRef.current) {
-      inputRef.current.style.height = "auto";
-      inputRef.current.style.height = `${inputRef.current.scrollHeight}px`;
-    }
-  }, [input]);
-
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
     if (messagesEndRef.current) {
@@ -381,40 +405,133 @@ export default function LandingPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isScrolledToAbout, isScrolledToRoadmap, isScrolledToLinks]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSwapComplete = (swapData: {
+    amount: string;
+    fromCurrency: string;
+    toCurrency: string;
+  }) => {
+    // Store in ref immediately (synchronous) for Enter key handling
+    pendingSwapDataRef.current = swapData;
+    // Also store in state for UI updates
+    setPendingSwapData(swapData);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     // Always check if wallet is connected before sending any message
     if (!connected) {
       // Save the message to send after connection
       if (hasUsableInput) {
-        setPendingMessage(sanitizedInput);
+        setPendingMessage(input.map((s) => s.label).join(" "));
       }
       // Open wallet connection modal
       setVisible(true);
       return;
     }
 
-    if (hasUsableInput && status === "ready") {
-      sendMessage({ text: sanitizedInput });
-      setInput("");
+    if (!hasUsableInput) {
+      return;
+    }
 
-      // Manually clear textarea value
-      if (inputRef.current) {
-        inputRef.current.value = "";
-        inputRef.current.style.height = "auto";
+    setIsChatMode(true);
+
+    // Check if this is a completed swap
+    // Use ref for immediate access (avoids race condition with Enter key)
+    const hasSwapSkill = input.some((skill) => skill.id === "swap");
+    const swapData = pendingSwapDataRef.current;
+    if (hasSwapSkill && swapData) {
+      const swapMessage = `Swap ${swapData.amount} ${swapData.fromCurrency} to ${swapData.toCurrency}`;
+
+      // Add user's swap message to chat
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: `user-swap-${Date.now()}`,
+          role: "user",
+          parts: [
+            {
+              type: "text",
+              text: swapMessage,
+            },
+          ],
+        },
+      ]);
+
+      // Get quote from Jupiter
+      try {
+        const quoteResult = await getQuote(
+          swapData.fromCurrency,
+          swapData.toCurrency,
+          swapData.amount
+        );
+        if (quoteResult) {
+          setShowSwapWidget(true);
+        } else {
+          setMessages((prev) => [
+            ...prev,
+            {
+              id: `swap-quote-error-${Date.now()}`,
+              role: "assistant",
+              parts: [
+                {
+                  type: "text",
+                  text: `Failed to get swap quote. Please check the console for details.`,
+                },
+              ],
+            },
+          ]);
+        }
+      } catch (err) {
+        console.error("Failed to get swap quote:", err);
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: `swap-quote-error-${Date.now()}`,
+            role: "assistant",
+            parts: [
+              {
+                type: "text",
+                text: `Failed to get swap quote: ${
+                  err instanceof Error ? err.message : "Unknown error"
+                }`,
+              },
+            ],
+          },
+        ]);
       }
 
-      setIsChatMode(true);
-
-      // Reset textarea height and ensure focus
-      setTimeout(() => {
-        if (inputRef.current) {
-          inputRef.current.style.height = "auto";
-          inputRef.current.focus();
-        }
-      }, 50);
+      // Clear input and swap data
+      setInput([]);
+      setPendingText("");
+      setPendingSwapData(null);
+      pendingSwapDataRef.current = null;
+    } else {
+      // Regular message - send to LLM
+      if (status === "ready") {
+        const messageText = [
+          ...input.map((skill) => skill.label),
+          pendingText.trim(),
+        ]
+          .filter(Boolean)
+          .join(" ");
+        sendMessage({ text: messageText });
+        setInput([]);
+        setPendingText("");
+      }
     }
+
+    // Clear the input component's internal state
+    if (inputRef.current && 'clear' in inputRef.current) {
+      (inputRef.current as HTMLInputElement & { clear: () => void }).clear();
+    }
+
+    // Ensure focus
+    setTimeout(() => {
+      if (inputRef.current) {
+        inputRef.current.focus();
+      }
+    }, 50);
   };
 
   const handleCopyMessage = async (messageId: string, text: string) => {
@@ -491,6 +608,61 @@ export default function LandingPage() {
         behavior: "smooth",
       });
     }
+  };
+
+  const handleSwapApprove = async () => {
+    if (!pendingSwapData) return;
+
+    try {
+      const result = await executeSwap(
+        pendingSwapData.fromCurrency,
+        pendingSwapData.toCurrency,
+        pendingSwapData.amount
+      );
+
+      if (result?.success) {
+        // Add success message to chat
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: `swap-success-${Date.now()}`,
+            role: "assistant",
+            parts: [
+              {
+                type: "text",
+                text: `✅ Swap successful! Transaction signature: ${result.signature}`,
+              },
+            ],
+          },
+        ]);
+      }
+    } catch (err) {
+      console.error("Swap execution failed:", err);
+      // Add error message to chat
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: `swap-error-${Date.now()}`,
+          role: "assistant",
+          parts: [
+            {
+              type: "text",
+              text: `❌ Swap failed: ${
+                err instanceof Error ? err.message : "Unknown error"
+              }`,
+            },
+          ],
+        },
+      ]);
+    } finally {
+      setShowSwapWidget(false);
+      setPendingSwapData(null);
+    }
+  };
+
+  const handleSwapCancel = () => {
+    setShowSwapWidget(false);
+    setPendingSwapData(null);
   };
 
   // Mock data for previous chats - replace with real data later
@@ -853,7 +1025,7 @@ export default function LandingPage() {
             <button
               onClick={() => {
                 setIsChatMode(false);
-                setInput("");
+                setInput([]);
                 // Clear all messages to start a completely new chat
                 setMessages([]);
                 setTimeout(() => {
@@ -944,7 +1116,7 @@ export default function LandingPage() {
               <button
                 onClick={() => {
                   setIsChatMode(false);
-                  setInput("");
+                  setInput([]);
                   // Clear all messages for a new chat
                   setMessages([]);
                   // Focus on input after resetting chat
@@ -1601,6 +1773,27 @@ export default function LandingPage() {
                   );
                 })}
 
+                {/* Swap Transaction Widget */}
+                {showSwapWidget && quote && (
+                  <div
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "flex-start",
+                      gap: "0.5rem",
+                      animation: "slideInUp 0.3s ease-out",
+                      animationFillMode: "both",
+                    }}
+                  >
+                    <SwapTransactionWidget
+                      loading={swapLoading}
+                      onApprove={handleSwapApprove}
+                      onCancel={handleSwapCancel}
+                      quote={quote}
+                    />
+                  </div>
+                )}
+
                 {/* Thinking indicator */}
                 {status === "submitted" && (
                   <div
@@ -1768,62 +1961,28 @@ export default function LandingPage() {
                   transition: "all 0.5s cubic-bezier(0.4, 0, 0.2, 1)",
                 }}
               >
-                <SkillsTextarea
-                  autoFocus
-                  disabled={
-                    !isOnline ||
-                    status !== "ready" ||
-                    (isChatMode && !connected)
-                  }
-                  onChange={(e) => {
-                    setInput(e.target.value);
+                <SkillsInput
+                  onChange={(skills) => {
+                    setInput(skills);
 
                     // Show modal on first typing
-                    if (!hasShownModal && e.target.value.length > 0) {
+                    if (!hasShownModal && skills.length > 0) {
                       setIsModalOpen(true);
                       setHasShownModal(true);
                       localStorage.setItem("loyal-testers-modal-shown", "true");
                     }
-
-                    // Auto-resize textarea
-                    if (inputRef.current) {
-                      inputRef.current.style.height = "auto";
-                      inputRef.current.style.height = `${inputRef.current.scrollHeight}px`;
-                    }
                   }}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && !e.shiftKey) {
-                      e.preventDefault();
-                      handleSubmit(e);
-                    }
-                  }}
+                  onPendingTextChange={setPendingText}
+                  onSwapComplete={handleSwapComplete}
+                  onSwapFlowChange={setSwapFlowState}
                   placeholder={
                     isOnline
                       ? isChatMode && !connected
                         ? "Please reconnect wallet to continue..."
-                        : "Ask me anything..."
+                        : "Ask me anything (type / for skills)..."
                       : "No internet connection..."
                   }
                   ref={inputRef}
-                  rows={1}
-                  style={{
-                    flex: 1,
-                    padding: "1.25rem 1.75rem",
-                    paddingRight: "3.5rem", // Make room for the send button
-                    fontSize: "1rem",
-                    color: "#fff",
-                    background: "transparent",
-                    border: "none",
-                    outline: "none",
-                    resize: "none",
-                    fontFamily: "inherit",
-                    lineHeight: "1.5",
-                    overflowX: "hidden",
-                    overflowY: "auto",
-                    minHeight: "auto",
-                    maxHeight: "200px",
-                  }}
-                  tabIndex={0}
                   value={input}
                 />
                 <button

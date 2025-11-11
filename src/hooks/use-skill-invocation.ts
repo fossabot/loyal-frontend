@@ -39,6 +39,7 @@ type UseSkillInvocationReturn = {
   handleInput: (e: React.FormEvent<HTMLTextAreaElement>) => void;
   selectSkill: (skill: LoyalSkill) => void;
   pendingAmountInput: boolean;
+  pendingCurrencySelection: boolean;
   showDeactivatedHint: boolean;
   pendingSwapToCurrency: boolean;
   swapData: {
@@ -375,40 +376,14 @@ export const useSkillInvocation = ({
       const after = text.slice(cursorPos);
 
       // Handle currency selection (from amount flow)
-      if (pendingCurrencySelection && skill.category === "currency") {
+      if (skill.category === "currency") {
         // Check if we're in a swap flow by looking for Swap skill in existing text
         const hasSwapSkill = skillSegments.some(
           (seg) => seg.isSkill && seg.skill?.id === "swap"
         );
 
-        if (hasSwapSkill && !swapFromCurrency) {
-          // First currency selection in swap - this is the FROM currency
-          const amountToken = `${SKILL_PREFIX}${amountValue} ${skill.label}${SKILL_SUFFIX}${SKILL_TRAILING_SPACE}`;
-          const newText = before + amountToken + after;
-          const newCursorPos = slashIndex + amountToken.length;
-
-          onSkillSelect?.(skill, slashIndex);
-          applyTextMutation(newText, newCursorPos);
-
-          // Store amount and FROM currency, then prompt for TO currency
-          setSwapAmount(amountValue);
-          setSwapFromCurrency(skill.label);
-          setPendingCurrencySelection(false);
-          setAmountValue("");
-          setAmountTriggerIndex(null);
-          setPendingSwapToCurrency(true);
-          setSlashIndex(newCursorPos);
-          setFilteredSkills(CURRENCY_SKILLS);
-          setSelectedSkillIndex(0);
-          setIsDropdownOpen(true);
-          setDropdownPosition(
-            calculateDropdownPosition(newText.slice(0, newCursorPos))
-          );
-          return;
-        }
-
-        if (hasSwapSkill && swapFromCurrency && pendingSwapToCurrency) {
-          // Second currency selection in swap - this is the TO currency
+        // Swap: Second currency selection (TO) - CHECK THIS FIRST
+        if (hasSwapSkill && pendingSwapToCurrency) {
           const currencyToken = `${SKILL_PREFIX}${skill.label}${SKILL_SUFFIX}${SKILL_TRAILING_SPACE}`;
           const newText = before + currencyToken + after;
           const newCursorPos = slashIndex + currencyToken.length;
@@ -429,28 +404,71 @@ export const useSkillInvocation = ({
           return;
         }
 
-        // Default Send flow - currency selection leads to recipient
-        const amountToken = `${SKILL_PREFIX}${amountValue} ${skill.label}${SKILL_SUFFIX}${SKILL_TRAILING_SPACE}`;
-        const newText = before + amountToken + after;
-        const newCursorPos = slashIndex + amountToken.length;
+        // Swap: First currency selection (FROM) - happens right after Swap skill
+        if (hasSwapSkill && !swapFromCurrency && pendingCurrencySelection && !pendingSwapToCurrency) {
+          // First currency selection in swap - this is the FROM currency
+          const currencyToken = `${SKILL_PREFIX}${skill.label}${SKILL_SUFFIX}${SKILL_TRAILING_SPACE}`;
+          const newText = before + currencyToken + after;
+          const newCursorPos = slashIndex + currencyToken.length;
 
-        onSkillSelect?.(skill, slashIndex);
-        applyTextMutation(newText, newCursorPos);
+          onSkillSelect?.(skill, slashIndex);
+          applyTextMutation(newText, newCursorPos);
 
-        // After currency, open recipient dropdown
-        setPendingCurrencySelection(false);
-        setAmountValue("");
-        setAmountTriggerIndex(null);
-        setPendingRecipientSelection(true);
-        setRecipientTriggerIndex(newCursorPos);
-        setFilteredSkills(RECIPIENT_SKILLS);
-        setSelectedSkillIndex(0);
-        setIsDropdownOpen(true);
-        setDropdownPosition(
-          calculateDropdownPosition(newText.slice(0, newCursorPos))
-        );
-        setSlashIndex(null);
-        return;
+          // Store FROM currency, then prompt for amount
+          setSwapFromCurrency(skill.label);
+          setPendingCurrencySelection(false);
+          setPendingAmountInput(true);
+          setAmountTriggerIndex(newCursorPos);
+          setIsDropdownOpen(false);
+          setSlashIndex(null);
+          return;
+        }
+
+        // Swap: Second currency selection (TO) - happens after amount entry
+        if (hasSwapSkill && swapFromCurrency && amountValue && pendingSwapToCurrency && pendingCurrencySelection) {
+          // Second currency selection in swap - this is the TO currency
+          const currencyToken = `${SKILL_PREFIX}${skill.label}${SKILL_SUFFIX}${SKILL_TRAILING_SPACE}`;
+          const newText = before + currencyToken + after;
+          const newCursorPos = slashIndex + currencyToken.length;
+
+          onSkillSelect?.(skill, slashIndex);
+          applyTextMutation(newText, newCursorPos);
+
+          // All swap data collected
+          setSwapAmount(amountValue);
+          setAmountValue("");
+          setAmountTriggerIndex(null);
+          setPendingCurrencySelection(false);
+          setPendingSwapToCurrency(false);
+          setIsDropdownOpen(false);
+          setSlashIndex(null);
+          return;
+        }
+
+        // Default Send flow - currency selection leads to recipient (only if not swapping)
+        if (!hasSwapSkill && pendingCurrencySelection) {
+          const amountToken = `${SKILL_PREFIX}${amountValue} ${skill.label}${SKILL_SUFFIX}${SKILL_TRAILING_SPACE}`;
+          const newText = before + amountToken + after;
+          const newCursorPos = slashIndex + amountToken.length;
+
+          onSkillSelect?.(skill, slashIndex);
+          applyTextMutation(newText, newCursorPos);
+
+          // After currency, open recipient dropdown
+          setPendingCurrencySelection(false);
+          setAmountValue("");
+          setAmountTriggerIndex(null);
+          setPendingRecipientSelection(true);
+          setRecipientTriggerIndex(newCursorPos);
+          setFilteredSkills(RECIPIENT_SKILLS);
+          setSelectedSkillIndex(0);
+          setIsDropdownOpen(true);
+          setDropdownPosition(
+            calculateDropdownPosition(newText.slice(0, newCursorPos))
+          );
+          setSlashIndex(null);
+          return;
+        }
       }
 
       const baseToken = `${SKILL_PREFIX}${skill.label}${SKILL_SUFFIX}${SKILL_TRAILING_SPACE}`;
@@ -469,11 +487,15 @@ export const useSkillInvocation = ({
         setIsDropdownOpen(false);
         setSlashIndex(null);
       } else if (skill.id === "swap") {
-        // After Swap, prompt for amount
-        setPendingAmountInput(true);
-        setAmountTriggerIndex(newCursorPos);
-        setIsDropdownOpen(false);
-        setSlashIndex(null);
+        // After Swap, show currency dropdown for FROM currency
+        setPendingCurrencySelection(true);
+        setFilteredSkills(CURRENCY_SKILLS);
+        setIsDropdownOpen(true);
+        setSelectedSkillIndex(0);
+        const textBeforeCursor = newText.slice(0, newCursorPos);
+        const position = calculateDropdownPosition(textBeforeCursor);
+        setDropdownPosition(position);
+        setSlashIndex(newCursorPos); // Keep slashIndex so we know where to insert currency
       } else {
         setIsDropdownOpen(false);
         setSlashIndex(null);
@@ -508,15 +530,43 @@ export const useSkillInvocation = ({
         const textarea = textareaRef.current;
         if (textarea) {
           const cursorPos = textarea.selectionStart;
-          // Show currency dropdown
+          const segments = splitSkillSegments(textarea.value);
+          const hasSwapSkill = segments.some(
+            (seg) => seg.isSkill && seg.skill?.id === "swap"
+          );
+
+          // Remove the user-typed amount and insert cleaned version
+          // User typed amount is between amountTriggerIndex and current cursor
+          const insertPos = amountTriggerIndex || 0;
+          const before = textarea.value.slice(0, insertPos);
+          // Skip the typed amount - it's between insertPos and cursorPos
+          const after = textarea.value.slice(cursorPos);
+          const amountText = ` ${amountValue} `;
+          const newText = before + amountText + after;
+          const newCursorPos = insertPos + amountText.length;
+
+          applyTextMutation(newText, newCursorPos);
+
+          // Show currency dropdown - set slashIndex to where currency should be inserted
           setPendingAmountInput(false);
           setPendingCurrencySelection(true);
-          setSlashIndex(amountTriggerIndex || cursorPos);
-          setFilteredSkills(CURRENCY_SKILLS);
+          setSlashIndex(newCursorPos); // Currency will be inserted right after the amount
+
+          // For swap, filter out the FROM currency from TO options
+          if (hasSwapSkill && swapFromCurrency) {
+            const availableToCurrencies = CURRENCY_SKILLS.filter(
+              (curr) => curr.label !== swapFromCurrency
+            );
+            setFilteredSkills(availableToCurrencies);
+            setPendingSwapToCurrency(true);
+          } else {
+            setFilteredSkills(CURRENCY_SKILLS);
+          }
+
           setSelectedSkillIndex(0);
           setIsDropdownOpen(true);
           setDropdownPosition(
-            calculateDropdownPosition(textarea.value.slice(0, cursorPos))
+            calculateDropdownPosition(newText.slice(0, newCursorPos))
           );
         }
         return true;
@@ -734,6 +784,12 @@ export const useSkillInvocation = ({
     const hasActionSkill = skillSegments.some(
       (segment) => segment.isSkill && segment.skill?.category === "action"
     );
+    const hasSendSkill = skillSegments.some(
+      (segment) => segment.isSkill && segment.skill?.id === "send"
+    );
+    const hasSwapSkill = skillSegments.some(
+      (segment) => segment.isSkill && segment.skill?.id === "swap"
+    );
     const hasRecipientSkill = skillSegments.some(
       (segment) => segment.isSkill && segment.skill?.category === "recipient"
     );
@@ -759,8 +815,8 @@ export const useSkillInvocation = ({
       return;
     }
 
-    // Only auto-open recipient if we have action skill, amount, but no recipient
-    if (hasActionSkill && hasAmountSkill && !hasRecipientSkill) {
+    // Only auto-open recipient for SEND skill (not Swap)
+    if (hasSendSkill && !hasSwapSkill && hasAmountSkill && !hasRecipientSkill) {
       const textarea = textareaRef.current;
       if (textarea) {
         const cursorPos = textarea.selectionStart;
@@ -795,6 +851,7 @@ export const useSkillInvocation = ({
     handleInput,
     selectSkill,
     pendingAmountInput,
+    pendingCurrencySelection,
     showDeactivatedHint,
     pendingSwapToCurrency,
     swapData: {

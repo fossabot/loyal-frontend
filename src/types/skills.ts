@@ -47,11 +47,6 @@ export const AVAILABLE_SKILLS: LoyalSkill[] = [
     category: "currency",
   },
   {
-    id: "currency-usd",
-    label: "USD",
-    category: "currency",
-  },
-  {
     id: "currency-usdc",
     label: "USDC",
     category: "currency",

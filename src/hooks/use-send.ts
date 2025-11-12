@@ -55,7 +55,9 @@ export function useSend() {
     async (
       currency: string,
       amount: string,
-      recipientAddress: string
+      recipientAddress: string,
+      tokenMint?: string,
+      tokenDecimals?: number
     ): Promise<SendResult> => {
       if (!(publicKey && signTransaction)) {
         const error = "Wallet not connected";
@@ -136,15 +138,16 @@ export function useSend() {
           };
         }
         // Send SPL Token
-        const tokenMint = getTokenMint(currency);
-        if (!tokenMint) {
-          throw new Error(`Unknown token: ${currency}`);
+        // Use provided tokenMint if available, otherwise try to look it up
+        const resolvedTokenMint = tokenMint || getTokenMint(currency);
+        if (!resolvedTokenMint) {
+          throw new Error(`Unknown token: ${currency}. Please provide token mint address.`);
         }
 
-        const mintPubkey = new PublicKey(tokenMint);
+        const mintPubkey = new PublicKey(resolvedTokenMint);
 
-        // Get decimals for the token
-        const decimals = TOKEN_DECIMALS[currency.toUpperCase()] || 6;
+        // Get decimals for the token - use provided decimals or look up in mapping
+        const decimals = tokenDecimals ?? TOKEN_DECIMALS[currency.toUpperCase()] ?? 6;
         const amountInSmallestUnit = Math.floor(
           Number.parseFloat(amount) * 10 ** decimals
         );

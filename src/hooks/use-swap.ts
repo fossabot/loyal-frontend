@@ -95,27 +95,28 @@ export function useSwap() {
     async (
       fromToken: string,
       toToken: string,
-      amount: string
+      amount: string,
+      fromTokenMint?: string,
+      fromTokenDecimals?: number
     ): Promise<SwapQuote | null> => {
       try {
         setError(null);
 
         // Convert token symbols to mint addresses
-        const inputMint = getTokenMint(fromToken);
+        // Use provided mints if available, otherwise look up
+        const inputMint = fromTokenMint || getTokenMint(fromToken);
         const outputMint = getTokenMint(toToken);
 
         if (!inputMint) {
-          throw new Error(`Unknown token: ${fromToken}`);
+          throw new Error(`Unknown token: ${fromToken}. Please provide token mint address.`);
         }
         if (!outputMint) {
           throw new Error(`Unknown token: ${toToken}`);
         }
 
         // Convert amount to lamports (smallest unit)
-        // For SOL: 1 SOL = 1,000,000,000 lamports
-        // For SPL tokens: usually 1 token = 1,000,000 (6 decimals) or 1,000,000,000 (9 decimals)
-        // We'll use 9 decimals for SOL and 6 for others
-        const decimals = fromToken.toUpperCase() === "SOL" ? 9 : 6;
+        // Use provided decimals if available, otherwise default based on token
+        const decimals = fromTokenDecimals ?? (fromToken.toUpperCase() === "SOL" ? 9 : 6);
         const amountInSmallestUnit = Math.floor(
           Number.parseFloat(amount) * 10 ** decimals
         ).toString();
@@ -184,7 +185,8 @@ export function useSwap() {
     async (
       fromToken: string,
       toToken: string,
-      amount: string
+      amount: string,
+      fromTokenMint?: string
     ): Promise<SwapResult> => {
       if (!(publicKey && signTransaction)) {
         const error = "Wallet not connected";
@@ -207,7 +209,12 @@ export function useSwap() {
         // Step 1: Call Jupiter Dial Blinks API to get transaction
         // Format: POST /api/v0/swap/{tokenPair}/{amount}
         // Amount should be passed as decimal string (e.g., "0.01" for 0.01 SOL)
-        // For BONK use "Bonk" symbol, for LOYAL use full mint address
+        // For known tokens use symbol, for unknown tokens use mint address
+
+        // Determine FROM token identifier - use mint if provided, otherwise symbol
+        const fromTokenIdentifier = fromTokenMint || fromToken;
+
+        // Determine TO token identifier
         let toTokenIdentifier: string;
         if (toToken.toUpperCase() === "LOYAL") {
           toTokenIdentifier = "LYLikzBQtpa9ZgVrJsqYGQpR3cC1WMJrBHaXGrQmeta";
@@ -217,7 +224,7 @@ export function useSwap() {
           toTokenIdentifier = toToken;
         }
 
-        const tokenPair = `${fromToken}-${toTokenIdentifier}`;
+        const tokenPair = `${fromTokenIdentifier}-${toTokenIdentifier}`;
         // Pass amount as decimal string, not in smallest units
         const dialUrl = `${JUPITER_DIAL_BASE_URL}/api/v0/swap/${tokenPair}/${amount}`;
         console.log("Calling Dial API:", dialUrl);

@@ -152,11 +152,15 @@ export default function LandingPage() {
   const [pendingSwapData, setPendingSwapData] = useState<{
     amount: string;
     fromCurrency: string;
+    fromCurrencyMint: string | null;
+    fromCurrencyDecimals: number | null;
     toCurrency: string;
   } | null>(null);
   const pendingSwapDataRef = useRef<{
     amount: string;
     fromCurrency: string;
+    fromCurrencyMint: string | null;
+    fromCurrencyDecimals: number | null;
     toCurrency: string;
   } | null>(null);
 
@@ -172,11 +176,15 @@ export default function LandingPage() {
   } | null>(null);
   const [pendingSendData, setPendingSendData] = useState<{
     currency: string;
+    currencyMint: string | null;
+    currencyDecimals: number | null;
     amount: string;
     walletAddress: string;
   } | null>(null);
   const pendingSendDataRef = useRef<{
     currency: string;
+    currencyMint: string | null;
+    currencyDecimals: number | null;
     amount: string;
     walletAddress: string;
   } | null>(null);
@@ -459,6 +467,8 @@ export default function LandingPage() {
   const handleSwapComplete = (swapData: {
     amount: string;
     fromCurrency: string;
+    fromCurrencyMint: string | null;
+    fromCurrencyDecimals: number | null;
     toCurrency: string;
   }) => {
     // Store in ref immediately (synchronous) for Enter key handling
@@ -469,6 +479,8 @@ export default function LandingPage() {
 
   const handleSendComplete = (sendData: {
     currency: string;
+    currencyMint: string | null;
+    currencyDecimals: number | null;
     amount: string;
     walletAddress: string;
   }) => {
@@ -525,7 +537,9 @@ export default function LandingPage() {
         const quoteResult = await getQuote(
           swapData.fromCurrency,
           swapData.toCurrency,
-          swapData.amount
+          swapData.amount,
+          swapData.fromCurrencyMint || undefined,
+          swapData.fromCurrencyDecimals || undefined
         );
         if (quoteResult) {
           setShowSwapWidget(true);
@@ -716,7 +730,8 @@ export default function LandingPage() {
     const result = await executeSwap(
       pendingSwapData.fromCurrency,
       pendingSwapData.toCurrency,
-      pendingSwapData.amount
+      pendingSwapData.amount,
+      pendingSwapData.fromCurrencyMint || undefined
     );
 
     if (result.success) {
@@ -746,7 +761,9 @@ export default function LandingPage() {
     const result = await executeSend(
       pendingSendData.currency,
       pendingSendData.amount,
-      pendingSendData.walletAddress
+      pendingSendData.walletAddress,
+      pendingSendData.currencyMint || undefined,
+      pendingSendData.currencyDecimals || undefined
     );
 
     if (result.success) {

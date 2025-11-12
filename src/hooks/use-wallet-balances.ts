@@ -78,14 +78,14 @@ export function useWalletBalances() {
         // Only include tokens with balance > 0
         if (balance > 0) {
           const tokenInfo = KNOWN_TOKENS[mintAddress];
-          if (tokenInfo) {
-            tokenBalances.push({
-              symbol: tokenInfo.symbol,
-              balance,
-              mint: mintAddress,
-              decimals: parsedInfo.tokenAmount.decimals,
-            });
-          }
+
+          // Include all tokens with balance > 0, not just known ones
+          tokenBalances.push({
+            symbol: tokenInfo?.symbol || `${mintAddress.slice(0, 4)}...${mintAddress.slice(-4)}`,
+            balance,
+            mint: mintAddress,
+            decimals: parsedInfo.tokenAmount.decimals,
+          });
         }
       }
 

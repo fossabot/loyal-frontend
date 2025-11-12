@@ -218,12 +218,12 @@ export const SkillsTextarea = forwardRef<
         onKeyDown={handleKeyDownCombined}
         placeholder={
           pendingCurrencySelection && !swapData.fromCurrency
-            ? "Select FROM currency (SOL, USDC, etc.)..."
+            ? "Select FROM currency (SOL, Loyal, etc.)..."
             : pendingAmountInput
-              ? "Type amount (e.g., 10) then press Enter..."
-              : pendingSwapToCurrency
-                ? "Select TO currency..."
-                : props.placeholder
+            ? "Type amount (e.g., 10) then press Enter..."
+            : pendingSwapToCurrency
+            ? "Select TO currency..."
+            : props.placeholder
         }
         ref={textareaRef}
         {...props}

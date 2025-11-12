@@ -12,8 +12,9 @@ export type SwapQuote = {
 };
 
 export type SwapResult = {
-  signature: string;
+  signature?: string;
   success: boolean;
+  error?: string;
 };
 
 // Use Jupiter public API for quotes (works with CORS)
@@ -183,15 +184,17 @@ export function useSwap() {
       fromToken: string,
       toToken: string,
       amount: string
-    ): Promise<SwapResult | null> => {
+    ): Promise<SwapResult> => {
       if (!(publicKey && signTransaction)) {
-        setError("Wallet not connected");
-        return null;
+        const error = "Wallet not connected";
+        setError(error);
+        return { success: false, error };
       }
 
       if (!quoteResponse) {
-        setError("No quote available. Please get a quote first.");
-        return null;
+        const error = "No quote available. Please get a quote first.";
+        setError(error);
+        return { success: false, error };
       }
 
       setLoading(true);
@@ -287,7 +290,7 @@ export function useSwap() {
         setError(errorMessage);
         console.error("Swap execution error:", err);
         setLoading(false);
-        return null;
+        return { success: false, error: errorMessage };
       }
     },
     [publicKey, signTransaction, connection, quoteResponse]

@@ -12,8 +12,9 @@ import {
 import { useCallback, useState } from "react";
 
 export type SendResult = {
-  signature: string;
+  signature?: string;
   success: boolean;
+  error?: string;
 };
 
 // Token mint address mapping for Solana mainnet
@@ -45,10 +46,11 @@ export function useSend() {
       currency: string,
       amount: string,
       recipientAddress: string
-    ): Promise<SendResult | null> => {
+    ): Promise<SendResult> => {
       if (!publicKey) {
-        setError("Wallet not connected");
-        return null;
+        const error = "Wallet not connected";
+        setError(error);
+        return { success: false, error };
       }
 
       setLoading(true);
@@ -200,7 +202,7 @@ export function useSend() {
         setError(errorMessage);
         console.error("Send execution error:", err);
         setLoading(false);
-        return null;
+        return { success: false, error: errorMessage };
       }
     },
     [publicKey, sendTransaction, connection]

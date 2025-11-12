@@ -62,16 +62,29 @@ export function SendTransactionWidget({
         background: "rgba(15, 15, 15, 0.85)",
         borderWidth: "1px",
         borderStyle: "solid",
-        borderColor: "rgba(255, 255, 255, 0.12)",
+        borderColor:
+          status === "success"
+            ? "rgba(134, 239, 172, 0.5)"
+            : status === "error"
+              ? "rgba(248, 113, 113, 0.5)"
+              : "rgba(255, 255, 255, 0.12)",
         backdropFilter: "blur(24px) saturate(180%)",
         WebkitBackdropFilter: "blur(24px) saturate(180%)",
         boxShadow:
-          "0 8px 32px rgba(0, 0, 0, 0.4), 0 2px 8px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.08)",
+          status === "success"
+            ? "0 8px 32px rgba(134, 239, 172, 0.3), 0 2px 8px rgba(134, 239, 172, 0.2), inset 0 1px 0 rgba(134, 239, 172, 0.1)"
+            : status === "error"
+              ? "0 8px 32px rgba(248, 113, 113, 0.3), 0 2px 8px rgba(248, 113, 113, 0.2), inset 0 1px 0 rgba(248, 113, 113, 0.1)"
+              : "0 8px 32px rgba(0, 0, 0, 0.4), 0 2px 8px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.08)",
         borderRadius: "20px",
         padding: "1.75rem",
         maxWidth: "420px",
         width: "100%",
         color: "rgba(255, 255, 255, 0.9)",
+        animation:
+          status === "success" || status === "error"
+            ? "borderBlink 0.6s ease-in-out 1"
+            : "none",
       }}
     >
       {/* Header */}
@@ -89,6 +102,8 @@ export function SendTransactionWidget({
           style={{
             width: "44px",
             height: "44px",
+            minWidth: "44px",
+            minHeight: "44px",
             borderRadius: "14px",
             background:
               status === "success"
@@ -105,6 +120,7 @@ export function SendTransactionWidget({
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
+            flexShrink: 0,
             boxShadow:
               status === "success"
                 ? "0 2px 8px rgba(134, 239, 172, 0.15)"
@@ -137,7 +153,7 @@ export function SendTransactionWidget({
             {status === "success"
               ? "Send Successful!"
               : status === "error"
-                ? "Send Failed"
+                ? "Transaction Failed"
                 : "Send Preview"}
           </h3>
           <p
@@ -146,6 +162,7 @@ export function SendTransactionWidget({
               color: "rgba(255, 255, 255, 0.5)",
               margin: 0,
               marginTop: "0.125rem",
+              wordBreak: "break-word",
             }}
           >
             {status === "success"
@@ -452,6 +469,14 @@ export function SendTransactionWidget({
         @keyframes spin {
           to {
             transform: rotate(360deg);
+          }
+        }
+        @keyframes borderBlink {
+          0%, 100% {
+            opacity: 1;
+          }
+          50% {
+            opacity: 0.4;
           }
         }
       `}</style>

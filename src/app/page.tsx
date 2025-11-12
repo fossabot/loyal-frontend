@@ -713,33 +713,27 @@ export default function LandingPage() {
 
     setSwapStatus("pending");
 
-    try {
-      const result = await executeSwap(
-        pendingSwapData.fromCurrency,
-        pendingSwapData.toCurrency,
-        pendingSwapData.amount
-      );
+    const result = await executeSwap(
+      pendingSwapData.fromCurrency,
+      pendingSwapData.toCurrency,
+      pendingSwapData.amount
+    );
 
-      if (result?.success) {
-        setSwapStatus("success");
-        setSwapResult({ signature: result.signature });
-        // Auto-hide after 5 seconds
-        setTimeout(() => {
-          setShowSwapWidget(false);
-          setPendingSwapData(null);
-          pendingSwapDataRef.current = null;
-          setSwapStatus(null);
-          setSwapResult(null);
-        }, 5000);
-      } else {
-        setSwapStatus("error");
-        setSwapResult({ error: "Swap failed" });
-      }
-    } catch (err) {
-      console.error("Swap execution failed:", err);
+    if (result.success) {
+      setSwapStatus("success");
+      setSwapResult({ signature: result.signature });
+      // Auto-hide after 5 seconds
+      setTimeout(() => {
+        setShowSwapWidget(false);
+        setPendingSwapData(null);
+        pendingSwapDataRef.current = null;
+        setSwapStatus(null);
+        setSwapResult(null);
+      }, 5000);
+    } else {
       setSwapStatus("error");
       setSwapResult({
-        error: err instanceof Error ? err.message : "Unknown error",
+        error: result.error || "Transaction failed. Please try again.",
       });
     }
   };
@@ -757,33 +751,27 @@ export default function LandingPage() {
 
     setSendStatus("pending");
 
-    try {
-      const result = await executeSend(
-        pendingSendData.currency,
-        pendingSendData.amount,
-        pendingSendData.walletAddress
-      );
+    const result = await executeSend(
+      pendingSendData.currency,
+      pendingSendData.amount,
+      pendingSendData.walletAddress
+    );
 
-      if (result?.success) {
-        setSendStatus("success");
-        setSendResult({ signature: result.signature });
-        // Auto-hide after 5 seconds
-        setTimeout(() => {
-          setShowSendWidget(false);
-          setPendingSendData(null);
-          pendingSendDataRef.current = null;
-          setSendStatus(null);
-          setSendResult(null);
-        }, 5000);
-      } else {
-        setSendStatus("error");
-        setSendResult({ error: "Send failed" });
-      }
-    } catch (err) {
-      console.error("Send execution failed:", err);
+    if (result.success) {
+      setSendStatus("success");
+      setSendResult({ signature: result.signature });
+      // Auto-hide after 5 seconds
+      setTimeout(() => {
+        setShowSendWidget(false);
+        setPendingSendData(null);
+        pendingSendDataRef.current = null;
+        setSendStatus(null);
+        setSendResult(null);
+      }, 5000);
+    } else {
       setSendStatus("error");
       setSendResult({
-        error: err instanceof Error ? err.message : "Unknown error",
+        error: result.error || "Transaction failed. Please try again.",
       });
     }
   };

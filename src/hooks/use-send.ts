@@ -37,7 +37,7 @@ const getTokenMint = (symbol: string): string | undefined => {
 
 export function useSend() {
   const { connection } = useConnection();
-  const { publicKey, sendTransaction } = useWallet();
+  const { publicKey, signTransaction } = useWallet();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -47,7 +47,7 @@ export function useSend() {
       amount: string,
       recipientAddress: string
     ): Promise<SendResult> => {
-      if (!publicKey) {
+      if (!(publicKey && signTransaction)) {
         const error = "Wallet not connected";
         setError(error);
         return { success: false, error };
@@ -95,8 +95,13 @@ export function useSend() {
           transaction.recentBlockhash = blockhash;
           transaction.feePayer = publicKey;
 
-          console.log("Sending transaction...");
-          const signature = await sendTransaction(transaction, connection);
+          console.log("Signing transaction...");
+          const signedTransaction = await signTransaction(transaction);
+
+          console.log("Sending signed transaction...");
+          const signature = await connection.sendRawTransaction(
+            signedTransaction.serialize()
+          );
 
           console.log("Transaction sent:", signature);
 
@@ -172,8 +177,13 @@ export function useSend() {
         transaction.recentBlockhash = blockhash;
         transaction.feePayer = publicKey;
 
-        console.log("Sending transaction...");
-        const signature = await sendTransaction(transaction, connection);
+        console.log("Signing transaction...");
+        const signedTransaction = await signTransaction(transaction);
+
+        console.log("Sending signed transaction...");
+        const signature = await connection.sendRawTransaction(
+          signedTransaction.serialize()
+        );
 
         console.log("Transaction sent:", signature);
 
@@ -205,7 +215,7 @@ export function useSend() {
         return { success: false, error: errorMessage };
       }
     },
-    [publicKey, sendTransaction, connection]
+    [publicKey, signTransaction, connection]
   );
 
   return {

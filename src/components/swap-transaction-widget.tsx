@@ -1,6 +1,13 @@
 "use client";
 
-import { ArrowDown, Check, Loader2, Repeat2 } from "lucide-react";
+import {
+  ArrowDown,
+  Check,
+  CheckCircle2,
+  Loader2,
+  Repeat2,
+  XCircle,
+} from "lucide-react";
 import { useState } from "react";
 import type { SwapQuote } from "@/hooks/use-swap";
 
@@ -12,6 +19,11 @@ type SwapTransactionWidgetProps = {
   onApprove: () => Promise<void>;
   onCancel: () => void;
   loading?: boolean;
+  status?: "pending" | "success" | "error" | null;
+  result?: {
+    signature?: string;
+    error?: string;
+  } | null;
 };
 
 export function SwapTransactionWidget({
@@ -19,6 +31,8 @@ export function SwapTransactionWidget({
   onApprove,
   onCancel,
   loading = false,
+  status = null,
+  result = null,
 }: SwapTransactionWidgetProps) {
   const [isExecuting, setIsExecuting] = useState(false);
 
@@ -66,15 +80,38 @@ export function SwapTransactionWidget({
             height: "44px",
             borderRadius: "14px",
             background:
-              "linear-gradient(135deg, rgba(147, 197, 253, 0.15) 0%, rgba(99, 102, 241, 0.15) 100%)",
-            border: "1px solid rgba(147, 197, 253, 0.25)",
+              status === "success"
+                ? "linear-gradient(135deg, rgba(134, 239, 172, 0.15) 0%, rgba(34, 197, 94, 0.15) 100%)"
+                : status === "error"
+                  ? "linear-gradient(135deg, rgba(248, 113, 113, 0.15) 0%, rgba(239, 68, 68, 0.15) 100%)"
+                  : "linear-gradient(135deg, rgba(147, 197, 253, 0.15) 0%, rgba(99, 102, 241, 0.15) 100%)",
+            border:
+              status === "success"
+                ? "1px solid rgba(134, 239, 172, 0.25)"
+                : status === "error"
+                  ? "1px solid rgba(248, 113, 113, 0.25)"
+                  : "1px solid rgba(147, 197, 253, 0.25)",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            boxShadow: "0 2px 8px rgba(147, 197, 253, 0.15)",
+            boxShadow:
+              status === "success"
+                ? "0 2px 8px rgba(134, 239, 172, 0.15)"
+                : status === "error"
+                  ? "0 2px 8px rgba(248, 113, 113, 0.15)"
+                  : "0 2px 8px rgba(147, 197, 253, 0.15)",
           }}
         >
-          <Repeat2 size={24} style={{ color: "rgba(147, 197, 253, 0.9)" }} />
+          {status === "success" ? (
+            <CheckCircle2
+              size={24}
+              style={{ color: "rgba(134, 239, 172, 0.9)" }}
+            />
+          ) : status === "error" ? (
+            <XCircle size={24} style={{ color: "rgba(248, 113, 113, 0.9)" }} />
+          ) : (
+            <Repeat2 size={24} style={{ color: "rgba(147, 197, 253, 0.9)" }} />
+          )}
         </div>
         <div>
           <h3
@@ -86,7 +123,11 @@ export function SwapTransactionWidget({
               letterSpacing: "-0.01em",
             }}
           >
-            Swap Preview
+            {status === "success"
+              ? "Swap Successful!"
+              : status === "error"
+                ? "Swap Failed"
+                : "Swap Preview"}
           </h3>
           <p
             style={{
@@ -96,7 +137,11 @@ export function SwapTransactionWidget({
               marginTop: "0.125rem",
             }}
           >
-            Review transaction details
+            {status === "success"
+              ? "Transaction confirmed"
+              : status === "error"
+                ? result?.error || "Transaction failed"
+                : "Review transaction details"}
           </p>
         </div>
       </div>
@@ -275,108 +320,151 @@ export function SwapTransactionWidget({
         </div>
       )}
 
+      {/* Transaction Signature (Success) */}
+      {status === "success" && result?.signature && (
+        <div
+          style={{
+            background: "rgba(134, 239, 172, 0.08)",
+            border: "1px solid rgba(134, 239, 172, 0.2)",
+            borderRadius: "12px",
+            padding: "0.875rem 1rem",
+            marginBottom: "1.25rem",
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: "0.5rem",
+              fontSize: "0.8125rem",
+            }}
+          >
+            <span
+              style={{
+                color: "rgba(134, 239, 172, 0.9)",
+                fontWeight: 600,
+              }}
+            >
+              Transaction Signature
+            </span>
+            <span
+              style={{
+                color: "rgba(255, 255, 255, 0.7)",
+                fontFamily: "monospace",
+                fontSize: "0.75rem",
+                wordBreak: "break-all",
+              }}
+            >
+              {result.signature}
+            </span>
+          </div>
+        </div>
+      )}
+
       {/* Action Buttons */}
-      <div style={{ display: "flex", gap: "0.75rem" }}>
-        <button
-          disabled={isExecuting}
-          onClick={onCancel}
-          onMouseEnter={(e) => {
-            if (!isExecuting) {
-              e.currentTarget.style.background = "rgba(255, 255, 255, 0.08)";
-              e.currentTarget.style.borderColor = "rgba(255, 255, 255, 0.2)";
-              e.currentTarget.style.transform = "translateY(-1px)";
-              e.currentTarget.style.boxShadow =
-                "0 4px 12px rgba(0, 0, 0, 0.15)";
-            }
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.background = "rgba(255, 255, 255, 0.04)";
-            e.currentTarget.style.borderColor = "rgba(255, 255, 255, 0.12)";
-            e.currentTarget.style.transform = "translateY(0)";
-            e.currentTarget.style.boxShadow = "0 2px 4px rgba(0, 0, 0, 0.1)";
-          }}
-          style={{
-            flex: 1,
-            padding: "0.875rem 1.5rem",
-            borderRadius: "14px",
-            fontSize: "0.875rem",
-            fontWeight: 600,
-            border: "1px solid rgba(255, 255, 255, 0.12)",
-            background: "rgba(255, 255, 255, 0.04)",
-            color: "rgba(255, 255, 255, 0.75)",
-            cursor: isExecuting ? "not-allowed" : "pointer",
-            transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
-            opacity: isExecuting ? BUTTON_DISABLED_OPACITY : 1,
-            boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
-            letterSpacing: "0.01em",
-          }}
-          type="button"
-        >
-          Cancel
-        </button>
-        <button
-          disabled={isExecuting || loading}
-          onClick={handleApprove}
-          onMouseEnter={(e) => {
-            if (!(isExecuting || loading)) {
+      {!status && (
+        <div style={{ display: "flex", gap: "0.75rem" }}>
+          <button
+            disabled={isExecuting}
+            onClick={onCancel}
+            onMouseEnter={(e) => {
+              if (!isExecuting) {
+                e.currentTarget.style.background = "rgba(255, 255, 255, 0.08)";
+                e.currentTarget.style.borderColor = "rgba(255, 255, 255, 0.2)";
+                e.currentTarget.style.transform = "translateY(-1px)";
+                e.currentTarget.style.boxShadow =
+                  "0 4px 12px rgba(0, 0, 0, 0.15)";
+              }
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = "rgba(255, 255, 255, 0.04)";
+              e.currentTarget.style.borderColor = "rgba(255, 255, 255, 0.12)";
+              e.currentTarget.style.transform = "translateY(0)";
+              e.currentTarget.style.boxShadow = "0 2px 4px rgba(0, 0, 0, 0.1)";
+            }}
+            style={{
+              flex: 1,
+              padding: "0.875rem 1.5rem",
+              borderRadius: "14px",
+              fontSize: "0.875rem",
+              fontWeight: 600,
+              border: "1px solid rgba(255, 255, 255, 0.12)",
+              background: "rgba(255, 255, 255, 0.04)",
+              color: "rgba(255, 255, 255, 0.75)",
+              cursor: isExecuting ? "not-allowed" : "pointer",
+              transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+              opacity: isExecuting ? BUTTON_DISABLED_OPACITY : 1,
+              boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
+              letterSpacing: "0.01em",
+            }}
+            type="button"
+          >
+            Cancel
+          </button>
+          <button
+            disabled={isExecuting || loading}
+            onClick={handleApprove}
+            onMouseEnter={(e) => {
+              if (!(isExecuting || loading)) {
+                e.currentTarget.style.background =
+                  "linear-gradient(135deg, rgba(147, 197, 253, 0.28) 0%, rgba(99, 102, 241, 0.28) 100%)";
+                e.currentTarget.style.borderColor = "rgba(147, 197, 253, 0.5)";
+                e.currentTarget.style.transform = "translateY(-2px)";
+                e.currentTarget.style.boxShadow =
+                  "0 8px 24px rgba(147, 197, 253, 0.25), 0 4px 8px rgba(0, 0, 0, 0.15)";
+              }
+            }}
+            onMouseLeave={(e) => {
               e.currentTarget.style.background =
-                "linear-gradient(135deg, rgba(147, 197, 253, 0.28) 0%, rgba(99, 102, 241, 0.28) 100%)";
-              e.currentTarget.style.borderColor = "rgba(147, 197, 253, 0.5)";
-              e.currentTarget.style.transform = "translateY(-2px)";
+                "linear-gradient(135deg, rgba(147, 197, 253, 0.18) 0%, rgba(99, 102, 241, 0.18) 100%)";
+              e.currentTarget.style.borderColor = "rgba(147, 197, 253, 0.35)";
+              e.currentTarget.style.transform = "translateY(0)";
               e.currentTarget.style.boxShadow =
-                "0 8px 24px rgba(147, 197, 253, 0.25), 0 4px 8px rgba(0, 0, 0, 0.15)";
-            }
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.background =
-              "linear-gradient(135deg, rgba(147, 197, 253, 0.18) 0%, rgba(99, 102, 241, 0.18) 100%)";
-            e.currentTarget.style.borderColor = "rgba(147, 197, 253, 0.35)";
-            e.currentTarget.style.transform = "translateY(0)";
-            e.currentTarget.style.boxShadow =
-              "0 4px 12px rgba(147, 197, 253, 0.15), 0 2px 4px rgba(0, 0, 0, 0.1)";
-          }}
-          style={{
-            flex: 1,
-            padding: "0.875rem 1.5rem",
-            borderRadius: "14px",
-            fontSize: "0.875rem",
-            fontWeight: 600,
-            border: "1px solid rgba(147, 197, 253, 0.35)",
-            background:
-              "linear-gradient(135deg, rgba(147, 197, 253, 0.18) 0%, rgba(99, 102, 241, 0.18) 100%)",
-            color: "rgba(147, 197, 253, 1)",
-            cursor: isExecuting || loading ? "not-allowed" : "pointer",
-            transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
-            opacity: isExecuting || loading ? BUTTON_LOADING_OPACITY : 1,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: "0.5rem",
-            boxShadow:
-              "0 4px 12px rgba(147, 197, 253, 0.15), 0 2px 4px rgba(0, 0, 0, 0.1)",
-            letterSpacing: "0.01em",
-            whiteSpace: "nowrap",
-          }}
-          type="button"
-        >
-          {isExecuting || loading ? (
-            <>
-              <Loader2
-                size={16}
-                style={{
-                  animation: "spin 0.8s linear infinite",
-                }}
-              />
-              <span>Processing...</span>
-            </>
-          ) : (
-            <>
-              <span>Approve</span>
-              <Check size={16} />
-            </>
-          )}
-        </button>
-      </div>
+                "0 4px 12px rgba(147, 197, 253, 0.15), 0 2px 4px rgba(0, 0, 0, 0.1)";
+            }}
+            style={{
+              flex: 1,
+              padding: "0.875rem 1.5rem",
+              borderRadius: "14px",
+              fontSize: "0.875rem",
+              fontWeight: 600,
+              border: "1px solid rgba(147, 197, 253, 0.35)",
+              background:
+                "linear-gradient(135deg, rgba(147, 197, 253, 0.18) 0%, rgba(99, 102, 241, 0.18) 100%)",
+              color: "rgba(147, 197, 253, 1)",
+              cursor: isExecuting || loading ? "not-allowed" : "pointer",
+              transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+              opacity: isExecuting || loading ? BUTTON_LOADING_OPACITY : 1,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: "0.5rem",
+              boxShadow:
+                "0 4px 12px rgba(147, 197, 253, 0.15), 0 2px 4px rgba(0, 0, 0, 0.1)",
+              letterSpacing: "0.01em",
+              whiteSpace: "nowrap",
+            }}
+            type="button"
+          >
+            {isExecuting || loading ? (
+              <>
+                <Loader2
+                  size={16}
+                  style={{
+                    animation: "spin 0.8s linear infinite",
+                  }}
+                />
+                <span>Processing...</span>
+              </>
+            ) : (
+              <>
+                <span>Approve</span>
+                <Check size={16} />
+              </>
+            )}
+          </button>
+        </div>
+      )}
 
       {/* Loading Spinner Animation */}
       <style>{`

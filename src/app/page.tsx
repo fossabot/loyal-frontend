@@ -142,6 +142,13 @@ export default function LandingPage() {
     error: swapError,
   } = useSwap();
   const [showSwapWidget, setShowSwapWidget] = useState(false);
+  const [swapStatus, setSwapStatus] = useState<
+    "pending" | "success" | "error" | null
+  >(null);
+  const [swapResult, setSwapResult] = useState<{
+    signature?: string;
+    error?: string;
+  } | null>(null);
   const [pendingSwapData, setPendingSwapData] = useState<{
     amount: string;
     fromCurrency: string;
@@ -156,6 +163,13 @@ export default function LandingPage() {
   // Send functionality
   const { executeSend, loading: sendLoading, error: sendError } = useSend();
   const [showSendWidget, setShowSendWidget] = useState(false);
+  const [sendStatus, setSendStatus] = useState<
+    "pending" | "success" | "error" | null
+  >(null);
+  const [sendResult, setSendResult] = useState<{
+    signature?: string;
+    error?: string;
+  } | null>(null);
   const [pendingSendData, setPendingSendData] = useState<{
     currency: string;
     amount: string;
@@ -697,6 +711,8 @@ export default function LandingPage() {
   const handleSwapApprove = async () => {
     if (!pendingSwapData) return;
 
+    setSwapStatus("pending");
+
     try {
       const result = await executeSwap(
         pendingSwapData.fromCurrency,
@@ -705,43 +721,26 @@ export default function LandingPage() {
       );
 
       if (result?.success) {
-        // Add success message to chat
-        setMessages((prev) => [
-          ...prev,
-          {
-            id: `swap-success-${Date.now()}`,
-            role: "assistant",
-            parts: [
-              {
-                type: "text",
-                text: `✅ Swap successful! Transaction signature: ${result.signature}`,
-              },
-            ],
-          },
-        ]);
+        setSwapStatus("success");
+        setSwapResult({ signature: result.signature });
+        // Auto-hide after 5 seconds
+        setTimeout(() => {
+          setShowSwapWidget(false);
+          setPendingSwapData(null);
+          pendingSwapDataRef.current = null;
+          setSwapStatus(null);
+          setSwapResult(null);
+        }, 5000);
+      } else {
+        setSwapStatus("error");
+        setSwapResult({ error: "Swap failed" });
       }
     } catch (err) {
       console.error("Swap execution failed:", err);
-      // Add error message to chat
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: `swap-error-${Date.now()}`,
-          role: "assistant",
-          parts: [
-            {
-              type: "text",
-              text: `❌ Swap failed: ${
-                err instanceof Error ? err.message : "Unknown error"
-              }`,
-            },
-          ],
-        },
-      ]);
-    } finally {
-      setShowSwapWidget(false);
-      setPendingSwapData(null);
-      pendingSwapDataRef.current = null;
+      setSwapStatus("error");
+      setSwapResult({
+        error: err instanceof Error ? err.message : "Unknown error",
+      });
     }
   };
 
@@ -749,10 +748,14 @@ export default function LandingPage() {
     setShowSwapWidget(false);
     setPendingSwapData(null);
     pendingSwapDataRef.current = null;
+    setSwapStatus(null);
+    setSwapResult(null);
   };
 
   const handleSendApprove = async () => {
     if (!pendingSendData) return;
+
+    setSendStatus("pending");
 
     try {
       const result = await executeSend(
@@ -762,43 +765,26 @@ export default function LandingPage() {
       );
 
       if (result?.success) {
-        // Add success message to chat
-        setMessages((prev) => [
-          ...prev,
-          {
-            id: `send-success-${Date.now()}`,
-            role: "assistant",
-            parts: [
-              {
-                type: "text",
-                text: `✅ Send successful! Transaction signature: ${result.signature}`,
-              },
-            ],
-          },
-        ]);
+        setSendStatus("success");
+        setSendResult({ signature: result.signature });
+        // Auto-hide after 5 seconds
+        setTimeout(() => {
+          setShowSendWidget(false);
+          setPendingSendData(null);
+          pendingSendDataRef.current = null;
+          setSendStatus(null);
+          setSendResult(null);
+        }, 5000);
+      } else {
+        setSendStatus("error");
+        setSendResult({ error: "Send failed" });
       }
     } catch (err) {
       console.error("Send execution failed:", err);
-      // Add error message to chat
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: `send-error-${Date.now()}`,
-          role: "assistant",
-          parts: [
-            {
-              type: "text",
-              text: `❌ Send failed: ${
-                err instanceof Error ? err.message : "Unknown error"
-              }`,
-            },
-          ],
-        },
-      ]);
-    } finally {
-      setShowSendWidget(false);
-      setPendingSendData(null);
-      pendingSendDataRef.current = null;
+      setSendStatus("error");
+      setSendResult({
+        error: err instanceof Error ? err.message : "Unknown error",
+      });
     }
   };
 
@@ -806,6 +792,8 @@ export default function LandingPage() {
     setShowSendWidget(false);
     setPendingSendData(null);
     pendingSendDataRef.current = null;
+    setSendStatus(null);
+    setSendResult(null);
   };
 
   // Mock data for previous chats - replace with real data later
@@ -1937,6 +1925,8 @@ export default function LandingPage() {
                       onApprove={handleSwapApprove}
                       onCancel={handleSwapCancel}
                       quote={quote}
+                      result={swapResult}
+                      status={swapStatus}
                     />
                   </div>
                 )}
@@ -1957,7 +1947,9 @@ export default function LandingPage() {
                       loading={sendLoading}
                       onApprove={handleSendApprove}
                       onCancel={handleSendCancel}
+                      result={sendResult}
                       sendData={pendingSendData}
+                      status={sendStatus}
                     />
                   </div>
                 )}

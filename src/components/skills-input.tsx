@@ -79,16 +79,16 @@ const SkillsInput = React.forwardRef<HTMLTextAreaElement, SkillsInputProps>(
 
     // Send flow state
     const [sendStep, setSendStep] = React.useState<
-      null | "currency" | "amount" | "recipient"
+      null | "currency" | "amount" | "wallet_address"
     >(null);
     const [sendData, setSendData] = React.useState<{
       currency: string | null;
       amount: string | null;
-      recipient: string | null;
+      walletAddress: string | null;
     }>({
       currency: null,
       amount: null,
-      recipient: null,
+      walletAddress: null,
     });
 
     const hasSwapSkill = value.some((skill) => skill.id === "swap");
@@ -120,7 +120,7 @@ const SkillsInput = React.forwardRef<HTMLTextAreaElement, SkillsInputProps>(
               setSendData({
                 currency: null,
                 amount: null,
-                recipient: null,
+                walletAddress: null,
               });
               setIsDropdownOpen(false);
             };
@@ -228,17 +228,19 @@ const SkillsInput = React.forwardRef<HTMLTextAreaElement, SkillsInputProps>(
         setSendStep("amount");
         setIsDropdownOpen(false);
         setPendingInput("");
-      } else if (sendStep === "recipient" && skill.category === "recipient") {
-        // Store recipient in sendData and complete the Send flow
-        setSendData({
-          currency: sendData.currency,
-          amount: sendData.amount,
-          recipient: skill.label,
-        });
-        setSendStep(null);
-        setIsDropdownOpen(false);
-        setPendingInput("");
-      } else {
+      }
+      // DISABLED: Recipient dropdown selection
+      // else if (sendStep === "recipient" && skill.category === "recipient") {
+      //   setSendData({
+      //     currency: sendData.currency,
+      //     amount: sendData.amount,
+      //     walletAddress: skill.label,
+      //   });
+      //   setSendStep(null);
+      //   setIsDropdownOpen(false);
+      //   setPendingInput("");
+      // }
+      else {
         // Regular skill (not part of swap or send flow) - add to array
         const newSkills = [...value, skill];
         onChange(newSkills);
@@ -261,7 +263,7 @@ const SkillsInput = React.forwardRef<HTMLTextAreaElement, SkillsInputProps>(
       // Reset send flow if Send skill is removed
       if (skillToRemove.id === "send") {
         setSendStep(null);
-        setSendData({ currency: null, amount: null, recipient: null });
+        setSendData({ currency: null, amount: null, walletAddress: null });
         setIsDropdownOpen(false);
       }
     };
@@ -316,22 +318,45 @@ const SkillsInput = React.forwardRef<HTMLTextAreaElement, SkillsInputProps>(
           const amount = Number.parseFloat(pendingInput.trim());
           if (amount > 0) {
             setSendData({ ...sendData, amount: pendingInput.trim() });
-            setSendStep("recipient");
+            setSendStep("wallet_address");
             setPendingInput("");
-            setFilteredSkills(RECIPIENT_SKILLS);
-            setIsDropdownOpen(true);
-            setSelectedSkillIndex(0);
-            calculateDropdownPosition();
           }
         } else if (e.key === "Backspace" && pendingInput.length === 0) {
           // If input is empty and user presses backspace, go back to currency selection
           e.preventDefault();
-          setSendData({ currency: null, amount: null, recipient: null });
+          setSendData({ currency: null, amount: null, walletAddress: null });
           setSendStep("currency");
           setFilteredSkills(CURRENCY_SKILLS);
           setIsDropdownOpen(true);
           setSelectedSkillIndex(0);
           calculateDropdownPosition();
+        }
+        return;
+      }
+
+      // Handle wallet address input during send
+      if (sendStep === "wallet_address") {
+        // Prevent default Enter behavior (new line) for wallet address entry
+        if (e.key === "Enter") {
+          e.preventDefault();
+        }
+        if (e.key === "Enter" && pendingInput.trim()) {
+          // Basic validation: wallet address should be non-empty
+          const walletAddress = pendingInput.trim();
+          if (walletAddress.length > 0) {
+            setSendData({
+              ...sendData,
+              walletAddress,
+            });
+            setSendStep(null);
+            setPendingInput("");
+          }
+        } else if (e.key === "Backspace" && pendingInput.length === 0) {
+          // If input is empty and user presses backspace, go back to amount
+          e.preventDefault();
+          setSendData({ ...sendData, amount: null, walletAddress: null });
+          setSendStep("amount");
+          setPendingInput("");
         }
         return;
       }
@@ -403,22 +428,19 @@ const SkillsInput = React.forwardRef<HTMLTextAreaElement, SkillsInputProps>(
         e.preventDefault();
 
         // Handle send data removal in reverse order
-        if (sendData.recipient) {
-          // Remove recipient
-          setSendData({ ...sendData, recipient: null });
-          setSendStep("recipient");
-          setFilteredSkills(RECIPIENT_SKILLS);
-          setIsDropdownOpen(true);
-          setSelectedSkillIndex(0);
-          calculateDropdownPosition();
+        if (sendData.walletAddress) {
+          // Remove wallet address
+          setSendData({ ...sendData, walletAddress: null });
+          setSendStep("wallet_address");
+          setPendingInput("");
         } else if (sendData.amount) {
           // Remove amount
-          setSendData({ ...sendData, amount: null, recipient: null });
+          setSendData({ ...sendData, amount: null, walletAddress: null });
           setSendStep("amount");
           setPendingInput("");
         } else if (sendData.currency) {
           // Remove currency
-          setSendData({ currency: null, amount: null, recipient: null });
+          setSendData({ currency: null, amount: null, walletAddress: null });
           setSendStep("currency");
           setFilteredSkills(CURRENCY_SKILLS);
           setIsDropdownOpen(true);
@@ -467,12 +489,12 @@ const SkillsInput = React.forwardRef<HTMLTextAreaElement, SkillsInputProps>(
         inputRef.current.style.height = `${inputRef.current.scrollHeight}px`;
       }
 
-      // Don't open dropdown during amount input for swap or send
+      // Don't open dropdown during amount input for swap or send, or during wallet address input
       if (
         swapStep === "amount" ||
         swapStep === "to_currency" ||
         sendStep === "amount" ||
-        sendStep === "recipient"
+        sendStep === "wallet_address"
       ) {
         return;
       }
@@ -511,8 +533,8 @@ const SkillsInput = React.forwardRef<HTMLTextAreaElement, SkillsInputProps>(
       if (sendStep === "amount" && !sendData.amount) {
         return "Type amount (e.g., 10) then press Enter...";
       }
-      if (sendStep === "recipient") {
-        return "Select recipient...";
+      if (sendStep === "wallet_address") {
+        return "Type wallet address then press Enter...";
       }
 
       // Hide placeholder if there's any content (skills, swap data, send data, or pending text)
@@ -523,7 +545,7 @@ const SkillsInput = React.forwardRef<HTMLTextAreaElement, SkillsInputProps>(
         swapData.toCurrency ||
         sendData.currency ||
         sendData.amount ||
-        sendData.recipient ||
+        sendData.walletAddress ||
         pendingInput.length > 0;
 
       if (hasContent) {
@@ -563,7 +585,7 @@ const SkillsInput = React.forwardRef<HTMLTextAreaElement, SkillsInputProps>(
       hasSendSkill &&
       sendData.currency &&
       sendData.amount &&
-      sendData.recipient;
+      sendData.walletAddress;
 
     return (
       <div style={{ position: "relative", width: "100%", flex: 1 }}>
@@ -743,24 +765,24 @@ const SkillsInput = React.forwardRef<HTMLTextAreaElement, SkillsInputProps>(
               </button>
             </span>
           )}
-          {sendData.recipient && (
+          {sendData.walletAddress && (
             <span
               className={cn(
                 "inline-flex items-center gap-1 rounded-full border px-3 py-1.5 font-medium text-sm",
                 "shadow-lg backdrop-blur-[18px]",
                 "border-blue-400/40 bg-blue-400/25 text-white"
               )}
+              title={sendData.walletAddress}
             >
-              {sendData.recipient}
+              {sendData.walletAddress.length > 12
+                ? `${sendData.walletAddress.slice(0, 6)}...${sendData.walletAddress.slice(-4)}`
+                : sendData.walletAddress}
               <button
                 className="ml-1 h-3 w-3 cursor-pointer border-0 bg-transparent p-0 transition-transform duration-200 hover:scale-125"
                 onClick={() => {
-                  setSendData({ ...sendData, recipient: null });
-                  setSendStep("recipient");
-                  setFilteredSkills(RECIPIENT_SKILLS);
-                  setIsDropdownOpen(true);
-                  setSelectedSkillIndex(0);
-                  calculateDropdownPosition();
+                  setSendData({ ...sendData, walletAddress: null });
+                  setSendStep("wallet_address");
+                  setPendingInput("");
                 }}
                 onFocus={(e) => e.currentTarget.blur()}
                 tabIndex={-1}

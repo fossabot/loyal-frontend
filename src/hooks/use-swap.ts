@@ -1,5 +1,9 @@
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
-import { VersionedTransaction } from "@solana/web3.js";
+import {
+  PublicKey,
+  VersionedTransaction,
+  type ParsedAccountData,
+} from "@solana/web3.js";
 import { useCallback, useState } from "react";
 
 export type SwapQuote = {
@@ -90,6 +94,26 @@ export function useSwap() {
   const [quote, setQuote] = useState<SwapQuote | null>(null);
   const [quoteResponse, setQuoteResponse] =
     useState<JupiterQuoteResponse | null>(null);
+  const getTokenDecimals = useCallback(
+    async (mintAddress: string): Promise<number> => {
+      const mintPublicKey = new PublicKey(mintAddress);
+      const accountInfo = await connection.getParsedAccountInfo(mintPublicKey);
+      const data = accountInfo.value?.data;
+
+      if (data && typeof data === "object" && "parsed" in data) {
+        const parsedData = data as ParsedAccountData;
+        const decimals = parsedData.parsed?.info?.decimals;
+        if (typeof decimals === "number") {
+          return decimals;
+        }
+      }
+
+      throw new Error(
+        `Unable to determine token decimals for mint ${mintAddress}`
+      );
+    },
+    [connection]
+  );
 
   const getQuote = useCallback(
     async (
@@ -97,7 +121,8 @@ export function useSwap() {
       toToken: string,
       amount: string,
       fromTokenMint?: string,
-      fromTokenDecimals?: number
+      fromTokenDecimals?: number,
+      toTokenDecimals?: number
     ): Promise<SwapQuote | null> => {
       try {
         setError(null);
@@ -117,11 +142,16 @@ export function useSwap() {
         }
 
         // Convert amount to lamports (smallest unit)
-        // Use provided decimals if available, otherwise default based on token
-        const decimals =
-          fromTokenDecimals ?? (fromToken.toUpperCase() === "SOL" ? 9 : 6);
+        // Use provided decimals if available, otherwise fetch from mint account
+        const inputDecimalsPromise = fromTokenDecimals
+          ? Promise.resolve(fromTokenDecimals)
+          : getTokenDecimals(inputMint);
+        const outputDecimalsPromise = toTokenDecimals
+          ? Promise.resolve(toTokenDecimals)
+          : getTokenDecimals(outputMint);
+        const inputDecimals = await inputDecimalsPromise;
         const amountInSmallestUnit = Math.floor(
-          Number.parseFloat(amount) * 10 ** decimals
+          Number.parseFloat(amount) * 10 ** inputDecimals
         ).toString();
 
         console.log("Token conversion:", {
@@ -131,7 +161,7 @@ export function useSwap() {
           outputMint,
           amount,
           amountInSmallestUnit,
-          decimals,
+          decimals: inputDecimals,
         });
 
         // Build Jupiter Quote API URL
@@ -153,11 +183,11 @@ export function useSwap() {
         setQuoteResponse(data);
 
         // Convert output amount from smallest unit back to tokens
-        const outputDecimals = toToken.toUpperCase() === "SOL" ? 9 : 6;
+        const outputDecimals = await outputDecimalsPromise;
         const outputAmount = (
-          Number.parseInt(data.outAmount) /
+          Number.parseInt(data.outAmount, 10) /
           10 ** outputDecimals
-        ).toFixed(outputDecimals === 9 ? 4 : 2);
+        ).toFixed(outputDecimals);
 
         const priceImpact = `${(Number.parseFloat(data.priceImpactPct) * 100).toFixed(2)}%`;
 
@@ -181,7 +211,7 @@ export function useSwap() {
         return null;
       }
     },
-    []
+    [getTokenDecimals]
   );
 
   const executeSwap = useCallback(

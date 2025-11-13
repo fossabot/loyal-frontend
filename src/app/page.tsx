@@ -155,6 +155,8 @@ export default function LandingPage() {
     fromCurrencyMint: string | null;
     fromCurrencyDecimals: number | null;
     toCurrency: string;
+    toCurrencyMint: string | null;
+    toCurrencyDecimals: number | null;
   } | null>(null);
   const pendingSwapDataRef = useRef<{
     amount: string;
@@ -162,6 +164,8 @@ export default function LandingPage() {
     fromCurrencyMint: string | null;
     fromCurrencyDecimals: number | null;
     toCurrency: string;
+    toCurrencyMint: string | null;
+    toCurrencyDecimals: number | null;
   } | null>(null);
 
   // Send functionality
@@ -470,6 +474,8 @@ export default function LandingPage() {
     fromCurrencyMint: string | null;
     fromCurrencyDecimals: number | null;
     toCurrency: string;
+    toCurrencyMint: string | null;
+    toCurrencyDecimals: number | null;
   }) => {
     // Store in ref immediately (synchronous) for Enter key handling
     pendingSwapDataRef.current = swapData;
@@ -539,7 +545,8 @@ export default function LandingPage() {
           swapData.toCurrency,
           swapData.amount,
           swapData.fromCurrencyMint || undefined,
-          swapData.fromCurrencyDecimals || undefined
+          swapData.fromCurrencyDecimals || undefined,
+          swapData.toCurrencyDecimals || undefined
         );
         if (quoteResult) {
           setShowSwapWidget(true);

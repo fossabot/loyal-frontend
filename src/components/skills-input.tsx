@@ -30,6 +30,8 @@ type SkillsInputProps = Omit<
     fromCurrencyMint: string | null;
     fromCurrencyDecimals: number | null;
     toCurrency: string;
+    toCurrencyMint: string | null;
+    toCurrencyDecimals: number | null;
   }) => void;
   onSendFlowChange?: (data: {
     isActive: boolean;
@@ -55,6 +57,22 @@ const ACTION_SKILLS = AVAILABLE_SKILLS.filter((s) => s.category === "action");
 const RECIPIENT_SKILLS = AVAILABLE_SKILLS.filter(
   (s) => s.category === "recipient"
 );
+const SWAP_TARGET_TOKENS: LoyalSkill[] = [
+  {
+    id: "currency-bonk",
+    label: "BONK",
+    category: "currency",
+    mint: "DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263",
+    decimals: 5,
+  },
+  {
+    id: "currency-loyal",
+    label: "LOYAL",
+    category: "currency",
+    mint: "LYLikzBQtpa9ZgVrJsqYGQpR3cC1WMJrBHaXGrQmeta",
+    decimals: 6,
+  },
+];
 
 const SkillsInput = React.forwardRef<HTMLTextAreaElement, SkillsInputProps>(
   (
@@ -109,12 +127,16 @@ const SkillsInput = React.forwardRef<HTMLTextAreaElement, SkillsInputProps>(
       fromCurrencyDecimals: number | null;
       amount: string | null;
       toCurrency: string | null;
+      toCurrencyMint: string | null;
+      toCurrencyDecimals: number | null;
     }>({
       fromCurrency: null,
       fromCurrencyMint: null,
       fromCurrencyDecimals: null,
       amount: null,
       toCurrency: null,
+      toCurrencyMint: null,
+      toCurrencyDecimals: null,
     });
 
     // Send flow state
@@ -161,6 +183,8 @@ const SkillsInput = React.forwardRef<HTMLTextAreaElement, SkillsInputProps>(
                 fromCurrencyDecimals: null,
                 amount: null,
                 toCurrency: null,
+                toCurrencyMint: null,
+                toCurrencyDecimals: null,
               });
               setSendStep(null);
               setSendData({
@@ -259,10 +283,13 @@ const SkillsInput = React.forwardRef<HTMLTextAreaElement, SkillsInputProps>(
       ) {
         // Store currency in swapData, DON'T add to skills array
         setSwapData({
-          ...swapData,
           fromCurrency: skill.label,
           fromCurrencyMint: skill.mint ?? null,
           fromCurrencyDecimals: skill.decimals ?? null,
+          amount: null,
+          toCurrency: null,
+          toCurrencyMint: null,
+          toCurrencyDecimals: null,
         });
         setSwapStep("amount");
         setIsDropdownOpen(false);
@@ -275,6 +302,8 @@ const SkillsInput = React.forwardRef<HTMLTextAreaElement, SkillsInputProps>(
           fromCurrencyDecimals: swapData.fromCurrencyDecimals,
           amount: swapData.amount!,
           toCurrency: skill.label,
+          toCurrencyMint: skill.mint ?? null,
+          toCurrencyDecimals: skill.decimals ?? null,
         };
         setSwapData({
           fromCurrency: swapData.fromCurrency,
@@ -282,6 +311,8 @@ const SkillsInput = React.forwardRef<HTMLTextAreaElement, SkillsInputProps>(
           fromCurrencyDecimals: swapData.fromCurrencyDecimals,
           amount: swapData.amount,
           toCurrency: skill.label,
+          toCurrencyMint: skill.mint ?? null,
+          toCurrencyDecimals: skill.decimals ?? null,
         });
         setSwapStep(null);
         setIsDropdownOpen(false);
@@ -342,6 +373,8 @@ const SkillsInput = React.forwardRef<HTMLTextAreaElement, SkillsInputProps>(
           fromCurrencyDecimals: null,
           amount: null,
           toCurrency: null,
+          toCurrencyMint: null,
+          toCurrencyDecimals: null,
         });
         setIsDropdownOpen(false);
       }
@@ -379,20 +412,8 @@ const SkillsInput = React.forwardRef<HTMLTextAreaElement, SkillsInputProps>(
             setSwapStep("to_currency");
             setPendingInput("");
             // Allow swapping TO Bonk or Loyal tokens
-            const swapToCurrencies = [
-              {
-                id: "currency-bonk",
-                label: "BONK",
-                category: "currency" as const,
-              },
-              {
-                id: "currency-loyal",
-                label: "LOYAL",
-                category: "currency" as const,
-              },
-            ];
-            setFilteredSkills(swapToCurrencies);
-            setIsDropdownOpen(true);
+            setFilteredSkills(SWAP_TARGET_TOKENS);
+            setIsDropdownOpen(SWAP_TARGET_TOKENS.length > 0);
             setSelectedSkillIndex(0);
             calculateDropdownPosition();
           }
@@ -405,6 +426,8 @@ const SkillsInput = React.forwardRef<HTMLTextAreaElement, SkillsInputProps>(
             fromCurrencyDecimals: null,
             amount: null,
             toCurrency: null,
+            toCurrencyMint: null,
+            toCurrencyDecimals: null,
           });
           setSwapStep("from_currency");
           setFilteredSkills(CURRENCY_SKILLS);
@@ -585,28 +608,26 @@ const SkillsInput = React.forwardRef<HTMLTextAreaElement, SkillsInputProps>(
         } else if (swapData.toCurrency) {
           // Handle swap data removal in reverse order
           // Remove TO currency
-          setSwapData({ ...swapData, toCurrency: null });
+          setSwapData({
+            ...swapData,
+            toCurrency: null,
+            toCurrencyMint: null,
+            toCurrencyDecimals: null,
+          });
           setSwapStep("to_currency");
-          // Allow swapping TO Bonk or Loyal tokens
-          const swapToCurrencies = [
-            {
-              id: "currency-bonk",
-              label: "BONK",
-              category: "currency" as const,
-            },
-            {
-              id: "currency-loyal",
-              label: "LOYAL",
-              category: "currency" as const,
-            },
-          ];
-          setFilteredSkills(swapToCurrencies);
-          setIsDropdownOpen(true);
+          setFilteredSkills(SWAP_TARGET_TOKENS);
+          setIsDropdownOpen(SWAP_TARGET_TOKENS.length > 0);
           setSelectedSkillIndex(0);
           calculateDropdownPosition();
         } else if (swapData.amount) {
           // Remove amount
-          setSwapData({ ...swapData, amount: null, toCurrency: null });
+          setSwapData({
+            ...swapData,
+            amount: null,
+            toCurrency: null,
+            toCurrencyMint: null,
+            toCurrencyDecimals: null,
+          });
           setSwapStep("amount");
           setPendingInput("");
         } else if (swapData.fromCurrency) {
@@ -617,6 +638,8 @@ const SkillsInput = React.forwardRef<HTMLTextAreaElement, SkillsInputProps>(
             fromCurrencyDecimals: null,
             amount: null,
             toCurrency: null,
+            toCurrencyMint: null,
+            toCurrencyDecimals: null,
           });
           setSwapStep("from_currency");
           setFilteredSkills(CURRENCY_SKILLS);
@@ -841,7 +864,13 @@ const SkillsInput = React.forwardRef<HTMLTextAreaElement, SkillsInputProps>(
               <button
                 className="ml-1 h-3 w-3 cursor-pointer border-0 bg-transparent p-0 transition-transform duration-200 hover:scale-125"
                 onClick={() => {
-                  setSwapData({ ...swapData, amount: null, toCurrency: null });
+                  setSwapData({
+                    ...swapData,
+                    amount: null,
+                    toCurrency: null,
+                    toCurrencyMint: null,
+                    toCurrencyDecimals: null,
+                  });
                   setSwapStep("amount");
                   setPendingInput("");
                 }}
@@ -865,23 +894,16 @@ const SkillsInput = React.forwardRef<HTMLTextAreaElement, SkillsInputProps>(
               <button
                 className="ml-1 h-3 w-3 cursor-pointer border-0 bg-transparent p-0 transition-transform duration-200 hover:scale-125"
                 onClick={() => {
-                  setSwapData({ ...swapData, toCurrency: null });
+                  setSwapData({
+                    ...swapData,
+                    toCurrency: null,
+                    toCurrencyMint: null,
+                    toCurrencyDecimals: null,
+                  });
                   setSwapStep("to_currency");
                   // Allow swapping TO Bonk or Loyal tokens
-                  const swapToCurrencies = [
-                    {
-                      id: "currency-bonk",
-                      label: "BONK",
-                      category: "currency" as const,
-                    },
-                    {
-                      id: "currency-loyal",
-                      label: "LOYAL",
-                      category: "currency" as const,
-                    },
-                  ];
-                  setFilteredSkills(swapToCurrencies);
-                  setIsDropdownOpen(true);
+                  setFilteredSkills(SWAP_TARGET_TOKENS);
+                  setIsDropdownOpen(SWAP_TARGET_TOKENS.length > 0);
                   setSelectedSkillIndex(0);
                   calculateDropdownPosition();
                 }}

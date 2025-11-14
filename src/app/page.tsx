@@ -1095,7 +1095,7 @@ export default function LandingPage() {
 
           {/* Token Ticker */}
           <div
-            className="loyal-token-ticker-container"
+            className={`loyal-token-ticker-container ${!connected ? "no-wallet" : ""}`}
             style={{
               position: "fixed",
               top: "4.5rem",
@@ -1128,6 +1128,9 @@ export default function LandingPage() {
                 border-radius: 10px !important;
                 padding: 0.4rem 0.5rem 0.3rem !important;
                 font-size: 0.75rem !important;
+              }
+              .loyal-token-ticker-container.no-wallet {
+                top: 1.5rem !important;
               }
             }
           `}</style>

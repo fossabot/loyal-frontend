@@ -639,10 +639,10 @@ export default function LandingPage() {
         if (quoteResult) {
           setShowSwapWidget(true);
         } else {
-          // Remove the user's swap message and add error message
+          // Add error message while preserving user's message
           const errorTimestamp = Date.now();
           setMessages((prev) => [
-            ...prev.filter((m) => m.id !== userMessageId),
+            ...prev,
             {
               id: `swap-quote-error-${errorTimestamp}`,
               role: "assistant",
@@ -658,10 +658,10 @@ export default function LandingPage() {
         }
       } catch (err) {
         console.error("Failed to get swap quote:", err);
-        // Remove the user's swap message and add error message
+        // Add error message while preserving user's message
         const errorTimestamp = Date.now();
         setMessages((prev) => [
-          ...prev.filter((m) => m.id !== userMessageId),
+          ...prev,
           {
             id: `swap-quote-error-${errorTimestamp}`,
             role: "assistant",

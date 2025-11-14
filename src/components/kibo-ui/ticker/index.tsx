@@ -69,7 +69,7 @@ export const Ticker = memo(
 );
 Ticker.displayName = "Ticker";
 
-export type TickerIconProps = HTMLAttributes<HTMLImageElement> & {
+export type TickerIconProps = HTMLAttributes<HTMLElement> & {
   src?: string;
   symbol?: string;
   asChild?: boolean;

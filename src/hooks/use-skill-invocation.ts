@@ -76,6 +76,10 @@ export const useSkillInvocation = ({
   const [showDeactivatedHint, setShowDeactivatedHint] = useState(false);
   const prevHadActionSkillRef = useRef(false);
 
+  // Refs for optimized dropdown position calculation
+  const canvasContextRef = useRef<CanvasRenderingContext2D | null>(null);
+  const cachedFontStringRef = useRef<string | null>(null);
+
   // Swap-specific state
   const [_pendingSwapFromCurrency, setPendingSwapFromCurrency] =
     useState(false);
@@ -86,18 +90,90 @@ export const useSkillInvocation = ({
   // Send-specific state
   const [sendCurrency, setSendCurrency] = useState<string | null>(null);
 
-  const calculateDropdownPosition = useCallback((textBeforeCursor: string) => {
-    const lines = textBeforeCursor.split("\n");
-    const currentLine = lines.length;
-    const lineHeight = 24;
-    const charWidth = 8;
-    const lastLineLength = lines.at(-1)?.length ?? 0;
+  const calculateDropdownPosition = useCallback(
+    (textBeforeCursor: string) => {
+      const textarea = textareaRef.current;
 
-    return {
-      top: currentLine * lineHeight,
-      left: lastLineLength * charWidth,
-    };
-  }, []);
+      // Bail early if no textarea available
+      if (!textarea) {
+        return { top: 0, left: 0 };
+      }
+
+      const lines = textBeforeCursor.split("\n");
+      const currentLine = lines.length;
+      const lastLineText = lines.at(-1) ?? "";
+
+      // Fallback values
+      const FALLBACK_LINE_HEIGHT = 24;
+      const FALLBACK_CHAR_WIDTH = 8;
+      const NORMAL_LINE_HEIGHT_MULTIPLIER = 1.2; // CSS "normal" line-height is ~1.2x font size
+
+      try {
+        // Get computed styles from the textarea
+        const styles = window.getComputedStyle(textarea);
+        const fontSize = styles.fontSize;
+        const fontFamily = styles.fontFamily;
+        const fontWeight = styles.fontWeight;
+        const fontStyle = styles.fontStyle;
+
+        // Parse line-height (can be "normal", px value, or unitless number)
+        let lineHeight = FALLBACK_LINE_HEIGHT;
+        const lineHeightValue = styles.lineHeight;
+
+        if (lineHeightValue === "normal") {
+          // "normal" is typically 1.2 * fontSize
+          const fontSizeNum = Number.parseFloat(fontSize);
+          lineHeight = Number.isNaN(fontSizeNum)
+            ? FALLBACK_LINE_HEIGHT
+            : fontSizeNum * NORMAL_LINE_HEIGHT_MULTIPLIER;
+        } else {
+          const parsedLineHeight = Number.parseFloat(lineHeightValue);
+          lineHeight = Number.isNaN(parsedLineHeight)
+            ? FALLBACK_LINE_HEIGHT
+            : parsedLineHeight;
+        }
+
+        // Build font string for canvas (format: "style weight size family")
+        const fontString = `${fontStyle} ${fontWeight} ${fontSize} ${fontFamily}`;
+
+        // Initialize or reuse canvas context for text measurement
+        if (!canvasContextRef.current) {
+          const canvas = document.createElement("canvas");
+          canvasContextRef.current = canvas.getContext("2d");
+        }
+
+        const ctx = canvasContextRef.current;
+        if (!ctx) {
+          // Fallback if canvas not available
+          return {
+            top: currentLine * lineHeight,
+            left: lastLineText.length * FALLBACK_CHAR_WIDTH,
+          };
+        }
+
+        // Update font only if changed (optimization)
+        if (cachedFontStringRef.current !== fontString) {
+          ctx.font = fontString;
+          cachedFontStringRef.current = fontString;
+        }
+
+        // Measure the actual text width
+        const textWidth = ctx.measureText(lastLineText).width;
+
+        return {
+          top: currentLine * lineHeight,
+          left: Number.isNaN(textWidth) ? 0 : textWidth,
+        };
+      } catch (_error) {
+        // Fallback to hardcoded values if any error occurs
+        return {
+          top: currentLine * FALLBACK_LINE_HEIGHT,
+          left: lastLineText.length * FALLBACK_CHAR_WIDTH,
+        };
+      }
+    },
+    [textareaRef]
+  );
 
   const applyTextMutation = useCallback(
     (newValue: string, caretPosition: number) => {

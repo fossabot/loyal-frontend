@@ -74,6 +74,9 @@ const SWAP_TARGET_TOKENS: LoyalSkill[] = [
   },
 ];
 
+// Solana address validation regex (base58, 32-44 characters)
+const SOLANA_ADDRESS_REGEX = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/;
+
 const SkillsInput = React.forwardRef<HTMLTextAreaElement, SkillsInputProps>(
   (
     {
@@ -157,9 +160,17 @@ const SkillsInput = React.forwardRef<HTMLTextAreaElement, SkillsInputProps>(
       amount: null,
       walletAddress: null,
     });
+    const [walletAddressError, setWalletAddressError] = React.useState<
+      string | null
+    >(null);
 
     const hasSwapSkill = value.some((skill) => skill.id === "swap");
     const hasSendSkill = value.some((skill) => skill.id === "send");
+
+    // Solana address validator
+    const isValidSolanaAddress = (address: string): boolean => {
+      return SOLANA_ADDRESS_REGEX.test(address);
+    };
 
     // Auto-resize textarea on mount and when pendingInput or placeholder changes
     React.useEffect(() => {
@@ -402,6 +413,7 @@ const SkillsInput = React.forwardRef<HTMLTextAreaElement, SkillsInputProps>(
           amount: null,
           walletAddress: null,
         });
+        setWalletAddressError(null);
         setIsDropdownOpen(false);
       }
     };
@@ -475,6 +487,7 @@ const SkillsInput = React.forwardRef<HTMLTextAreaElement, SkillsInputProps>(
             walletAddress: null,
           });
           setSendStep("currency");
+          setWalletAddressError(null);
           setFilteredSkills(CURRENCY_SKILLS);
           setIsDropdownOpen(CURRENCY_SKILLS.length > 0);
           setSelectedSkillIndex(0);
@@ -490,32 +503,42 @@ const SkillsInput = React.forwardRef<HTMLTextAreaElement, SkillsInputProps>(
           e.preventDefault();
         }
         if (e.key === "Enter" && pendingInput.trim()) {
-          // Basic validation: wallet address should be non-empty
           const walletAddress = pendingInput.trim();
-          if (walletAddress.length > 0) {
-            const completedSend = {
-              currency: sendData.currency!,
-              currencyMint: sendData.currencyMint,
-              currencyDecimals: sendData.currencyDecimals,
-              amount: sendData.amount!,
-              walletAddress,
-            };
-            setSendData({
-              ...sendData,
-              walletAddress,
-            });
-            setSendStep(null);
-            setPendingInput("");
-            // Notify parent that Send is complete
-            onSendComplete?.(completedSend);
-            setShouldSubmitForm(true);
+
+          // Validate Solana address
+          if (!isValidSolanaAddress(walletAddress)) {
+            setWalletAddressError(
+              "Invalid Solana address. Please enter a valid base58-encoded address (32-44 characters)."
+            );
+            return;
           }
+
+          // Clear any previous error
+          setWalletAddressError(null);
+
+          const completedSend = {
+            currency: sendData.currency!,
+            currencyMint: sendData.currencyMint,
+            currencyDecimals: sendData.currencyDecimals,
+            amount: sendData.amount!,
+            walletAddress,
+          };
+          setSendData({
+            ...sendData,
+            walletAddress,
+          });
+          setSendStep(null);
+          setPendingInput("");
+          // Notify parent that Send is complete
+          onSendComplete?.(completedSend);
+          setShouldSubmitForm(true);
         } else if (e.key === "Backspace" && pendingInput.length === 0) {
           // If input is empty and user presses backspace, go back to amount
           e.preventDefault();
           setSendData({ ...sendData, amount: null, walletAddress: null });
           setSendStep("amount");
           setPendingInput("");
+          setWalletAddressError(null);
         }
         return;
       }
@@ -668,6 +691,11 @@ const SkillsInput = React.forwardRef<HTMLTextAreaElement, SkillsInputProps>(
       if (textareaRef.current) {
         textareaRef.current.style.height = "auto";
         textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
+      }
+
+      // Clear wallet address error when user starts typing
+      if (sendStep === "wallet_address" && walletAddressError) {
+        setWalletAddressError(null);
       }
 
       // Don't open dropdown during amount input for swap or send, or during wallet address input
@@ -1003,6 +1031,7 @@ const SkillsInput = React.forwardRef<HTMLTextAreaElement, SkillsInputProps>(
                   setSendData({ ...sendData, walletAddress: null });
                   setSendStep("wallet_address");
                   setPendingInput("");
+                  setWalletAddressError(null);
                 }}
                 onFocus={(e) => e.currentTarget.blur()}
                 tabIndex={-1}
@@ -1029,6 +1058,11 @@ const SkillsInput = React.forwardRef<HTMLTextAreaElement, SkillsInputProps>(
             rows={1}
             value={pendingInput}
           />
+          {walletAddressError && (
+            <div className="mt-2 rounded-md bg-red-500/20 px-3 py-2 text-sm text-white">
+              {walletAddressError}
+            </div>
+          )}
         </div>
         {isDropdownOpen && (
           <SkillDropdown

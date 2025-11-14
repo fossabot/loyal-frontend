@@ -6,6 +6,15 @@ import {
 } from "@solana/web3.js";
 import { useCallback, useState } from "react";
 
+// Debug logger that only emits in development
+const logger = {
+  debug: (...args: unknown[]) => {
+    if (process.env.NODE_ENV === "development") {
+      console.log(...args);
+    }
+  },
+};
+
 export type SwapQuote = {
   inputAmount: string;
   outputAmount: string;
@@ -154,7 +163,7 @@ export function useSwap() {
           Number.parseFloat(amount) * 10 ** inputDecimals
         ).toString();
 
-        console.log("Token conversion:", {
+        logger.debug("Token conversion:", {
           fromToken,
           inputMint,
           toToken,
@@ -166,7 +175,7 @@ export function useSwap() {
 
         // Build Jupiter Quote API URL
         const url = `${JUPITER_QUOTE_API_URL}?inputMint=${inputMint}&outputMint=${outputMint}&amount=${amountInSmallestUnit}&slippageBps=50`;
-        console.log("Fetching quote from:", url);
+        logger.debug("Fetching quote from:", url);
 
         const response = await fetch(url);
 
@@ -177,7 +186,7 @@ export function useSwap() {
         }
 
         const data: JupiterQuoteResponse = await response.json();
-        console.log("Jupiter Quote response:", data);
+        logger.debug("Jupiter Quote response:", data);
 
         // Store the full quote response for later use in executeSwap
         setQuoteResponse(data);
@@ -200,7 +209,7 @@ export function useSwap() {
           fee: undefined,
         };
 
-        console.log("Parsed quote data:", quoteData);
+        logger.debug("Parsed quote data:", quoteData);
         setQuote(quoteData);
         return quoteData;
       } catch (err) {
@@ -237,7 +246,7 @@ export function useSwap() {
       setError(null);
 
       try {
-        console.log("Executing swap with quote:", quoteResponse);
+        logger.debug("Executing swap with quote:", quoteResponse);
 
         // Step 1: Call Jupiter Dial Blinks API to get transaction
         // Format: POST /api/v0/swap/{tokenPair}/{amount}
@@ -260,7 +269,7 @@ export function useSwap() {
         const tokenPair = `${fromTokenIdentifier}-${toTokenIdentifier}`;
         // Pass amount as decimal string, not in smallest units
         const dialUrl = `${JUPITER_DIAL_BASE_URL}/api/v0/swap/${tokenPair}/${amount}`;
-        console.log("Calling Dial API:", dialUrl);
+        logger.debug("Calling Dial API:", dialUrl);
 
         const dialResponse = await fetch(dialUrl, {
           method: "POST",
@@ -279,7 +288,7 @@ export function useSwap() {
         }
 
         const dialData: BlinkActionResponse = await dialResponse.json();
-        console.log("Dial transaction response:", dialData);
+        logger.debug("Dial transaction response:", dialData);
 
         const { transaction: serializedTx } = dialData;
         if (!serializedTx) {
@@ -290,11 +299,11 @@ export function useSwap() {
         const txBuffer = Buffer.from(serializedTx, "base64");
         const transaction = VersionedTransaction.deserialize(txBuffer);
 
-        console.log("Transaction deserialized, requesting signature...");
+        logger.debug("Transaction deserialized, requesting signature...");
         const signedTx = await signTransaction(transaction);
 
         // Step 3: Send transaction
-        console.log("Sending transaction...");
+        logger.debug("Sending transaction...");
         const signature = await connection.sendRawTransaction(
           signedTx.serialize(),
           {
@@ -303,10 +312,10 @@ export function useSwap() {
           }
         );
 
-        console.log("Transaction sent:", signature);
+        logger.debug("Transaction sent:", signature);
 
         // Step 4: Confirm transaction
-        console.log("Confirming transaction...");
+        logger.debug("Confirming transaction...");
         const confirmation = await connection.confirmTransaction(
           signature,
           "confirmed"
@@ -318,7 +327,7 @@ export function useSwap() {
           );
         }
 
-        console.log("Transaction confirmed!");
+        logger.debug("Transaction confirmed!");
         setLoading(false);
         return {
           signature,

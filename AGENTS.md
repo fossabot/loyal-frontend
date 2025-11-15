@@ -121,28 +121,7 @@ Biome's linter will catch most issues automatically. Focus your attention on:
 ---
 
 Most formatting and common issues are automatically fixed by Biome. Run `npx ultracite fix` before committing to ensure compliance.
-<<<<<<< ours
 
-# # Development Workflow
-- When you're done with a task where code was created or files edited, please run the gitbutler mcp update_branches command.
-- Always run **snyk_code_scan** tool for new first party code that is generated in a Snyk-supported language.
-- If any security issues are found based on newly introduced or modified code or dependencies, attempt to fix the issues using the results context from **Snyk**.
-- Rescan the code after fixing the issues to ensure that the issues were fixed and that there are no newly introduced issues.
-- Repeat this process until no new issues are found.
-||||||| ancestor
-=======
-<<<<<<< ours
 
-# # Development Workflow
+# Development Workflow
 - When you're done with a task where code was created or files edited, please run the gitbutler mcp update_branches command.
-- Always run **snyk_code_scan** tool for new first party code that is generated in a Snyk-supported language.
-- If any security issues are found based on newly introduced or modified code or dependencies, attempt to fix the issues using the results context from **Snyk**.
-- Rescan the code after fixing the issues to ensure that the issues were fixed and that there are no newly introduced issues.
-- Repeat this process until no new issues are found.
-||||||| ancestor
-=======
-
-# # Development Workflow
-- When you're done with a task where code was created or files edited, please run the gitbutler mcp update_branches command.
->>>>>>> theirs
->>>>>>> theirs

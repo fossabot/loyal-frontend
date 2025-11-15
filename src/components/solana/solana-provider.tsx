@@ -15,18 +15,22 @@ import {
 } from "@solana/wallet-adapter-wallets";
 import { type FC, type ReactNode, useMemo } from "react";
 
-interface SolanaProviderProps {
+type SolanaProviderProps = {
   children: ReactNode;
-}
+};
 
 export const SolanaProvider: FC<SolanaProviderProps> = ({ children }) => {
   const network = WalletAdapterNetwork.Mainnet;
   // Using QuickNode endpoint to avoid 403 errors from public RPC
-  const endpoint = useMemo(
-    () =>
-      "https://billowing-blissful-violet.solana-mainnet.quiknode.pro/1811e07f0fcdfbdecc852b62a6ab61002d9f582f/",
-    []
-  );
+  const endpoint = useMemo(() => {
+    const rpcEndpoint = process.env.NEXT_PUBLIC_SOLANA_RPC_ENDPOINT;
+    if (!rpcEndpoint) {
+      throw new Error(
+        "NEXT_PUBLIC_SOLANA_RPC_ENDPOINT environment variable is not set. Please add it to your .env file."
+      );
+    }
+    return rpcEndpoint;
+  }, []);
 
   // Configure connection with appropriate timeout and commitment settings
   const config = useMemo(

@@ -23,6 +23,7 @@ import { CopyIcon, type CopyIconHandle } from "@/components/ui/copy";
 import { MenuIcon, type MenuIconHandle } from "@/components/ui/menu";
 import { PlusIcon, type PlusIconHandle } from "@/components/ui/plus";
 import { useChatMode } from "@/contexts/chat-mode-context";
+import { isSkillsEnabled } from "@/flags";
 import { useSend } from "@/hooks/use-send";
 import { useSwap } from "@/hooks/use-swap";
 import type { LoyalSkill } from "@/types/skills";
@@ -65,14 +66,15 @@ const dirtyline = localFont({
 type TimestampedMessage = UIMessage & { createdAt?: number };
 
 export default function LandingPage() {
-  const { messages, sendMessage, status, setMessages } = useChat<
-    TimestampedMessage
-  >({
-    transport: new DefaultChatTransport({
-      api: "/api/chat",
-    }),
-  });
-  const [messageTimestamps, setMessageTimestamps] = useState<Record<string, number>>({});
+  const { messages, sendMessage, status, setMessages } =
+    useChat<TimestampedMessage>({
+      transport: new DefaultChatTransport({
+        api: "/api/chat",
+      }),
+    });
+  const [messageTimestamps, setMessageTimestamps] = useState<
+    Record<string, number>
+  >({});
   const [input, setInput] = useState<LoyalSkill[]>([]);
   const [pendingText, setPendingText] = useState("");
   const [swapFlowState, setSwapFlowState] = useState<{
@@ -96,10 +98,21 @@ export default function LandingPage() {
   const [isChatModeLocal, setIsChatModeLocal] = useState(false);
   const { setIsChatMode } = useChatMode();
 
+  // Check Skills feature flag
+  const skillsEnabled = isSkillsEnabled();
+
   // Sync local state with context
   useEffect(() => {
     setIsChatMode(isChatModeLocal);
   }, [isChatModeLocal, setIsChatMode]);
+
+  // Auto-resize textarea when skills are disabled
+  useEffect(() => {
+    if (!skillsEnabled && inputRef.current) {
+      inputRef.current.style.height = "auto";
+      inputRef.current.style.height = `${inputRef.current.scrollHeight}px`;
+    }
+  }, [skillsEnabled, pendingText]);
 
   // Use local state for component logic
   const isChatMode = isChatModeLocal;
@@ -302,14 +315,16 @@ export default function LandingPage() {
     }
   }, [connected, pendingMessage, status, sendMessage]);
 
-  // Auto-focus on initial load
+  // Auto-focus on initial load (but not if there's a hash in URL)
   useEffect(() => {
-    // Focus the textarea when the component mounts
-    const timer = setTimeout(() => {
-      inputRef.current?.focus();
-    }, 500);
-
-    return () => clearTimeout(timer);
+    // Don't auto-focus if there's a hash - let the hash scroll complete first
+    const hasHash = window.location.hash;
+    if (!hasHash) {
+      const timer = setTimeout(() => {
+        inputRef.current?.focus();
+      }, 500);
+      return () => clearTimeout(timer);
+    }
   }, []); // Empty dependency array = run once on mount
 
   // Handle initial page load with hash in URL
@@ -588,7 +603,9 @@ export default function LandingPage() {
     if (!connected) {
       // Save the message to send after connection
       if (hasUsableInput) {
-        setPendingMessage(input.map((s) => s.label).join(" "));
+        setPendingMessage(
+          `${pendingText.trim()} ${input.map((s) => s.label).join(" ")}`.trim()
+        );
       }
       // Open wallet connection modal
       setVisible(true);
@@ -606,22 +623,22 @@ export default function LandingPage() {
     const hasSwapSkill = input.some((skill) => skill.id === "swap");
     const swapData = pendingSwapDataRef.current;
     if (hasSwapSkill && swapData) {
-        const swapMessage = `Swap ${swapData.amount} ${swapData.fromCurrency} to ${swapData.toCurrency}`;
-        const timestamp = Date.now();
-        const userMessageId = `user-swap-${timestamp}`;
+      const swapMessage = `Swap ${swapData.amount} ${swapData.fromCurrency} to ${swapData.toCurrency}`;
+      const timestamp = Date.now();
+      const userMessageId = `user-swap-${timestamp}`;
 
-        // Add user's swap message to chat
-        setMessages((prev) => [
-          ...prev,
-          {
-            id: userMessageId,
-            role: "user",
-            createdAt: timestamp,
-            parts: [
-              {
-                type: "text",
-                text: swapMessage,
-              },
+      // Add user's swap message to chat
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: userMessageId,
+          role: "user",
+          createdAt: timestamp,
+          parts: [
+            {
+              type: "text",
+              text: swapMessage,
+            },
           ],
         },
       ]);
@@ -722,13 +739,13 @@ export default function LandingPage() {
         // It will be cleared in handleSendApprove or handleSendCancel
       } else {
         // Regular message - send to LLM
-        if (status === "ready") {
-          const messageText = [
-            ...input.map((skill) => skill.label),
-            pendingText.trim(),
-          ]
-            .filter(Boolean)
-            .join(" ");
+        const messageText = skillsEnabled
+          ? [...input.map((skill) => skill.label), pendingText.trim()]
+              .filter(Boolean)
+              .join(" ")
+          : pendingText.trim();
+
+        if (messageText) {
           sendMessage({ text: messageText });
           setInput([]);
           setPendingText("");
@@ -843,12 +860,7 @@ export default function LandingPage() {
     setSwapStatus("pending");
 
     try {
-      const result = await executeSwap(
-        pendingSwapData.fromCurrency,
-        pendingSwapData.toCurrency,
-        pendingSwapData.amount,
-        pendingSwapData.fromCurrencyMint || undefined
-      );
+      const result = await executeSwap();
 
       if (result.success) {
         setSwapStatus("success");
@@ -862,7 +874,8 @@ export default function LandingPage() {
     } catch (error) {
       setSwapStatus("error");
       setSwapResult({
-        error: error instanceof Error ? error.message : "Unexpected error occurred",
+        error:
+          error instanceof Error ? error.message : "Unexpected error occurred",
       });
     }
   };
@@ -901,7 +914,8 @@ export default function LandingPage() {
     } catch (error) {
       setSendStatus("error");
       setSendResult({
-        error: error instanceof Error ? error.message : "Unexpected error occurred",
+        error:
+          error instanceof Error ? error.message : "Unexpected error occurred",
       });
     }
   };
@@ -1055,6 +1069,14 @@ export default function LandingPage() {
                 isLinks: true,
               },
               { label: "Docs", href: "https://docs.askloyal.com/" },
+              {
+                label: "Changelog",
+                onClick: () => {
+                  if (typeof window !== "undefined" && window.Productlane) {
+                    window.Productlane.open("CHANGELOG");
+                  }
+                },
+              },
             ].map((item, index) => (
               <button
                 className={ibmPlexSans.className}
@@ -1175,7 +1197,7 @@ export default function LandingPage() {
 
           {/* Token Ticker */}
           <div
-            className={`loyal-token-ticker-container ${!connected ? "no-wallet" : ""}`}
+            className={`loyal-token-ticker-container ${connected ? "" : "no-wallet"}`}
             style={{
               position: "fixed",
               top: "4.5rem",
@@ -1278,6 +1300,7 @@ export default function LandingPage() {
               onClick={() => {
                 setIsChatModeLocal(false);
                 setInput([]);
+                setPendingText(""); // Clear fallback textarea when Skills are disabled
                 // Clear all messages to start a completely new chat
                 setMessages([]);
                 // Reset widget states
@@ -2254,48 +2277,126 @@ export default function LandingPage() {
                   transition: "all 0.5s cubic-bezier(0.4, 0, 0.2, 1)",
                 }}
               >
-                <SkillsInput
-                  onChange={(skills) => {
-                    setInput(skills);
+                {skillsEnabled ? (
+                  <SkillsInput
+                    onChange={(skills) => {
+                      setInput(skills);
 
-                    // Show modal on first typing
-                    if (!hasShownModal && skills.length > 0) {
-                      setIsModalOpen(true);
-                      setHasShownModal(true);
-                      if (typeof window !== "undefined" && window.localStorage) {
-                        try {
-                          window.localStorage.setItem(
-                            "loyal-testers-modal-shown",
-                            "true"
-                          );
-                        } catch (error) {
-                          console.warn(
-                            "Unable to persist testers modal flag to storage",
-                            error
-                          );
+                      // Show modal on first typing
+                      if (!hasShownModal && skills.length > 0) {
+                        setIsModalOpen(true);
+                        setHasShownModal(true);
+                        if (
+                          typeof window !== "undefined" &&
+                          window.localStorage
+                        ) {
+                          try {
+                            window.localStorage.setItem(
+                              "loyal-testers-modal-shown",
+                              "true"
+                            );
+                          } catch (error) {
+                            console.warn(
+                              "Unable to persist testers modal flag to storage",
+                              error
+                            );
+                          }
                         }
                       }
+                    }}
+                    onPendingTextChange={setPendingText}
+                    onSendComplete={handleSendComplete}
+                    onSendFlowChange={setSendFlowState}
+                    onSwapComplete={handleSwapComplete}
+                    onSwapFlowChange={setSwapFlowState}
+                    placeholder={
+                      isOnline
+                        ? isChatMode && !connected
+                          ? "Please reconnect wallet to continue..."
+                          : isChatMode
+                            ? ""
+                            : "Ask me anything (type / for skills)..."
+                        : "No internet connection..."
                     }
-                  }}
-                  onPendingTextChange={setPendingText}
-                  onSendComplete={handleSendComplete}
-                  onSendFlowChange={setSendFlowState}
-                  onSwapComplete={handleSwapComplete}
-                  onSwapFlowChange={setSwapFlowState}
-                  placeholder={
-                    isOnline
-                      ? isChatMode && !connected
-                        ? "Please reconnect wallet to continue..."
-                        : isChatMode
-                          ? ""
-                          : "Ask me anything (type / for skills)..."
-                      : "No internet connection..."
-                  }
-                  ref={inputRef}
-                  value={input}
-                />
+                    ref={inputRef}
+                    value={input}
+                  />
+                ) : (
+                  <textarea
+                    onChange={(e) => {
+                      setPendingText(e.target.value);
+
+                      // Auto-resize textarea based on content
+                      if (inputRef.current) {
+                        inputRef.current.style.height = "auto";
+                        inputRef.current.style.height = `${inputRef.current.scrollHeight}px`;
+                      }
+
+                      // Show modal on first typing
+                      if (!hasShownModal && e.target.value.length > 0) {
+                        setIsModalOpen(true);
+                        setHasShownModal(true);
+                        if (
+                          typeof window !== "undefined" &&
+                          window.localStorage
+                        ) {
+                          try {
+                            window.localStorage.setItem(
+                              "loyal-testers-modal-shown",
+                              "true"
+                            );
+                          } catch (error) {
+                            console.warn(
+                              "Unable to persist testers modal flag to storage",
+                              error
+                            );
+                          }
+                        }
+                      }
+                    }}
+                    onKeyDown={(e) => {
+                      // Allow Shift+Enter to create new lines
+                      if (e.key === "Enter" && !e.shiftKey) {
+                        e.preventDefault();
+                        if (hasUsableInput && !isLoading) {
+                          handleSubmit(e as unknown as React.FormEvent);
+                        }
+                      }
+                    }}
+                    placeholder={
+                      isOnline
+                        ? isChatMode && !connected
+                          ? "Please reconnect wallet to continue..."
+                          : isChatMode
+                            ? ""
+                            : "Ask me anything..."
+                        : "No internet connection..."
+                    }
+                    ref={inputRef as React.RefObject<HTMLTextAreaElement>}
+                    rows={1}
+                    style={{
+                      width: "100%",
+                      padding: "20px 64px 20px 28px",
+                      background: "transparent",
+                      border: "none",
+                      color: "white",
+                      fontSize: "15px",
+                      fontFamily: "inherit",
+                      resize: "none",
+                      outline: "none",
+                      overflow: "hidden",
+                    }}
+                    value={pendingText}
+                  />
+                )}
                 <button
                   disabled={!hasUsableInput || isLoading}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    if (hasUsableInput && !isLoading) {
+                      handleSubmit(e as unknown as React.FormEvent);
+                    }
+                  }}
                   onMouseEnter={(e) => {
                     if (hasUsableInput && !isLoading) {
                       e.currentTarget.style.opacity = "1";
@@ -2326,13 +2427,14 @@ export default function LandingPage() {
                     background: "transparent",
                     border: "none",
                     borderRadius: "12px",
-                    cursor: hasUsableInput && !isLoading ? "pointer" : "not-allowed",
+                    cursor:
+                      hasUsableInput && !isLoading ? "pointer" : "not-allowed",
                     outline: "none",
                     transition: "all 0.3s ease",
                     opacity: hasUsableInput && !isLoading ? 0.8 : 0.3,
                     zIndex: 2,
                   }}
-                  type="submit"
+                  type="button"
                 >
                   {isLoading ? (
                     <Loader2

@@ -105,6 +105,14 @@ export default function LandingPage() {
     setIsChatMode(isChatModeLocal);
   }, [isChatModeLocal, setIsChatMode]);
 
+  // Auto-resize textarea when skills are disabled
+  useEffect(() => {
+    if (!skillsEnabled && inputRef.current) {
+      inputRef.current.style.height = "auto";
+      inputRef.current.style.height = `${inputRef.current.scrollHeight}px`;
+    }
+  }, [skillsEnabled, pendingText]);
+
   // Use local state for component logic
   const isChatMode = isChatModeLocal;
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -726,13 +734,16 @@ export default function LandingPage() {
         // It will be cleared in handleSendApprove or handleSendCancel
       } else {
         // Regular message - send to LLM
-        if (status === "ready") {
-          const messageText = [
-            ...input.map((skill) => skill.label),
-            pendingText.trim(),
-          ]
-            .filter(Boolean)
-            .join(" ");
+        const messageText = skillsEnabled
+          ? [
+              ...input.map((skill) => skill.label),
+              pendingText.trim(),
+            ]
+              .filter(Boolean)
+              .join(" ")
+          : pendingText.trim();
+
+        if (messageText) {
           sendMessage({ text: messageText });
           setInput([]);
           setPendingText("");
@@ -1285,6 +1296,7 @@ export default function LandingPage() {
               onClick={() => {
                 setIsChatModeLocal(false);
                 setInput([]);
+                setPendingText(""); // Clear fallback textarea when Skills are disabled
                 // Clear all messages to start a completely new chat
                 setMessages([]);
                 // Reset widget states
@@ -2307,6 +2319,12 @@ export default function LandingPage() {
                     onChange={(e) => {
                       setPendingText(e.target.value);
 
+                      // Auto-resize textarea based on content
+                      if (inputRef.current) {
+                        inputRef.current.style.height = "auto";
+                        inputRef.current.style.height = `${inputRef.current.scrollHeight}px`;
+                      }
+
                       // Show modal on first typing
                       if (!hasShownModal && e.target.value.length > 0) {
                         setIsModalOpen(true);
@@ -2326,6 +2344,15 @@ export default function LandingPage() {
                         }
                       }
                     }}
+                    onKeyDown={(e) => {
+                      // Allow Shift+Enter to create new lines
+                      if (e.key === "Enter" && !e.shiftKey) {
+                        e.preventDefault();
+                        if (hasUsableInput && !isLoading) {
+                          handleSubmit(e as unknown as React.FormEvent);
+                        }
+                      }
+                    }}
                     placeholder={
                       isOnline
                         ? isChatMode && !connected
@@ -2339,7 +2366,7 @@ export default function LandingPage() {
                     rows={1}
                     style={{
                       width: "100%",
-                      padding: "16px 20px",
+                      padding: "20px 64px 20px 28px",
                       background: "transparent",
                       border: "none",
                       color: "white",
@@ -2347,12 +2374,19 @@ export default function LandingPage() {
                       fontFamily: "inherit",
                       resize: "none",
                       outline: "none",
+                      overflow: "hidden",
                     }}
                     value={pendingText}
                   />
                 )}
                 <button
                   disabled={!hasUsableInput || isLoading}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    if (hasUsableInput && !isLoading) {
+                      handleSubmit(e as unknown as React.FormEvent);
+                    }
+                  }}
                   onMouseEnter={(e) => {
                     if (hasUsableInput && !isLoading) {
                       e.currentTarget.style.opacity = "1";
@@ -2389,7 +2423,7 @@ export default function LandingPage() {
                     opacity: hasUsableInput && !isLoading ? 0.8 : 0.3,
                     zIndex: 2,
                   }}
-                  type="submit"
+                  type="button"
                 >
                   {isLoading ? (
                     <Loader2

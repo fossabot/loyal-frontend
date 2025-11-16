@@ -2319,8 +2319,8 @@ export default function LandingPage() {
                         ? isChatMode && !connected
                           ? "Please reconnect wallet to continue..."
                           : isChatMode
-                          ? ""
-                          : "Ask me anything (type / for skills)..."
+                            ? ""
+                            : "Ask me anything (type / for skills)..."
                         : "No internet connection..."
                     }
                     ref={inputRef}
@@ -2373,8 +2373,8 @@ export default function LandingPage() {
                         ? isChatMode && !connected
                           ? "Please reconnect wallet to continue..."
                           : isChatMode
-                          ? ""
-                          : "Ask me anything..."
+                            ? ""
+                            : "Ask me anything..."
                         : "No internet connection..."
                     }
                     ref={inputRef as React.RefObject<HTMLTextAreaElement>}

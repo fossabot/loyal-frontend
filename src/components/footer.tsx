@@ -253,18 +253,34 @@ export function Footer() {
           </h2>
         </div>
 
-        {/* Copyright */}
+        {/* Copyright and Status */}
         <div
           className={ibmPlexSans.className}
           style={{
-            textAlign: "center",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
             fontSize: "0.75rem",
             color: "rgba(255, 255, 255, 0.3)",
             paddingTop: "2rem",
             borderTop: "1px solid rgba(255, 255, 255, 0.05)",
+            flexWrap: "wrap",
+            gap: "1rem",
           }}
         >
-          © {new Date().getFullYear()} Loyal. All rights reserved.
+          <div>© {new Date().getFullYear()} Loyal. All rights reserved.</div>
+          <iframe
+            frameBorder="0"
+            height="30"
+            scrolling="no"
+            src="https://status.askloyal.com/badge?theme=dark"
+            style={{
+              colorScheme: "normal",
+              border: "none",
+            }}
+            title="Status Badge"
+            width="250"
+          />
         </div>
       </div>
     </footer>

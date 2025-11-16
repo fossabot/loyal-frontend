@@ -43,7 +43,7 @@ export const Spotlight = ({
       className="pointer-events-none absolute top-0 left-0 z-40 h-screen w-screen"
       transition={{
         duration,
-        repeat: Number.POSITIVE_INFINITY,
+        repeat: 0,
         repeatType: "reverse",
         ease: "easeInOut",
       }}
@@ -86,7 +86,7 @@ export const Spotlight = ({
       className="pointer-events-none absolute top-0 right-0 z-40 h-screen w-screen"
       transition={{
         duration,
-        repeat: Number.POSITIVE_INFINITY,
+        repeat: 0,
         repeatType: "reverse",
         ease: "easeInOut",
       }}

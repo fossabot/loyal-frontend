@@ -1,14 +1,5 @@
 "use client";
 
-import { useChat } from "@ai-sdk/react";
-import { useWallet } from "@solana/wallet-adapter-react";
-import { useWalletModal } from "@solana/wallet-adapter-react-ui";
-import { DefaultChatTransport, type UIMessage } from "ai";
-import { ArrowDownIcon, ArrowUpToLine, Loader2 } from "lucide-react";
-import { IBM_Plex_Sans, Plus_Jakarta_Sans } from "next/font/google";
-import localFont from "next/font/local";
-import Image from "next/image";
-import { useEffect, useRef, useState } from "react";
 import { BentoGridSection } from "@/components/bento-grid-section";
 import { Footer } from "@/components/footer";
 import { LoyalTokenTicker } from "@/components/loyal-token-ticker";
@@ -28,6 +19,15 @@ import { isSkillsEnabled } from "@/flags";
 import { useSend } from "@/hooks/use-send";
 import { useSwap } from "@/hooks/use-swap";
 import type { LoyalSkill } from "@/types/skills";
+import { useChat } from "@ai-sdk/react";
+import { useWallet } from "@solana/wallet-adapter-react";
+import { useWalletModal } from "@solana/wallet-adapter-react-ui";
+import { DefaultChatTransport, type UIMessage } from "ai";
+import { ArrowDownIcon, ArrowUpToLine, Loader2 } from "lucide-react";
+import { IBM_Plex_Sans, Plus_Jakarta_Sans } from "next/font/google";
+import localFont from "next/font/local";
+import Image from "next/image";
+import { useEffect, useRef, useState } from "react";
 
 // import { detectSwapSkill, stripSkillMarkers } from "@/lib/skills-text";
 
@@ -231,6 +231,27 @@ export default function LandingPage() {
     amount: string;
     walletAddress: string;
   } | null>(null);
+
+  // NLP State
+  const [nlpState, setNlpState] = useState<{
+    isActive: boolean;
+    parsedData: {
+      amount: string | null;
+      currency: string | null;
+      currencyMint: string | null;
+      currencyDecimals: number | null;
+      walletAddress: string | null;
+    };
+  }>({
+    isActive: false,
+    parsedData: {
+      amount: null,
+      currency: null,
+      currencyMint: null,
+      currencyDecimals: null,
+      walletAddress: null,
+    },
+  });
 
   // Check if any transaction or chat operation is in progress
   const isLoading =
@@ -687,9 +708,8 @@ export default function LandingPage() {
             parts: [
               {
                 type: "text",
-                text: `Failed to get swap quote: ${
-                  err instanceof Error ? err.message : "Unknown error"
-                }`,
+                text: `Failed to get swap quote: ${err instanceof Error ? err.message : "Unknown error"
+                  }`,
               },
             ],
           },
@@ -705,14 +725,21 @@ export default function LandingPage() {
       // Check if this is a completed send
       const hasSendSkill = input.some((skill) => skill.id === "send");
       const sendData = pendingSendDataRef.current;
-      if (hasSendSkill && sendData) {
+
+      // Check for NLP send command
+      // We allow send if:
+      // 1. The "Send" skill is explicitly active (hasSendSkill) AND we have data
+      // 2. OR the text starts with "send " (NLP mode) AND we have data (from onSendComplete)
+      const isNlpSend = pendingText.trim().toLowerCase().startsWith("send ") && !!sendData;
+
+      if ((hasSendSkill || isNlpSend) && sendData) {
         // Truncate wallet address for display (keep first 6 and last 4 chars)
         const truncatedAddress =
           sendData.walletAddress.length > 12
             ? `${sendData.walletAddress.slice(
-                0,
-                6
-              )}...${sendData.walletAddress.slice(-4)}`
+              0,
+              6
+            )}...${sendData.walletAddress.slice(-4)}`
             : sendData.walletAddress;
         const sendMessage = `Send ${sendData.amount} ${sendData.currency} to ${truncatedAddress}`;
         const timestamp = Date.now();
@@ -745,8 +772,8 @@ export default function LandingPage() {
         // Regular message - send to LLM
         const messageText = skillsEnabled
           ? [...input.map((skill) => skill.label), pendingText.trim()]
-              .filter(Boolean)
-              .join(" ")
+            .filter(Boolean)
+            .join(" ")
           : pendingText.trim();
 
         if (messageText) {
@@ -952,9 +979,8 @@ export default function LandingPage() {
     >
       {/* Desktop margin wrapper - only pushes content on desktop */}
       <div
-        className={`transition-all duration-400 ${
-          isSidebarOpen ? "md:ml-[300px]" : ""
-        }`}
+        className={`transition-all duration-400 ${isSidebarOpen ? "md:ml-[300px]" : ""
+          }`}
         style={{
           position: "relative",
           width: "100%",
@@ -1088,7 +1114,7 @@ export default function LandingPage() {
                 onClick={
                   item.href
                     ? () =>
-                        window.open(item.href, "_blank", "noopener,noreferrer")
+                      window.open(item.href, "_blank", "noopener,noreferrer")
                     : item.onClick
                 }
                 onMouseEnter={() => setHoveredNavIndex(index)}
@@ -1119,8 +1145,8 @@ export default function LandingPage() {
                   gap: "0.375rem",
                   filter:
                     (item.isAbout && isScrolledToAbout) ||
-                    (item.isRoadmap && isScrolledToRoadmap) ||
-                    (item.isLinks && isScrolledToLinks)
+                      (item.isRoadmap && isScrolledToRoadmap) ||
+                      (item.isLinks && isScrolledToLinks)
                       ? "drop-shadow(0 0 8px rgba(255, 255, 255, 0.6))"
                       : "none",
                   overflow: "hidden",
@@ -1133,27 +1159,27 @@ export default function LandingPage() {
                     justifyContent: "center",
                     opacity:
                       (item.isAbout && isScrolledToAbout) ||
-                      (item.isRoadmap && isScrolledToRoadmap) ||
-                      (item.isLinks && isScrolledToLinks)
+                        (item.isRoadmap && isScrolledToRoadmap) ||
+                        (item.isLinks && isScrolledToLinks)
                         ? 1
                         : 0,
                     transform:
                       (item.isAbout && isScrolledToAbout) ||
-                      (item.isRoadmap && isScrolledToRoadmap) ||
-                      (item.isLinks && isScrolledToLinks)
+                        (item.isRoadmap && isScrolledToRoadmap) ||
+                        (item.isLinks && isScrolledToLinks)
                         ? "scale(1) translateY(0)"
                         : "scale(0.8) translateY(4px)",
                     transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
                     position:
                       (item.isAbout && isScrolledToAbout) ||
-                      (item.isRoadmap && isScrolledToRoadmap) ||
-                      (item.isLinks && isScrolledToLinks)
+                        (item.isRoadmap && isScrolledToRoadmap) ||
+                        (item.isLinks && isScrolledToLinks)
                         ? "relative"
                         : "absolute",
                     pointerEvents:
                       (item.isAbout && isScrolledToAbout) ||
-                      (item.isRoadmap && isScrolledToRoadmap) ||
-                      (item.isLinks && isScrolledToLinks)
+                        (item.isRoadmap && isScrolledToRoadmap) ||
+                        (item.isLinks && isScrolledToLinks)
                         ? "auto"
                         : "none",
                   }}
@@ -1169,26 +1195,26 @@ export default function LandingPage() {
                     justifyContent: "center",
                     opacity:
                       (item.isAbout && isScrolledToAbout) ||
-                      (item.isRoadmap && isScrolledToRoadmap) ||
-                      (item.isLinks && isScrolledToLinks)
+                        (item.isRoadmap && isScrolledToRoadmap) ||
+                        (item.isLinks && isScrolledToLinks)
                         ? 0
                         : 1,
                     transform:
                       (item.isAbout && isScrolledToAbout) ||
-                      (item.isRoadmap && isScrolledToRoadmap) ||
-                      (item.isLinks && isScrolledToLinks)
+                        (item.isRoadmap && isScrolledToRoadmap) ||
+                        (item.isLinks && isScrolledToLinks)
                         ? "scale(0.8) translateY(-4px)"
                         : "scale(1) translateY(0)",
                     transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
                     position:
                       (item.isAbout && isScrolledToAbout) ||
-                      (item.isRoadmap && isScrolledToRoadmap) ||
-                      (item.isLinks && isScrolledToLinks)
+                        (item.isRoadmap && isScrolledToRoadmap) ||
+                        (item.isLinks && isScrolledToLinks)
                         ? "absolute"
                         : "relative",
                     pointerEvents:
                       (item.isAbout && isScrolledToAbout) ||
-                      (item.isLinks && isScrolledToLinks)
+                        (item.isLinks && isScrolledToLinks)
                         ? "none"
                         : "auto",
                   }}
@@ -1201,9 +1227,8 @@ export default function LandingPage() {
 
           {/* Token Ticker */}
           <div
-            className={`loyal-token-ticker-container ${
-              connected ? "" : "no-wallet"
-            }`}
+            className={`loyal-token-ticker-container ${connected ? "" : "no-wallet"
+              }`}
             style={{
               position: "fixed",
               top: "4.5rem",
@@ -1268,8 +1293,8 @@ export default function LandingPage() {
             }}
           >
             <MenuIcon
-              onMouseEnter={() => {}}
-              onMouseLeave={() => {}}
+              onMouseEnter={() => { }}
+              onMouseLeave={() => { }}
               ref={menuIconRef}
               size={24}
             />
@@ -1341,8 +1366,8 @@ export default function LandingPage() {
               title="New chat"
             >
               <PlusIcon
-                onMouseEnter={() => {}}
-                onMouseLeave={() => {}}
+                onMouseEnter={() => { }}
+                onMouseLeave={() => { }}
                 ref={plusIconRef}
                 size={24}
               />
@@ -1516,15 +1541,15 @@ export default function LandingPage() {
                     alignItems: "center",
                     justifyContent:
                       (item.isAbout && isScrolledToAbout) ||
-                      (item.isRoadmap && isScrolledToRoadmap) ||
-                      (item.isLinks && isScrolledToLinks)
+                        (item.isRoadmap && isScrolledToRoadmap) ||
+                        (item.isLinks && isScrolledToLinks)
                         ? "center"
                         : "flex-start",
                     gap: "0.5rem",
                     filter:
                       (item.isAbout && isScrolledToAbout) ||
-                      (item.isRoadmap && isScrolledToRoadmap) ||
-                      (item.isLinks && isScrolledToLinks)
+                        (item.isRoadmap && isScrolledToRoadmap) ||
+                        (item.isLinks && isScrolledToLinks)
                         ? "drop-shadow(0 0 6px rgba(255, 255, 255, 0.5))"
                         : "none",
                     overflow: "hidden",
@@ -1538,27 +1563,27 @@ export default function LandingPage() {
                       justifyContent: "center",
                       opacity:
                         (item.isAbout && isScrolledToAbout) ||
-                        (item.isRoadmap && isScrolledToRoadmap) ||
-                        (item.isLinks && isScrolledToLinks)
+                          (item.isRoadmap && isScrolledToRoadmap) ||
+                          (item.isLinks && isScrolledToLinks)
                           ? 1
                           : 0,
                       transform:
                         (item.isAbout && isScrolledToAbout) ||
-                        (item.isRoadmap && isScrolledToRoadmap) ||
-                        (item.isLinks && isScrolledToLinks)
+                          (item.isRoadmap && isScrolledToRoadmap) ||
+                          (item.isLinks && isScrolledToLinks)
                           ? "scale(1) translateY(0)"
                           : "scale(0.8) translateY(4px)",
                       transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
                       position:
                         (item.isAbout && isScrolledToAbout) ||
-                        (item.isRoadmap && isScrolledToRoadmap) ||
-                        (item.isLinks && isScrolledToLinks)
+                          (item.isRoadmap && isScrolledToRoadmap) ||
+                          (item.isLinks && isScrolledToLinks)
                           ? "relative"
                           : "absolute",
                       pointerEvents:
                         (item.isAbout && isScrolledToAbout) ||
-                        (item.isRoadmap && isScrolledToRoadmap) ||
-                        (item.isLinks && isScrolledToLinks)
+                          (item.isRoadmap && isScrolledToRoadmap) ||
+                          (item.isLinks && isScrolledToLinks)
                           ? "auto"
                           : "none",
                     }}
@@ -1574,26 +1599,26 @@ export default function LandingPage() {
                       justifyContent: "center",
                       opacity:
                         (item.isAbout && isScrolledToAbout) ||
-                        (item.isRoadmap && isScrolledToRoadmap) ||
-                        (item.isLinks && isScrolledToLinks)
+                          (item.isRoadmap && isScrolledToRoadmap) ||
+                          (item.isLinks && isScrolledToLinks)
                           ? 0
                           : 1,
                       transform:
                         (item.isAbout && isScrolledToAbout) ||
-                        (item.isRoadmap && isScrolledToRoadmap) ||
-                        (item.isLinks && isScrolledToLinks)
+                          (item.isRoadmap && isScrolledToRoadmap) ||
+                          (item.isLinks && isScrolledToLinks)
                           ? "scale(0.8) translateY(-4px)"
                           : "scale(1) translateY(0)",
                       transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
                       position:
                         (item.isAbout && isScrolledToAbout) ||
-                        (item.isRoadmap && isScrolledToRoadmap) ||
-                        (item.isLinks && isScrolledToLinks)
+                          (item.isRoadmap && isScrolledToRoadmap) ||
+                          (item.isLinks && isScrolledToLinks)
                           ? "absolute"
                           : "relative",
                       pointerEvents:
                         (item.isAbout && isScrolledToAbout) ||
-                        (item.isLinks && isScrolledToLinks)
+                          (item.isLinks && isScrolledToLinks)
                           ? "none"
                           : "auto",
                     }}
@@ -1822,16 +1847,16 @@ export default function LandingPage() {
               >
                 {messages[0]?.role === "user"
                   ? messages[0].parts
-                      .filter((part) => part.type === "text")
-                      .map((part) => part.text)
-                      .join("")
-                      .slice(0, 80) +
-                    (messages[0].parts
-                      .filter((part) => part.type === "text")
-                      .map((part) => part.text)
-                      .join("").length > 80
-                      ? "..."
-                      : "")
+                    .filter((part) => part.type === "text")
+                    .map((part) => part.text)
+                    .join("")
+                    .slice(0, 80) +
+                  (messages[0].parts
+                    .filter((part) => part.type === "text")
+                    .map((part) => part.text)
+                    .join("").length > 80
+                    ? "..."
+                    : "")
                   : "Chat"}
               </h2>
             </div>
@@ -1905,9 +1930,9 @@ export default function LandingPage() {
                     message.createdAt ?? messageTimestamps[message.id];
                   const messageTime = resolvedTimestamp
                     ? new Date(resolvedTimestamp).toLocaleTimeString([], {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })
                     : null;
 
                   return (
@@ -2249,24 +2274,34 @@ export default function LandingPage() {
             >
               <div
                 onBlur={(e) => {
-                  e.currentTarget.style.background =
-                    "rgba(255, 255, 255, 0.08)";
-                  e.currentTarget.style.border =
-                    "1px solid rgba(255, 255, 255, 0.15)";
+                  if (nlpState.isActive && nlpState.parsedData.amount && nlpState.parsedData.currency && nlpState.parsedData.walletAddress) {
+                    e.currentTarget.style.border = "1px solid rgba(74, 222, 128, 0.5)"; // Green border
+                    e.currentTarget.style.background = "rgba(74, 222, 128, 0.05)";
+                  } else {
+                    e.currentTarget.style.background = "rgba(255, 255, 255, 0.08)";
+                    e.currentTarget.style.border = "1px solid rgba(255, 255, 255, 0.15)";
+                  }
                 }}
                 onFocus={(e) => {
-                  e.currentTarget.style.background =
-                    "rgba(255, 255, 255, 0.12)";
-                  e.currentTarget.style.border =
-                    "1px solid rgba(255, 255, 255, 0.25)";
+                  if (nlpState.isActive && nlpState.parsedData.amount && nlpState.parsedData.currency && nlpState.parsedData.walletAddress) {
+                    e.currentTarget.style.border = "1px solid rgba(74, 222, 128, 0.8)"; // Stronger green on focus
+                    e.currentTarget.style.background = "rgba(74, 222, 128, 0.1)";
+                  } else {
+                    e.currentTarget.style.background = "rgba(255, 255, 255, 0.12)";
+                    e.currentTarget.style.border = "1px solid rgba(255, 255, 255, 0.25)";
+                  }
                 }}
                 style={{
                   position: "relative",
                   display: "flex",
                   flexDirection: "column",
-                  background: "rgba(255, 255, 255, 0.08)",
+                  background: nlpState.isActive && nlpState.parsedData.amount && nlpState.parsedData.currency && nlpState.parsedData.walletAddress
+                    ? "rgba(74, 222, 128, 0.05)"
+                    : "rgba(255, 255, 255, 0.08)",
                   backdropFilter: "blur(20px)",
-                  border: "1px solid rgba(255, 255, 255, 0.15)",
+                  border: nlpState.isActive && nlpState.parsedData.amount && nlpState.parsedData.currency && nlpState.parsedData.walletAddress
+                    ? "1px solid rgba(74, 222, 128, 0.5)"
+                    : "1px solid rgba(255, 255, 255, 0.15)",
                   borderRadius: "20px",
                   boxShadow:
                     "0 8px 32px 0 rgba(0, 0, 0, 0.37), inset 0 1px 1px rgba(255, 255, 255, 0.1)",
@@ -2280,176 +2315,146 @@ export default function LandingPage() {
                     alignItems: "flex-end",
                   }}
                 >
-                {skillsEnabled ? (
-                  <SkillsInput
-                    onChange={(skills) => {
-                      setInput(skills);
-
-                      // Show modal on first typing
-                      if (!hasShownModal && skills.length > 0) {
-                        setIsModalOpen(true);
-                        setHasShownModal(true);
-                        if (
-                          typeof window !== "undefined" &&
-                          window.localStorage
-                        ) {
-                          try {
-                            window.localStorage.setItem(
-                              "loyal-testers-modal-shown",
-                              "true"
-                            );
-                          } catch (error) {
-                            console.warn(
-                              "Unable to persist testers modal flag to storage",
-                              error
-                            );
-                          }
-                        }
-                      }
-                    }}
-                    onPendingTextChange={setPendingText}
-                    onSendComplete={handleSendComplete}
-                    onSendFlowChange={setSendFlowState}
-                    onSwapComplete={handleSwapComplete}
-                    onSwapFlowChange={setSwapFlowState}
-                    placeholder={
-                      isOnline
-                        ? isChatMode && !connected
-                          ? "Please reconnect wallet to continue..."
-                          : isChatMode
-                            ? ""
-                            : "Ask me anything (type / for skills)..."
-                        : "No internet connection..."
-                    }
-                    ref={inputRef}
-                    value={input}
-                  />
-                ) : (
-                  <textarea
-                    onChange={(e) => {
-                      setPendingText(e.target.value);
-
-                      // Auto-resize textarea based on content
-                      if (inputRef.current) {
-                        inputRef.current.style.height = "auto";
-                        inputRef.current.style.height = `${inputRef.current.scrollHeight}px`;
-                      }
-
-                      // Show modal on first typing
-                      if (!hasShownModal && e.target.value.length > 0) {
-                        setIsModalOpen(true);
-                        setHasShownModal(true);
-                        if (
-                          typeof window !== "undefined" &&
-                          window.localStorage
-                        ) {
-                          try {
-                            window.localStorage.setItem(
-                              "loyal-testers-modal-shown",
-                              "true"
-                            );
-                          } catch (error) {
-                            console.warn(
-                              "Unable to persist testers modal flag to storage",
-                              error
-                            );
-                          }
-                        }
-                      }
-                    }}
-                    onKeyDown={(e) => {
-                      // Allow Shift+Enter to create new lines
-                      if (e.key === "Enter" && !e.shiftKey) {
-                        e.preventDefault();
-                        if (hasUsableInput && !isLoading) {
-                          handleSubmit(e as unknown as React.FormEvent);
-                        }
-                      }
-                    }}
-                    placeholder={
-                      isOnline
-                        ? isChatMode && !connected
-                          ? "Please reconnect wallet to continue..."
-                          : isChatMode
-                            ? ""
-                            : "Ask me anything..."
-                        : "No internet connection..."
-                    }
-                    ref={inputRef as React.RefObject<HTMLTextAreaElement>}
-                    rows={1}
-                    style={{
-                      width: "100%",
-                      padding: "20px 64px 20px 28px",
-                      background: "transparent",
-                      border: "none",
-                      color: "white",
-                      fontSize: "15px",
-                      fontFamily: "inherit",
-                      resize: "none",
-                      outline: "none",
-                      overflow: "hidden",
-                    }}
-                    value={pendingText}
-                  />
-                )}
-                <button
-                  disabled={!hasUsableInput || isLoading}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    if (hasUsableInput && !isLoading) {
-                      handleSubmit(e as unknown as React.FormEvent);
-                    }
-                  }}
-                  onMouseEnter={(e) => {
-                    if (hasUsableInput && !isLoading) {
-                      e.currentTarget.style.opacity = "1";
-                      e.currentTarget.style.background =
-                        "rgba(255, 255, 255, 0.15)";
-                      e.currentTarget.style.transform =
-                        "translateY(-50%) scale(1.1)";
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (hasUsableInput && !isLoading) {
-                      e.currentTarget.style.opacity = "0.8";
-                      e.currentTarget.style.background = "transparent";
-                      e.currentTarget.style.transform =
-                        "translateY(-50%) scale(1)";
-                    }
-                  }}
-                  style={{
-                    position: "absolute",
-                    right: "0.75rem",
-                    top: "50%",
-                    transform: "translateY(-50%)",
-                    padding: "0.5rem",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    color: "#fff",
-                    background: "transparent",
-                    border: "none",
-                    borderRadius: "12px",
-                    cursor:
-                      hasUsableInput && !isLoading ? "pointer" : "not-allowed",
-                    outline: "none",
-                    transition: "all 0.3s ease",
-                    opacity: hasUsableInput && !isLoading ? 0.8 : 0.3,
-                    zIndex: 2,
-                  }}
-                  type="button"
-                >
-                  {isLoading ? (
-                    <Loader2
-                      size={24}
-                      style={{
-                        animation: "spin 1s linear infinite",
-                      }}
+                  {skillsEnabled ? (
+                    <SkillsInput
+                      className="min-h-[60px] w-full text-lg"
+                      onChange={setInput}
+                      onPendingTextChange={setPendingText}
+                      onSendComplete={handleSendComplete}
+                      onSendFlowChange={setSendFlowState}
+                      onSwapComplete={handleSwapComplete}
+                      onSwapFlowChange={setSwapFlowState}
+                      onNlpStateChange={setNlpState}
+                      placeholder="Ask me anything..."
+                      ref={inputRef}
+                      value={input}
                     />
                   ) : (
-                    <ChevronRightIcon size={24} />
+                    <textarea
+                      onChange={(e) => {
+                        setPendingText(e.target.value);
+
+                        // Auto-resize textarea based on content
+                        if (inputRef.current) {
+                          inputRef.current.style.height = "auto";
+                          inputRef.current.style.height = `${inputRef.current.scrollHeight}px`;
+                        }
+
+                        // Show modal on first typing
+                        if (!hasShownModal && e.target.value.length > 0) {
+                          setIsModalOpen(true);
+                          setHasShownModal(true);
+                          if (
+                            typeof window !== "undefined" &&
+                            window.localStorage
+                          ) {
+                            try {
+                              window.localStorage.setItem(
+                                "loyal-testers-modal-shown",
+                                "true"
+                              );
+                            } catch (error) {
+                              console.warn(
+                                "Unable to persist testers modal flag to storage",
+                                error
+                              );
+                            }
+                          }
+                        }
+                      }}
+                      onKeyDown={(e) => {
+                        // Allow Shift+Enter to create new lines
+                        if (e.key === "Enter" && !e.shiftKey) {
+                          e.preventDefault();
+                          if (hasUsableInput && !isLoading) {
+                            handleSubmit(e as unknown as React.FormEvent);
+                          }
+                        }
+                      }}
+                      placeholder={
+                        isOnline
+                          ? isChatMode && !connected
+                            ? "Please reconnect wallet to continue..."
+                            : isChatMode
+                              ? ""
+                              : "Ask me anything..."
+                          : "No internet connection..."
+                      }
+                      ref={inputRef as React.RefObject<HTMLTextAreaElement>}
+                      rows={1}
+                      style={{
+                        width: "100%",
+                        padding: "20px 64px 20px 28px",
+                        background: "transparent",
+                        border: "none",
+                        color: "white",
+                        fontSize: "15px",
+                        fontFamily: "inherit",
+                        resize: "none",
+                        outline: "none",
+                        overflow: "hidden",
+                      }}
+                      value={pendingText}
+                    />
                   )}
-                </button>
+                  <button
+                    disabled={!hasUsableInput || isLoading}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      if (hasUsableInput && !isLoading) {
+                        handleSubmit(e as unknown as React.FormEvent);
+                      }
+                    }}
+                    onMouseEnter={(e) => {
+                      if (hasUsableInput && !isLoading) {
+                        e.currentTarget.style.opacity = "1";
+                        e.currentTarget.style.background =
+                          "rgba(255, 255, 255, 0.15)";
+                        e.currentTarget.style.transform =
+                          "translateY(-50%) scale(1.1)";
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (hasUsableInput && !isLoading) {
+                        e.currentTarget.style.opacity = "0.8";
+                        e.currentTarget.style.background = "transparent";
+                        e.currentTarget.style.transform =
+                          "translateY(-50%) scale(1)";
+                      }
+                    }}
+                    style={{
+                      position: "absolute",
+                      right: "0.75rem",
+                      top: "50%",
+                      transform: "translateY(-50%)",
+                      padding: "0.5rem",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      color: "#fff",
+                      background: "transparent",
+                      border: "none",
+                      borderRadius: "12px",
+                      cursor:
+                        hasUsableInput && !isLoading ? "pointer" : "not-allowed",
+                      outline: "none",
+                      transition: "all 0.3s ease",
+                      opacity: hasUsableInput && !isLoading ? 0.8 : 0.3,
+                      zIndex: 2,
+                    }}
+                    type="button"
+                  >
+                    {isLoading ? (
+                      <Loader2
+                        size={24}
+                        style={{
+                          animation: "spin 1s linear infinite",
+                        }}
+                      />
+                    ) : (
+                      <ChevronRightIcon size={24} />
+                    )}
+                  </button>
                 </div>
                 {skillsEnabled && (
                   <SkillsSelector
@@ -2466,13 +2471,22 @@ export default function LandingPage() {
                           setInput([]);
                         }
                       } else {
-                        // Reset all state and add the selected skill
-                        if (inputRef.current && "resetAndAddSkill" in inputRef.current) {
-                          (inputRef.current as HTMLTextAreaElement & { resetAndAddSkill: (skill: LoyalSkill) => void }).resetAndAddSkill(skill);
+                        if (skill.id === "send") {
+                          // For "send" skill, activate NLP mode instead of adding the skill object
+                          if (inputRef.current && "activateNlpMode" in inputRef.current) {
+                            (inputRef.current as any).activateNlpMode("send ");
+                          }
+                        } else {
+                          // For other skills (like swap), use the old flow
+                          // Reset all state and add the selected skill
+                          if (inputRef.current && "resetAndAddSkill" in inputRef.current) {
+                            (inputRef.current as HTMLTextAreaElement & { resetAndAddSkill: (skill: LoyalSkill) => void }).resetAndAddSkill(skill);
+                          }
                         }
                       }
                     }}
                     className="px-5 py-2"
+                    nlpState={nlpState}
                   />
                 )}
               </div>

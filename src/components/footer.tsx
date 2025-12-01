@@ -69,7 +69,7 @@ const socialLinks = [
   },
   {
     name: "Discord",
-    url: "https://discord.gg/HSeXaVhzWU",
+    url: "https://discord.askloyal.com",
     icon: (
       <svg
         fill="currentColor"
@@ -104,7 +104,7 @@ const legalLinks = [
     name: "Trade $LOYAL on Jupiter",
     url: "https://jup.ag/tokens/LYLikzBQtpa9ZgVrJsqYGQpR3cC1WMJrBHaXGrQmeta",
   },
-  { name: "Join Discord community", url: "https://discord.gg/HSeXaVhzWU" },
+  { name: "Join Discord community", url: "https://discord.askloyal.com" },
   { name: "Join Telegram community", url: "https://t.me/loyal_tgchat" },
 ];
 

@@ -65,6 +65,8 @@ const dirtyline = localFont({
 
 type TimestampedMessage = UIMessage & { createdAt?: number };
 
+const PENDING_MESSAGE_KEY = "loyal_pending_message";
+
 export default function LandingPage() {
   const { messages, sendMessage, status, setMessages } =
     useChat<TimestampedMessage>({
@@ -134,6 +136,28 @@ export default function LandingPage() {
   const { isConnected } = usePhantom();
   const { open } = useModal();
   const [pendingMessage, setPendingMessage] = useState<string | null>(null);
+  const [showPastePrompt, setShowPastePrompt] = useState(false);
+
+  // Restore pending message from localStorage on mount (for mobile deeplink flow)
+  // Also detect if we're in Phantom's in-app browser and show paste prompt
+  useEffect(() => {
+    const stored = localStorage.getItem(PENDING_MESSAGE_KEY);
+    if (stored) {
+      setPendingMessage(stored);
+      return;
+    }
+
+    // Detect if we're in Phantom's in-app browser on mobile
+    // Check: mobile user agent + Phantom provider available + no stored pending message
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    const hasPhantomProvider = typeof window !== "undefined" && window.phantom?.solana;
+
+    if (isMobile && hasPhantomProvider) {
+      // Show paste prompt for users who came from deeplink
+      setShowPastePrompt(true);
+    }
+  }, []);
+
   const [isOnline, setIsOnline] = useState(true);
   const [showScrollButton, setShowScrollButton] = useState(false);
   const [isScrolledToAbout, setIsScrolledToAbout] = useState(false);
@@ -333,6 +357,8 @@ export default function LandingPage() {
       setInput([]);
       setPendingText("");
       setPendingMessage(null);
+      localStorage.removeItem(PENDING_MESSAGE_KEY);
+      setShowPastePrompt(false);
       setIsChatModeLocal(true);
 
       // Ensure focus
@@ -631,10 +657,15 @@ export default function LandingPage() {
     // Always check if wallet is connected before sending any message
     if (!isConnected) {
       // Save the message to send after connection
+      // Also copy to clipboard for mobile deeplink flow (different browser context)
       if (hasUsableInput) {
-        setPendingMessage(
-          `${pendingText.trim()} ${input.map((s) => s.label).join(" ")}`.trim()
-        );
+        const message = `${pendingText.trim()} ${input.map((s) => s.label).join(" ")}`.trim();
+        setPendingMessage(message);
+        localStorage.setItem(PENDING_MESSAGE_KEY, message);
+        // Copy to clipboard for mobile users who will switch to Phantom browser
+        navigator.clipboard.writeText(message).catch(() => {
+          // Clipboard API may fail silently on some browsers
+        });
       }
       // Open wallet connection modal
       open();
@@ -881,6 +912,7 @@ export default function LandingPage() {
           sendMessage({ text: messageText });
           setInput([]);
           setPendingText("");
+          setShowPastePrompt(false);
         }
       }
     }
@@ -1078,6 +1110,35 @@ export default function LandingPage() {
         overflow: isChatMode ? "hidden" : "auto",
       }}
     >
+      {/* Paste prompt for mobile users coming from Phantom deeplink */}
+      {showPastePrompt && (
+        <div
+          className="fixed top-4 left-4 right-4 z-[300] rounded-xl bg-[#1a1a1a] border border-[#333] p-4 shadow-lg"
+          style={{ maxWidth: "400px", margin: "0 auto" }}
+        >
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex-1">
+              <p className="text-sm text-white font-medium mb-1">
+                Welcome to Phantom!
+              </p>
+              <p className="text-xs text-gray-400">
+                Your message was copied to clipboard. Paste it in the chat to continue.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowPastePrompt(false)}
+              className="text-gray-400 hover:text-white transition-colors"
+              aria-label="Dismiss"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M18 6L6 18M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Desktop margin wrapper - only pushes content on desktop */}
       <div
         className={`transition-all duration-400 ${

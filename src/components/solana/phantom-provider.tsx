@@ -56,14 +56,25 @@ export const PhantomWalletProvider: FC<PhantomWalletProviderProps> = ({
 
   const connectionValue = useMemo(() => ({ connection }), [connection]);
 
+  // Get redirect URL for OAuth callbacks
+  const redirectUrl = useMemo(() => {
+    if (typeof window !== "undefined") {
+      return `${window.location.origin}/auth/callback`;
+    }
+    return "https://askloyal.com/auth/callback";
+  }, []);
+
   return (
     <PhantomSdkProvider
       appIcon="https://askloyal.com/favicon.png"
       appName="Loyal"
       config={{
-        providers: ["injected", "deeplink"],
+        providers: ["google", "apple", "injected", "deeplink"],
         appId: PHANTOM_APP_ID,
         addressTypes: [AddressType.solana],
+        authOptions: {
+          redirectUrl,
+        },
       }}
       theme={darkTheme}
     >

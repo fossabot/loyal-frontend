@@ -3,10 +3,9 @@
 import {
   useAccounts,
   useDisconnect,
+  useModal,
   usePhantom,
 } from "@phantom/react-sdk";
-
-import { useWalletSelector } from "@/components/wallet/wallet-selector-context";
 import { useEffect, useState } from "react";
 
 import { useChatMode } from "@/contexts/chat-mode-context";
@@ -15,7 +14,7 @@ export function Header() {
   const [mounted, setMounted] = useState(false);
   const { isChatMode } = useChatMode();
   const { isConnected } = usePhantom();
-  const { open } = useWalletSelector();
+  const { open } = useModal();
   const { disconnect } = useDisconnect();
   const accounts = useAccounts();
 

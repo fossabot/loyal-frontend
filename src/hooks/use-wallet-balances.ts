@@ -1,6 +1,8 @@
-import { useConnection, useWallet } from "@solana/wallet-adapter-react";
+import { useAccounts, usePhantom } from "@phantom/react-sdk";
 import { LAMPORTS_PER_SOL, PublicKey } from "@solana/web3.js";
 import { useCallback, useEffect, useState } from "react";
+
+import { useConnection } from "@/components/solana/phantom-provider";
 
 export type TokenBalance = {
   symbol: string;
@@ -32,13 +34,19 @@ const KNOWN_TOKENS: Record<string, { symbol: string; decimals: number }> = {
 
 export function useWalletBalances() {
   const { connection } = useConnection();
-  const { publicKey } = useWallet();
+  const { isConnected } = usePhantom();
+  const accounts = useAccounts();
   const [balances, setBalances] = useState<TokenBalance[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Get Solana address from accounts
+  const solanaAddress = accounts?.find(
+    (acc) => acc.addressType === "Solana"
+  )?.address;
+
   const fetchBalances = useCallback(async () => {
-    if (!publicKey) {
+    if (!(isConnected && solanaAddress)) {
       setBalances([]);
       return;
     }
@@ -47,6 +55,7 @@ export function useWalletBalances() {
     setError(null);
 
     try {
+      const publicKey = new PublicKey(solanaAddress);
       const tokenBalances: TokenBalance[] = [];
 
       // Fetch SOL balance
@@ -100,7 +109,7 @@ export function useWalletBalances() {
       console.error("Error fetching wallet balances:", err);
       setLoading(false);
     }
-  }, [publicKey, connection]);
+  }, [isConnected, solanaAddress, connection]);
 
   // Fetch balances when wallet connects
   useEffect(() => {

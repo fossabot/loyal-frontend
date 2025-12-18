@@ -1,10 +1,6 @@
 "use client";
 
-import { useWallet } from "@solana/wallet-adapter-react";
-import {
-  useWalletModal,
-  WalletMultiButton,
-} from "@solana/wallet-adapter-react-ui";
+import { ConnectButton } from "@phantom/react-sdk";
 import { useEffect, useState } from "react";
 
 import { useChatMode } from "@/contexts/chat-mode-context";
@@ -12,28 +8,10 @@ import { useChatMode } from "@/contexts/chat-mode-context";
 export function Header() {
   const [mounted, setMounted] = useState(false);
   const { isChatMode } = useChatMode();
-  const { connected, disconnect } = useWallet();
-  const { setVisible } = useWalletModal();
 
   useEffect(() => {
     setMounted(true);
   }, []);
-
-  // Allow users to change wallet selection at any time when not connected
-  const handleWalletClick = (e: React.MouseEvent) => {
-    if (!connected) {
-      // Prevent default wallet button behavior
-      e.preventDefault();
-      e.stopPropagation();
-
-      // Disconnect any pending connection and show modal
-      disconnect();
-      // Small delay to ensure disconnect completes
-      setTimeout(() => {
-        setVisible(true);
-      }, 100);
-    }
-  };
 
   if (!mounted) {
     return (
@@ -51,12 +29,15 @@ export function Header() {
     <header
       className={`fixed top-6 right-6 z-[100] ${isChatMode ? "chat-mode-active" : ""}`}
     >
-      <div
-        className={connected ? "wallet-connected" : "wallet-disconnected"}
-        onClickCapture={handleWalletClick}
-      >
-        <WalletMultiButton />
-      </div>
+      <style>{`
+        header button {
+          min-height: 46px !important;
+          display: flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+        }
+      `}</style>
+      <ConnectButton />
     </header>
   );
 }

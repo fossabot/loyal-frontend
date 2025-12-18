@@ -1,8 +1,7 @@
 "use client";
 
 import { useChat } from "@ai-sdk/react";
-import { useWallet } from "@solana/wallet-adapter-react";
-import { useWalletModal } from "@solana/wallet-adapter-react-ui";
+import { useModal, usePhantom } from "@phantom/react-sdk";
 import { DefaultChatTransport, type UIMessage } from "ai";
 import { ArrowDownIcon, ArrowUpToLine, Loader2 } from "lucide-react";
 import { IBM_Plex_Sans, Plus_Jakarta_Sans } from "next/font/google";
@@ -66,6 +65,7 @@ const dirtyline = localFont({
 
 type TimestampedMessage = UIMessage & { createdAt?: number };
 
+
 export default function LandingPage() {
   const { messages, sendMessage, status, setMessages } =
     useChat<TimestampedMessage>({
@@ -120,7 +120,6 @@ export default function LandingPage() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [copiedMessageId, setCopiedMessageId] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [hasShownModal, setHasShownModal] = useState(false);
   const [hoveredChatId, setHoveredChatId] = useState<string | null>(null);
   const [hoveredNavIndex, setHoveredNavIndex] = useState<number | null>(null);
   const menuIconRef = useRef<MenuIconHandle>(null);
@@ -132,9 +131,19 @@ export default function LandingPage() {
   const navItemRefs = useRef<(HTMLButtonElement | null)[]>([]);
 
   // Wallet hooks
-  const { connected } = useWallet();
-  const { setVisible } = useWalletModal();
-  const [pendingMessage, setPendingMessage] = useState<string | null>(null);
+  const { isConnected } = usePhantom();
+  const { open } = useModal();
+  // Track if we've already prompted auth on first input
+  const [hasPromptedAuth, setHasPromptedAuth] = useState(false);
+
+  // Prompt auth on first character typed (works for both SkillsInput and textarea)
+  useEffect(() => {
+    if (!(hasPromptedAuth || isConnected) && pendingText.length > 0) {
+      setHasPromptedAuth(true);
+      open();
+    }
+  }, [hasPromptedAuth, isConnected, pendingText, open]);
+
   const [isOnline, setIsOnline] = useState(true);
   const [showScrollButton, setShowScrollButton] = useState(false);
   const [isScrolledToAbout, setIsScrolledToAbout] = useState(false);
@@ -301,22 +310,6 @@ export default function LandingPage() {
     };
   }, []);
 
-  // Check if testers modal has been shown before
-  useEffect(() => {
-    if (typeof window === "undefined" || !window.localStorage) {
-      return;
-    }
-    try {
-      const modalShown = window.localStorage.getItem(
-        "loyal-testers-modal-shown"
-      );
-      if (modalShown === "true") {
-        setHasShownModal(true);
-      }
-    } catch (error) {
-      console.warn("Unable to read testers modal flag from storage", error);
-    }
-  }, []);
 
   // Control menu icon animation based on sidebar state
   useEffect(() => {
@@ -327,23 +320,6 @@ export default function LandingPage() {
     }
   }, [isSidebarOpen]);
 
-  // Handle sending pending message after wallet connection
-  useEffect(() => {
-    if (connected && pendingMessage && status === "ready") {
-      sendMessage({ text: pendingMessage });
-      setInput([]);
-      setPendingText("");
-      setPendingMessage(null);
-      setIsChatModeLocal(true);
-
-      // Ensure focus
-      setTimeout(() => {
-        if (inputRef.current) {
-          inputRef.current.focus();
-        }
-      }, 50);
-    }
-  }, [connected, pendingMessage, status, sendMessage]);
 
   // Auto-focus on initial load (but not if there's a hash in URL)
   useEffect(() => {
@@ -629,16 +605,9 @@ export default function LandingPage() {
       return;
     }
 
-    // Always check if wallet is connected before sending any message
-    if (!connected) {
-      // Save the message to send after connection
-      if (hasUsableInput) {
-        setPendingMessage(
-          `${pendingText.trim()} ${input.map((s) => s.label).join(" ")}`.trim()
-        );
-      }
-      // Open wallet connection modal
-      setVisible(true);
+    // Check if wallet is connected before sending
+    if (!isConnected) {
+      open();
       return;
     }
 
@@ -1079,6 +1048,7 @@ export default function LandingPage() {
         overflow: isChatMode ? "hidden" : "auto",
       }}
     >
+
       {/* Desktop margin wrapper - only pushes content on desktop */}
       <div
         className={`transition-all duration-400 ${
@@ -1275,13 +1245,11 @@ export default function LandingPage() {
                     transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
                     position:
                       (item.isAbout && isScrolledToAbout) ||
-                      (item.isRoadmap && isScrolledToRoadmap) ||
                       (item.isLinks && isScrolledToLinks)
                         ? "relative"
                         : "absolute",
                     pointerEvents:
                       (item.isAbout && isScrolledToAbout) ||
-                      (item.isRoadmap && isScrolledToRoadmap) ||
                       (item.isLinks && isScrolledToLinks)
                         ? "auto"
                         : "none",
@@ -1311,7 +1279,6 @@ export default function LandingPage() {
                     transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
                     position:
                       (item.isAbout && isScrolledToAbout) ||
-                      (item.isRoadmap && isScrolledToRoadmap) ||
                       (item.isLinks && isScrolledToLinks)
                         ? "absolute"
                         : "relative",
@@ -1331,7 +1298,7 @@ export default function LandingPage() {
           {/* Token Ticker */}
           <div
             className={`loyal-token-ticker-container ${
-              connected ? "" : "no-wallet"
+              isConnected ? "" : "no-wallet"
             }`}
             style={{
               position: "fixed",
@@ -1881,7 +1848,7 @@ export default function LandingPage() {
                         border: "1px solid rgba(255, 255, 255, 0.2)",
                         borderRadius: "10px",
                         boxShadow:
-                          "0 8px 24px 0 rgba(0, 0, 0, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.15)",
+                          "0 8px 24px 0 rgba(0, 0, 0, 0.4), inset 0 1px 2px rgba(255, 255, 255, 0.15)",
                         fontSize: "0.75rem",
                         fontWeight: 500,
                         color: "rgba(255, 255, 255, 0.9)",
@@ -2141,7 +2108,9 @@ export default function LandingPage() {
                         display: "flex",
                         flexDirection: "column",
                         alignItems:
-                          message.role === "user" ? "flex-end" : "flex-start",
+                          message.role === "user"
+                            ? "flex-end"
+                            : "flex-start",
                         gap: "0.5rem",
                         animation: "slideInUp 0.3s ease-out",
                         animationFillMode: "both",
@@ -2564,28 +2533,6 @@ export default function LandingPage() {
                           inputRef.current.style.height = "auto";
                           inputRef.current.style.height = `${inputRef.current.scrollHeight}px`;
                         }
-
-                        // Show modal on first typing
-                        if (!hasShownModal && e.target.value.length > 0) {
-                          setIsModalOpen(true);
-                          setHasShownModal(true);
-                          if (
-                            typeof window !== "undefined" &&
-                            window.localStorage
-                          ) {
-                            try {
-                              window.localStorage.setItem(
-                                "loyal-testers-modal-shown",
-                                "true"
-                              );
-                            } catch (error) {
-                              console.warn(
-                                "Unable to persist testers modal flag to storage",
-                                error
-                              );
-                            }
-                          }
-                        }
                       }}
                       onKeyDown={(e) => {
                         // Allow Shift+Enter to create new lines
@@ -2598,7 +2545,7 @@ export default function LandingPage() {
                       }}
                       placeholder={
                         isOnline
-                          ? isChatMode && !connected
+                          ? isChatMode && !isConnected
                             ? "Please reconnect wallet to continue..."
                             : isChatMode
                             ? ""
@@ -2838,7 +2785,7 @@ export default function LandingPage() {
       )}
 
       {/* Wallet disconnection warning overlay */}
-      {isChatMode && !connected && (
+      {isChatMode && !isConnected && (
         <div
           style={{
             position: "fixed",
@@ -2864,7 +2811,7 @@ export default function LandingPage() {
               padding: "2rem",
               boxShadow:
                 "0 20px 60px 0 rgba(255, 68, 68, 0.2), " +
-                "inset 0 2px 4px rgba(255, 255, 255, 0.1)",
+                "inset 0 2px 4px rgba(255, 255, 255, 0.15)",
               textAlign: "center",
             }}
           >
@@ -2899,7 +2846,7 @@ export default function LandingPage() {
               your conversation.
             </p>
             <button
-              onClick={() => setVisible(true)}
+              onClick={() => open()}
               onMouseEnter={(e) => {
                 e.currentTarget.style.background = "rgba(255, 68, 68, 0.3)";
                 e.currentTarget.style.border =

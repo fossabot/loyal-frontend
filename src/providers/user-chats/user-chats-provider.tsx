@@ -1,6 +1,5 @@
 "use client";
 
-import { useAnchorWallet, useConnection } from "@solana/wallet-adapter-react";
 import type { PropsWithChildren } from "react";
 import {
   createContext,
@@ -11,6 +10,8 @@ import {
   useState,
 } from "react";
 
+import { useConnection } from "@/components/solana/phantom-provider";
+import { useAnchorWallet } from "@/hooks/use-anchor-wallet";
 import {
   fetchAllUserChats,
   fetchUserContext,

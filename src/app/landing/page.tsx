@@ -1,7 +1,6 @@
 "use client";
 
 import { useChat } from "@ai-sdk/react";
-import { useAnchorWallet, useConnection } from "@solana/wallet-adapter-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import {
@@ -36,6 +35,8 @@ import {
   SourcesTrigger,
 } from "@/components/ai-elements/source";
 import { TopicsSidebar } from "@/components/ai-elements/topics-sidebar";
+import { useConnection } from "@/components/solana/phantom-provider";
+import { useAnchorWallet } from "@/hooks/use-anchor-wallet";
 import { mapChatsToTopics } from "@/lib/chat/topic-utils";
 import { GrpcChatTransport } from "@/lib/query/transport";
 import { createAndUploadChat } from "@/lib/services/service";

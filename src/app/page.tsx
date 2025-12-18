@@ -1,8 +1,7 @@
 "use client";
 
 import { useChat } from "@ai-sdk/react";
-import { useWallet } from "@solana/wallet-adapter-react";
-import { useWalletModal } from "@solana/wallet-adapter-react-ui";
+import { useModal, usePhantom } from "@phantom/react-sdk";
 import { DefaultChatTransport, type UIMessage } from "ai";
 import { ArrowDownIcon, ArrowUpToLine, Loader2 } from "lucide-react";
 import { IBM_Plex_Sans, Plus_Jakarta_Sans } from "next/font/google";
@@ -132,8 +131,8 @@ export default function LandingPage() {
   const navItemRefs = useRef<(HTMLButtonElement | null)[]>([]);
 
   // Wallet hooks
-  const { connected } = useWallet();
-  const { setVisible } = useWalletModal();
+  const { isConnected } = usePhantom();
+  const { open } = useModal();
   const [pendingMessage, setPendingMessage] = useState<string | null>(null);
   const [isOnline, setIsOnline] = useState(true);
   const [showScrollButton, setShowScrollButton] = useState(false);
@@ -329,7 +328,7 @@ export default function LandingPage() {
 
   // Handle sending pending message after wallet connection
   useEffect(() => {
-    if (connected && pendingMessage && status === "ready") {
+    if (isConnected && pendingMessage && status === "ready") {
       sendMessage({ text: pendingMessage });
       setInput([]);
       setPendingText("");
@@ -343,7 +342,7 @@ export default function LandingPage() {
         }
       }, 50);
     }
-  }, [connected, pendingMessage, status, sendMessage]);
+  }, [isConnected, pendingMessage, status, sendMessage]);
 
   // Auto-focus on initial load (but not if there's a hash in URL)
   useEffect(() => {
@@ -630,7 +629,7 @@ export default function LandingPage() {
     }
 
     // Always check if wallet is connected before sending any message
-    if (!connected) {
+    if (!isConnected) {
       // Save the message to send after connection
       if (hasUsableInput) {
         setPendingMessage(
@@ -638,7 +637,7 @@ export default function LandingPage() {
         );
       }
       // Open wallet connection modal
-      setVisible(true);
+      open();
       return;
     }
 
@@ -1275,13 +1274,11 @@ export default function LandingPage() {
                     transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
                     position:
                       (item.isAbout && isScrolledToAbout) ||
-                      (item.isRoadmap && isScrolledToRoadmap) ||
                       (item.isLinks && isScrolledToLinks)
                         ? "relative"
                         : "absolute",
                     pointerEvents:
                       (item.isAbout && isScrolledToAbout) ||
-                      (item.isRoadmap && isScrolledToRoadmap) ||
                       (item.isLinks && isScrolledToLinks)
                         ? "auto"
                         : "none",
@@ -1311,7 +1308,6 @@ export default function LandingPage() {
                     transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
                     position:
                       (item.isAbout && isScrolledToAbout) ||
-                      (item.isRoadmap && isScrolledToRoadmap) ||
                       (item.isLinks && isScrolledToLinks)
                         ? "absolute"
                         : "relative",
@@ -1331,7 +1327,7 @@ export default function LandingPage() {
           {/* Token Ticker */}
           <div
             className={`loyal-token-ticker-container ${
-              connected ? "" : "no-wallet"
+              isConnected ? "" : "no-wallet"
             }`}
             style={{
               position: "fixed",
@@ -1881,7 +1877,7 @@ export default function LandingPage() {
                         border: "1px solid rgba(255, 255, 255, 0.2)",
                         borderRadius: "10px",
                         boxShadow:
-                          "0 8px 24px 0 rgba(0, 0, 0, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.15)",
+                          "0 8px 24px 0 rgba(0, 0, 0, 0.4), inset 0 1px 2px rgba(255, 255, 255, 0.15)",
                         fontSize: "0.75rem",
                         fontWeight: 500,
                         color: "rgba(255, 255, 255, 0.9)",
@@ -2141,7 +2137,9 @@ export default function LandingPage() {
                         display: "flex",
                         flexDirection: "column",
                         alignItems:
-                          message.role === "user" ? "flex-end" : "flex-start",
+                          message.role === "user"
+                            ? "flex-end"
+                            : "flex-start",
                         gap: "0.5rem",
                         animation: "slideInUp 0.3s ease-out",
                         animationFillMode: "both",
@@ -2598,7 +2596,7 @@ export default function LandingPage() {
                       }}
                       placeholder={
                         isOnline
-                          ? isChatMode && !connected
+                          ? isChatMode && !isConnected
                             ? "Please reconnect wallet to continue..."
                             : isChatMode
                             ? ""
@@ -2838,7 +2836,7 @@ export default function LandingPage() {
       )}
 
       {/* Wallet disconnection warning overlay */}
-      {isChatMode && !connected && (
+      {isChatMode && !isConnected && (
         <div
           style={{
             position: "fixed",
@@ -2864,7 +2862,7 @@ export default function LandingPage() {
               padding: "2rem",
               boxShadow:
                 "0 20px 60px 0 rgba(255, 68, 68, 0.2), " +
-                "inset 0 2px 4px rgba(255, 255, 255, 0.1)",
+                "inset 0 2px 4px rgba(255, 255, 255, 0.15)",
               textAlign: "center",
             }}
           >
@@ -2899,7 +2897,7 @@ export default function LandingPage() {
               your conversation.
             </p>
             <button
-              onClick={() => setVisible(true)}
+              onClick={() => open()}
               onMouseEnter={(e) => {
                 e.currentTarget.style.background = "rgba(255, 68, 68, 0.3)";
                 e.currentTarget.style.border =

@@ -4,15 +4,18 @@ import {
   getAccount,
   getAssociatedTokenAddress,
 } from "@solana/spl-token";
-import { useConnection, useWallet } from "@solana/wallet-adapter-react";
+import { useSolana, usePhantom } from "@phantom/react-sdk";
 import {
   ComputeBudgetProgram,
   LAMPORTS_PER_SOL,
   PublicKey,
   SystemProgram,
-  Transaction,
+  TransactionMessage,
+  VersionedTransaction,
 } from "@solana/web3.js";
 import { useCallback, useState } from "react";
+
+import { useConnection } from "@/components/solana/phantom-provider";
 
 export type SendResult = {
   signature?: string;
@@ -50,7 +53,8 @@ const getTokenMint = (symbol: string): string | undefined => {
 
 export function useSend() {
   const { connection } = useConnection();
-  const { publicKey, signTransaction } = useWallet();
+  const { solana, isAvailable } = useSolana();
+  const { isConnected } = usePhantom();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -62,7 +66,7 @@ export function useSend() {
       tokenMint?: string,
       tokenDecimals?: number
     ): Promise<SendResult> => {
-      if (!(publicKey && signTransaction)) {
+      if (!(isConnected && isAvailable && solana)) {
         const error = "Wallet not connected";
         setError(error);
         return { success: false, error };
@@ -74,6 +78,13 @@ export function useSend() {
       try {
         console.log("Executing send:", { currency, amount, recipientAddress });
 
+        // Get the public key from Phantom
+        const publicKeyString = await solana.getPublicKey();
+        if (!publicKeyString) {
+          throw new Error("Failed to get public key from wallet");
+        }
+        const publicKey = new PublicKey(publicKeyString);
+
         // Validate recipient address
         let recipientPubkey: PublicKey;
         try {
@@ -83,6 +94,10 @@ export function useSend() {
         }
 
         const isSol = currency.toUpperCase() === "SOL";
+
+        // Get latest blockhash for the transaction
+        const { blockhash, lastValidBlockHeight } =
+          await connection.getLatestBlockhash();
 
         if (isSol) {
           // Send native SOL
@@ -97,33 +112,34 @@ export function useSend() {
             to: recipientPubkey.toBase58(),
           });
 
-          const transaction = new Transaction().add(
-            SystemProgram.transfer({
-              fromPubkey: publicKey,
-              toPubkey: recipientPubkey,
-              lamports: amountInLamports,
-            })
-          );
+          const transferInstruction = SystemProgram.transfer({
+            fromPubkey: publicKey,
+            toPubkey: recipientPubkey,
+            lamports: amountInLamports,
+          });
 
-          // Get latest blockhash
-          const { blockhash } = await connection.getLatestBlockhash();
-          transaction.recentBlockhash = blockhash;
-          transaction.feePayer = publicKey;
+          // Create VersionedTransaction
+          const messageV0 = new TransactionMessage({
+            payerKey: publicKey,
+            recentBlockhash: blockhash,
+            instructions: [transferInstruction],
+          }).compileToV0Message();
 
-          console.log("Signing transaction...");
-          const signedTransaction = await signTransaction(transaction);
+          const transaction = new VersionedTransaction(messageV0);
 
-          console.log("Sending signed transaction...");
-          const signature = await connection.sendRawTransaction(
-            signedTransaction.serialize()
-          );
+          console.log("Signing and sending transaction...");
+          const result = await solana.signAndSendTransaction(transaction);
 
-          console.log("Transaction sent:", signature);
+          console.log("Transaction sent:", result.signature);
 
           // Confirm transaction
           console.log("Confirming transaction...");
           const confirmation = await connection.confirmTransaction(
-            signature,
+            {
+              signature: result.signature,
+              blockhash,
+              lastValidBlockHeight,
+            },
             "confirmed"
           );
 
@@ -136,7 +152,7 @@ export function useSend() {
           console.log("Transaction confirmed!");
           setLoading(false);
           return {
-            signature,
+            signature: result.signature,
             success: true,
           };
         }
@@ -196,27 +212,27 @@ export function useSend() {
           needsATA = true;
         }
 
-        // Construct transaction
-        const transaction = new Transaction();
+        // Construct transaction instructions
+        const instructions = [];
 
         // Add priority fee and compute budget if creating ATA
         if (needsATA) {
           console.log("Adding ATA creation instructions...");
           // Increase compute budget for ATA creation + transfer
-          transaction.add(
+          instructions.push(
             ComputeBudgetProgram.setComputeUnitLimit({
               units: 300_000,
             })
           );
           // Add priority fee
-          transaction.add(
+          instructions.push(
             ComputeBudgetProgram.setComputeUnitPrice({
               microLamports: 1000,
             })
           );
 
           // Add ATA creation instruction
-          transaction.add(
+          instructions.push(
             createAssociatedTokenAccountInstruction(
               publicKey, // payer
               toTokenAccount, // ata
@@ -227,7 +243,7 @@ export function useSend() {
         }
 
         // Add transfer instruction
-        transaction.add(
+        instructions.push(
           createTransferInstruction(
             fromTokenAccount,
             toTokenAccount,
@@ -236,25 +252,28 @@ export function useSend() {
           )
         );
 
-        // Get latest blockhash AFTER all instructions are added
-        const { blockhash } = await connection.getLatestBlockhash();
-        transaction.recentBlockhash = blockhash;
-        transaction.feePayer = publicKey;
+        // Create VersionedTransaction
+        const messageV0 = new TransactionMessage({
+          payerKey: publicKey,
+          recentBlockhash: blockhash,
+          instructions,
+        }).compileToV0Message();
 
-        console.log("Signing transaction...");
-        const signedTransaction = await signTransaction(transaction);
+        const transaction = new VersionedTransaction(messageV0);
 
-        console.log("Sending signed transaction...");
-        const signature = await connection.sendRawTransaction(
-          signedTransaction.serialize()
-        );
+        console.log("Signing and sending transaction...");
+        const result = await solana.signAndSendTransaction(transaction);
 
-        console.log("Transaction sent:", signature);
+        console.log("Transaction sent:", result.signature);
 
         // Confirm transaction
         console.log("Confirming transaction...");
         const confirmation = await connection.confirmTransaction(
-          signature,
+          {
+            signature: result.signature,
+            blockhash,
+            lastValidBlockHeight,
+          },
           "confirmed"
         );
 
@@ -267,7 +286,7 @@ export function useSend() {
         console.log("Transaction confirmed!");
         setLoading(false);
         return {
-          signature,
+          signature: result.signature,
           success: true,
         };
       } catch (err) {
@@ -294,7 +313,7 @@ export function useSend() {
         return { success: false, error: errorMessage };
       }
     },
-    [publicKey, signTransaction, connection]
+    [isConnected, isAvailable, solana, connection]
   );
 
   return {

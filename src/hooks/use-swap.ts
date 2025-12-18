@@ -1,10 +1,12 @@
-import { useConnection, useWallet } from "@solana/wallet-adapter-react";
+import { useSolana, usePhantom } from "@phantom/react-sdk";
 import {
   type ParsedAccountData,
   PublicKey,
   VersionedTransaction,
 } from "@solana/web3.js";
 import { useCallback, useState } from "react";
+
+import { useConnection } from "@/components/solana/phantom-provider";
 
 // Debug logger that only emits in development
 const logger = {
@@ -106,7 +108,8 @@ type JupiterSwapResponse = {
 
 export function useSwap() {
   const { connection } = useConnection();
-  const { publicKey, signTransaction } = useWallet();
+  const { solana, isAvailable } = useSolana();
+  const { isConnected } = usePhantom();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [quote, setQuote] = useState<SwapQuote | null>(null);
@@ -239,7 +242,7 @@ export function useSwap() {
   );
 
   const executeSwap = useCallback(async (): Promise<SwapResult> => {
-    if (!(publicKey && signTransaction)) {
+    if (!(isConnected && isAvailable && solana)) {
       const errorMsg = "Wallet not connected";
       setError(errorMsg);
       return { success: false, error: errorMsg };
@@ -255,6 +258,13 @@ export function useSwap() {
     setError(null);
 
     try {
+      // Get the public key from Phantom
+      const publicKeyString = await solana.getPublicKey();
+      if (!publicKeyString) {
+        throw new Error("Failed to get public key from wallet");
+      }
+      const publicKey = new PublicKey(publicKeyString);
+
       logger.debug("Executing swap with quote:", quoteResponse);
 
       // Step 1: Call Jupiter Swap API to get transaction
@@ -295,26 +305,17 @@ export function useSwap() {
         throw new Error("No transaction returned from Jupiter Swap API");
       }
 
-      // Step 2: Deserialize and sign transaction
+      // Step 2: Deserialize transaction
       const txBuffer = Buffer.from(serializedTx, "base64");
       const transaction = VersionedTransaction.deserialize(txBuffer);
 
-      logger.debug("Transaction deserialized, requesting signature...");
-      const signedTx = await signTransaction(transaction);
+      // Step 3: Sign and send transaction using Phantom
+      logger.debug("Signing and sending transaction...");
+      const result = await solana.signAndSendTransaction(transaction);
 
-      // Step 3: Send transaction with retry
-      logger.debug("Sending transaction...");
-      const signature = await connection.sendRawTransaction(
-        signedTx.serialize(),
-        {
-          skipPreflight: true, // Skip simulation - it's overly conservative about rent
-          maxRetries: 3,
-        }
-      );
-
-      logger.debug("Transaction sent:", signature);
+      logger.debug("Transaction sent:", result.signature);
       logger.debug(
-        `View transaction: https://solscan.io/tx/${signature}?cluster=mainnet`
+        `View transaction: https://solscan.io/tx/${result.signature}?cluster=mainnet`
       );
 
       // Step 4: Confirm transaction with proper strategy
@@ -322,7 +323,7 @@ export function useSwap() {
       const latestBlockhash = await connection.getLatestBlockhash("confirmed");
       const confirmation = await connection.confirmTransaction(
         {
-          signature,
+          signature: result.signature,
           blockhash: latestBlockhash.blockhash,
           lastValidBlockHeight: latestBlockhash.lastValidBlockHeight,
         },
@@ -338,7 +339,7 @@ export function useSwap() {
       logger.debug("Transaction confirmed!");
       setLoading(false);
       return {
-        signature,
+        signature: result.signature,
         success: true,
       };
     } catch (err) {
@@ -364,7 +365,7 @@ export function useSwap() {
       setLoading(false);
       return { success: false, error: errorMessage };
     }
-  }, [publicKey, signTransaction, connection, quoteResponse]);
+  }, [isConnected, isAvailable, solana, connection, quoteResponse]);
 
   const resetQuote = useCallback(() => {
     setQuote(null);

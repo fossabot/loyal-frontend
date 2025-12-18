@@ -1,5 +1,5 @@
 import { AnchorProvider, BN, Program } from "@coral-xyz/anchor";
-import type { AnchorWallet } from "@solana/wallet-adapter-react";
+import type { AnchorWallet } from "@/hooks/use-anchor-wallet";
 import { type Connection, PublicKey } from "@solana/web3.js";
 
 import type { LoyalOracle } from "@/program/generated/loyal_oracle";

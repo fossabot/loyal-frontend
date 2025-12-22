@@ -1326,107 +1326,83 @@ export default function LandingPage() {
               display: "flex",
               flexDirection: "column",
               justifyContent: "space-between",
-              padding: isSidebarOpen ? "0" : "8px 0",
+              padding: "0",
             }}
           >
             {/* Collapsed State - Icon Buttons */}
-            {!isSidebarOpen && (
-              <>
-                {/* Top buttons group */}
-                <div
+            <div
+              style={{
+                position: "absolute",
+                top: "0",
+                left: "0",
+                bottom: "0",
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "space-between",
+                padding: "8px 0",
+                opacity: isSidebarOpen ? 0 : 1,
+                pointerEvents: isSidebarOpen ? "none" : "auto",
+                transition: "opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+              }}
+            >
+              {/* Top buttons group */}
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "8px",
+                }}
+              >
+                {/* Menu Button */}
+                <button
+                  className="sidebar-icon-btn"
+                  onClick={() => setIsSidebarOpen(true)}
                   style={{
+                    width: "36px",
+                    height: "36px",
                     display: "flex",
-                    flexDirection: "column",
-                    gap: "8px",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    background: "rgba(255, 255, 255, 0.06)",
+                    backdropFilter: "blur(48px)",
+                    border: "none",
+                    borderRadius: "9999px",
+                    cursor: "pointer",
+                    transition: "all 0.2s ease",
+                    boxShadow:
+                      "0px 4px 8px 0px rgba(0, 0, 0, 0.04), 0px 2px 4px 0px rgba(0, 0, 0, 0.02)",
+                    mixBlendMode: "lighten",
+                    color: "#fff",
                   }}
+                  title="Open menu"
                 >
-                  {/* Menu Button */}
-                  <button
-                    className="sidebar-icon-btn"
-                    onClick={() => setIsSidebarOpen(true)}
-                    style={{
-                      width: "36px",
-                      height: "36px",
-                      display: "flex",
-                      justifyContent: "center",
-                      alignItems: "center",
-                      background: "rgba(255, 255, 255, 0.06)",
-                      backdropFilter: "blur(48px)",
-                      border: "none",
-                      borderRadius: "9999px",
-                      cursor: "pointer",
-                      transition: "all 0.2s ease",
-                      boxShadow:
-                        "0px 4px 8px 0px rgba(0, 0, 0, 0.04), 0px 2px 4px 0px rgba(0, 0, 0, 0.02)",
-                      mixBlendMode: "lighten",
-                      color: "#fff",
-                    }}
-                    title="Open menu"
-                  >
-                    <MenuIcon
-                      onMouseEnter={() => {}}
-                      onMouseLeave={() => {}}
-                      ref={menuIconRef}
-                      size={24}
-                    />
-                  </button>
+                  <MenuIcon
+                    onMouseEnter={() => {}}
+                    onMouseLeave={() => {}}
+                    ref={menuIconRef}
+                    size={24}
+                  />
+                </button>
 
-                  {/* New Chat Button */}
-                  <button
-                    className="sidebar-icon-btn"
-                    onClick={() => {
-                      setIsChatModeLocal(false);
-                      setInput([]);
-                      setPendingText("");
-                      setMessages([]);
-                      setShowSwapWidget(false);
-                      setShowSendWidget(false);
-                      setPendingSwapData(null);
-                      setPendingSendData(null);
-                      setSwapStatus(null);
-                      setSendStatus(null);
-                      setSwapResult(null);
-                      setSendResult(null);
-                      setTimeout(() => {
-                        inputRef.current?.focus();
-                      }, 100);
-                    }}
-                    style={{
-                      width: "36px",
-                      height: "36px",
-                      display: "flex",
-                      justifyContent: "center",
-                      alignItems: "center",
-                      background: "rgba(255, 255, 255, 0.06)",
-                      backdropFilter: "blur(48px)",
-                      border: "none",
-                      borderRadius: "9999px",
-                      cursor: "pointer",
-                      transition: "all 0.2s ease",
-                      boxShadow:
-                        "0px 4px 8px 0px rgba(0, 0, 0, 0.04), 0px 2px 4px 0px rgba(0, 0, 0, 0.02)",
-                      mixBlendMode: "lighten",
-                      color: "#fff",
-                    }}
-                    title="New chat"
-                  >
-                    <PlusIcon
-                      onMouseEnter={() => {}}
-                      onMouseLeave={() => {}}
-                      ref={plusIconRef}
-                      size={24}
-                    />
-                  </button>
-                </div>
-
-                {/* Wallet Button - Bottom (when connected) or Top (when not connected) */}
+                {/* New Chat Button */}
                 <button
                   className="sidebar-icon-btn"
                   onClick={() => {
-                    if (!isConnected) {
-                      open();
-                    }
-                    // When connected, could open wallet management modal
+                    setIsChatModeLocal(false);
+                    setInput([]);
+                    setPendingText("");
+                    setMessages([]);
+                    setShowSwapWidget(false);
+                    setShowSendWidget(false);
+                    setPendingSwapData(null);
+                    setPendingSendData(null);
+                    setSwapStatus(null);
+                    setSendStatus(null);
+                    setSwapResult(null);
+                    setSendResult(null);
+                    setTimeout(() => {
+                      inputRef.current?.focus();
+                    }, 100);
                   }}
                   style={{
                     width: "36px",
@@ -1443,37 +1419,76 @@ export default function LandingPage() {
                     boxShadow:
                       "0px 4px 8px 0px rgba(0, 0, 0, 0.04), 0px 2px 4px 0px rgba(0, 0, 0, 0.02)",
                     mixBlendMode: "lighten",
-                    padding: "4px",
+                    color: "#fff",
                   }}
-                  title={isConnected ? truncatedAddress : "Connect Wallet"}
+                  title="New chat"
                 >
-                  <img
-                    alt="Wallet"
-                    height={28}
-                    src="/Wallet-Icon.svg"
-                    width={28}
+                  <PlusIcon
+                    onMouseEnter={() => {}}
+                    onMouseLeave={() => {}}
+                    ref={plusIconRef}
+                    size={24}
                   />
                 </button>
-              </>
-            )}
+              </div>
 
-            {/* Expanded Sidebar Panel */}
-            {isSidebarOpen && (
-              <div
+              {/* Wallet Button - Bottom (when connected) or Top (when not connected) */}
+              <button
+                className="sidebar-icon-btn"
+                onClick={() => {
+                  if (!isConnected) {
+                    open();
+                  }
+                  // When connected, could open wallet management modal
+                }}
                 style={{
-                  width: "298px",
-                  height: "100%",
-                  background: "rgba(38, 38, 38, 0.7)",
+                  width: "36px",
+                  height: "36px",
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  background: "rgba(255, 255, 255, 0.06)",
                   backdropFilter: "blur(48px)",
-                  borderRadius: "16px",
+                  border: "none",
+                  borderRadius: "9999px",
+                  cursor: "pointer",
+                  transition: "all 0.2s ease",
                   boxShadow:
                     "0px 4px 8px 0px rgba(0, 0, 0, 0.04), 0px 2px 4px 0px rgba(0, 0, 0, 0.02)",
-                  mixBlendMode: "luminosity",
-                  display: "flex",
-                  flexDirection: "column",
-                  overflow: "hidden",
+                  mixBlendMode: "lighten",
+                  padding: "4px",
                 }}
+                title={isConnected ? truncatedAddress : "Connect Wallet"}
               >
+                <img
+                  alt="Wallet"
+                  height={28}
+                  src="/Wallet-Icon.svg"
+                  width={28}
+                />
+              </button>
+            </div>
+
+            {/* Expanded Sidebar Panel */}
+            <div
+              style={{
+                width: "298px",
+                height: "100%",
+                background: "rgba(38, 38, 38, 0.7)",
+                backdropFilter: "blur(48px)",
+                borderRadius: "16px",
+                boxShadow:
+                  "0px 4px 8px 0px rgba(0, 0, 0, 0.04), 0px 2px 4px 0px rgba(0, 0, 0, 0.02)",
+                mixBlendMode: "luminosity",
+                display: "flex",
+                flexDirection: "column",
+                overflow: "hidden",
+                transform: isSidebarOpen ? "translateX(0)" : "translateX(-110%)",
+                opacity: isSidebarOpen ? 1 : 0,
+                transition: "transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+                pointerEvents: isSidebarOpen ? "auto" : "none",
+              }}
+            >
                 {/* Panel Header */}
                 <div
                   style={{
@@ -1909,7 +1924,7 @@ export default function LandingPage() {
               transform: isChatMode ? "none" : "translateX(-50%)",
               width: isChatMode ? "auto" : "min(600px, 90%)",
               maxWidth: isChatMode ? "none" : "none",
-              transition: "all 0.8s cubic-bezier(0.4, 0, 0.2, 1)",
+              transition: "left 0.3s cubic-bezier(0.4, 0, 0.2, 1), transform 0.8s cubic-bezier(0.4, 0, 0.2, 1), bottom 0.8s cubic-bezier(0.4, 0, 0.2, 1), width 0.8s cubic-bezier(0.4, 0, 0.2, 1)",
               display: "flex",
               flexDirection: "column",
               gap: "0",

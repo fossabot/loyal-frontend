@@ -1924,7 +1924,7 @@ export default function LandingPage() {
               width: isChatMode ? "auto" : "min(600px, 90%)",
               maxWidth: isChatMode ? "none" : "none",
               marginLeft: isChatMode && isSidebarOpen ? "314px" : "0",
-              transition: "margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1), transform 0.8s cubic-bezier(0.4, 0, 0.2, 1), bottom 0.8s cubic-bezier(0.4, 0, 0.2, 1), width 0.8s cubic-bezier(0.4, 0, 0.2, 1)",
+              transition: "margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
               display: "flex",
               flexDirection: "column",
               gap: "0",

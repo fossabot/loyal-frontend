@@ -101,6 +101,7 @@ export default function LandingPage() {
     };
   } | null>(null);
   const [isChatModeLocal, setIsChatModeLocal] = useState(false);
+  const [parallaxOffset, setParallaxOffset] = useState(0);
   const { setIsChatMode } = useChatMode();
 
   // Check Skills feature flag
@@ -554,6 +555,28 @@ export default function LandingPage() {
 
     return () => {
       window.removeEventListener("scroll", handlePageScroll);
+    };
+  }, [isChatMode]);
+
+  // Parallax effect for landing page input
+  useEffect(() => {
+    if (isChatMode) {
+      setParallaxOffset(0);
+      return;
+    }
+
+    const handleParallaxScroll = () => {
+      const scrollY = window.scrollY;
+      // Move the input at 0.15 of the scroll speed (subtle parallax)
+      const offset = scrollY * 0.15;
+      setParallaxOffset(offset);
+    };
+
+    window.addEventListener("scroll", handleParallaxScroll, { passive: true });
+    handleParallaxScroll();
+
+    return () => {
+      window.removeEventListener("scroll", handleParallaxScroll);
     };
   }, [isChatMode]);
 
@@ -2239,14 +2262,17 @@ export default function LandingPage() {
                 bottom: isChatMode ? "16px" : "50%",
                 left: "16px",
                 right: "16px",
-                transform: isChatMode ? "translateY(0)" : "translateY(50%)",
+                transform: isChatMode
+                  ? "translateY(0)"
+                  : `translateY(calc(50% + ${parallaxOffset}px))`,
                 display: "flex",
                 flexDirection: "column",
                 alignItems: "center",
                 justifyContent: "center",
                 pointerEvents: "none",
-                transition:
-                  "bottom 0.5s cubic-bezier(0.4, 0, 0.2, 1), transform 0.5s cubic-bezier(0.4, 0, 0.2, 1)",
+                transition: isChatMode
+                  ? "bottom 0.5s cubic-bezier(0.4, 0, 0.2, 1), transform 0.5s cubic-bezier(0.4, 0, 0.2, 1)"
+                  : "bottom 0.5s cubic-bezier(0.4, 0, 0.2, 1)",
               }}
             >
               {/* Input form - liquid glass style with integrated send button */}

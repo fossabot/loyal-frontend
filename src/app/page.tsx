@@ -3,7 +3,7 @@
 import { useChat } from "@ai-sdk/react";
 import { useModal, usePhantom } from "@phantom/react-sdk";
 import { DefaultChatTransport, type UIMessage } from "ai";
-import { ArrowDownIcon, ArrowUpToLine, MoreHorizontal } from "lucide-react";
+import { ArrowDownIcon, ArrowUpToLine, MoreHorizontal, RefreshCw } from "lucide-react";
 import { IBM_Plex_Sans, Plus_Jakarta_Sans } from "next/font/google";
 import localFont from "next/font/local";
 import Image from "next/image";
@@ -2096,47 +2096,40 @@ export default function LandingPage() {
                         animationFillMode: "both",
                       }}
                     >
-                      {/* Message bubble */}
-                      <div
-                        style={{
-                          position: "relative",
-                          padding:
-                            message.role === "user"
-                              ? "8px 16px"
-                              : "1rem 1.5rem",
-                          borderRadius:
-                            message.role === "user"
-                              ? "20px 20px 4px 20px"
-                              : "16px",
-                          background:
-                            message.role === "user"
-                              ? "rgba(255, 255, 255, 0.12)"
-                              : "rgba(255, 255, 255, 0.05)",
-                          backdropFilter:
-                            message.role === "user" ? "none" : "blur(10px)",
-                          border:
-                            message.role === "user"
-                              ? "none"
-                              : "1px solid rgba(255, 255, 255, 0.1)",
-                          color: "#fff",
-                          fontSize: "16px",
-                          lineHeight: "24px",
-                          maxWidth: message.role === "user" ? "464px" : "80%",
-                          transition: "all 0.2s ease",
-                          overflow: "visible",
-                          fontFamily: "var(--font-geist-sans), sans-serif",
-                        }}
-                      >
-                        {message.role === "assistant" ? (
-                          <MarkdownRenderer content={messageText} />
-                        ) : (
-                          message.parts.map((part, index) =>
+                      {/* Message content */}
+                      {message.role === "user" ? (
+                        <div
+                          style={{
+                            position: "relative",
+                            padding: "8px 16px",
+                            borderRadius: "20px 20px 4px 20px",
+                            background: "rgba(255, 255, 255, 0.12)",
+                            color: "#fff",
+                            fontSize: "16px",
+                            lineHeight: "24px",
+                            maxWidth: "464px",
+                            fontFamily: "var(--font-geist-sans), sans-serif",
+                          }}
+                        >
+                          {message.parts.map((part, index) =>
                             part.type === "text" ? (
                               <span key={index}>{part.text}</span>
                             ) : null
-                          )
-                        )}
-                      </div>
+                          )}
+                        </div>
+                      ) : (
+                        <div
+                          style={{
+                            width: "100%",
+                            color: "#fff",
+                            fontSize: "16px",
+                            lineHeight: "28px",
+                            fontFamily: "var(--font-geist-sans), sans-serif",
+                          }}
+                        >
+                          <MarkdownRenderer content={messageText} />
+                        </div>
+                      )}
 
                       {/* Message Footer Actions */}
                       {message.role === "user" && (
@@ -2213,6 +2206,112 @@ export default function LandingPage() {
                           </div>
                         </div>
                       )}
+
+                      {/* Assistant Message Footer Actions - only show on completed messages */}
+                      {message.role === "assistant" &&
+                        !(
+                          messageIndex === messages.length - 1 &&
+                          (status === "streaming" || status === "submitted")
+                        ) && (
+                          <div
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "flex-start",
+                              height: "40px",
+                              width: "100%",
+                              gap: "8px",
+                            }}
+                          >
+                            <div
+                              style={{
+                                display: "flex",
+                                alignItems: "center",
+                              }}
+                            >
+                              {/* Copy button with glass background */}
+                              <button
+                                onClick={() =>
+                                  handleCopyMessage(message.id, messageText)
+                                }
+                                style={{
+                                  padding: "6px",
+                                  background:
+                                    copiedMessageId === message.id
+                                      ? "rgba(34, 197, 94, 0.15)"
+                                      : "rgba(255, 255, 255, 0.1)",
+                                  backdropFilter: "blur(48px)",
+                                  border: "none",
+                                  borderRadius: "9999px",
+                                  cursor: "pointer",
+                                  color:
+                                    copiedMessageId === message.id
+                                      ? "#22c55e"
+                                      : "rgba(255, 255, 255, 1)",
+                                  transition: "all 0.2s ease",
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                  boxShadow:
+                                    "0px 4px 8px 0px rgba(0, 0, 0, 0.04), 0px 2px 4px 0px rgba(0, 0, 0, 0.02)",
+                                  mixBlendMode: "lighten",
+                                }}
+                                title={
+                                  copiedMessageId === message.id
+                                    ? "Copied!"
+                                    : "Copy message"
+                                }
+                              >
+                                <CopyIcon
+                                  ref={(el) => {
+                                    if (el) {
+                                      copyIconRefs.current.set(message.id, el);
+                                    }
+                                  }}
+                                  size={20}
+                                />
+                              </button>
+
+                              {/* Refresh/Regenerate button */}
+                              <button
+                                style={{
+                                  padding: "6px",
+                                  background: "transparent",
+                                  border: "none",
+                                  borderRadius: "9999px",
+                                  cursor: "pointer",
+                                  color: "rgba(255, 255, 255, 1)",
+                                  transition: "all 0.2s ease",
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                }}
+                                title="Regenerate response"
+                              >
+                                <RefreshCw size={20} />
+                              </button>
+
+                              {/* More button */}
+                              <button
+                                style={{
+                                  padding: "6px",
+                                  background: "transparent",
+                                  border: "none",
+                                  borderRadius: "9999px",
+                                  cursor: "pointer",
+                                  color: "rgba(255, 255, 255, 1)",
+                                  transition: "all 0.2s ease",
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                }}
+                                title="More options"
+                              >
+                                <MoreHorizontal size={20} />
+                              </button>
+                            </div>
+                          </div>
+                        )}
                     </div>
                   );
                 })}

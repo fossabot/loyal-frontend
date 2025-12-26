@@ -17,7 +17,7 @@ export default function AuthCallbackPage() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-black">
       <div className="flex flex-col items-center gap-6">
-        <h1 className="text-xl font-medium text-white">
+        <h1 className="font-medium text-white text-xl">
           Connecting to Phantom...
         </h1>
         <ConnectBox maxWidth="400px" />

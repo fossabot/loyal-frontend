@@ -1,17 +1,17 @@
 "use client";
 
 import {
-  PhantomProvider as PhantomSdkProvider,
-  darkTheme,
   AddressType,
+  darkTheme,
+  PhantomProvider as PhantomSdkProvider,
 } from "@phantom/react-sdk";
 import { Connection } from "@solana/web3.js";
 import {
   createContext,
-  useContext,
-  useMemo,
   type FC,
   type ReactNode,
+  useContext,
+  useMemo,
 } from "react";
 
 type ConnectionContextValue = {
@@ -47,12 +47,14 @@ export const PhantomWalletProvider: FC<PhantomWalletProviderProps> = ({
     return rpcEndpoint;
   }, []);
 
-  const connection = useMemo(() => {
-    return new Connection(endpoint, {
-      commitment: "confirmed",
-      confirmTransactionInitialTimeout: 60_000,
-    });
-  }, [endpoint]);
+  const connection = useMemo(
+    () =>
+      new Connection(endpoint, {
+        commitment: "confirmed",
+        confirmTransactionInitialTimeout: 60_000,
+      }),
+    [endpoint]
+  );
 
   const connectionValue = useMemo(() => ({ connection }), [connection]);
 

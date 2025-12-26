@@ -65,47 +65,52 @@ function BentoGridSectionComponent() {
       style={{
         position: "relative",
         padding: "4rem 1rem",
-        background: "#000",
-        borderTop: "1px solid rgba(255, 255, 255, 0.1)",
         overflow: "hidden",
       }}
     >
       <Spotlight />
+      {/* Main glass container */}
       <div
         style={{
-          maxWidth: "1200px",
+          maxWidth: "1100px",
           margin: "0 auto",
           position: "relative",
           zIndex: 10,
+          background: "rgba(26, 26, 26, 0.3)",
+          backdropFilter: "blur(24px) saturate(150%)",
+          WebkitBackdropFilter: "blur(24px) saturate(150%)",
+          borderRadius: "32px",
+          border: "1px solid rgba(255, 255, 255, 0.05)",
+          boxShadow:
+            "0 8px 32px 0 rgba(0, 0, 0, 0.3), inset 0 1px 0 0 rgba(255, 255, 255, 0.03)",
+          padding: "3rem 2rem",
         }}
       >
         <h2
           className={instrumentSerif.className}
           style={{
-            fontSize: "3.5rem",
+            fontSize: "2.5rem",
             fontWeight: 400,
             color: "#fff",
             textAlign: "center",
-            marginBottom: "1rem",
+            marginBottom: "0.75rem",
+            letterSpacing: "-0.02em",
           }}
         >
           About Loyal
         </h2>
         <p
-          className={instrumentSerif.className}
           style={{
-            fontSize: "1.5rem",
+            fontSize: "1rem",
             fontWeight: 400,
-            color: "rgba(255, 255, 255, 0.8)",
+            color: "rgba(255, 255, 255, 0.5)",
             textAlign: "center",
-            marginBottom: "3rem",
-            maxWidth: "800px",
-            margin: "0 auto 3rem",
-            lineHeight: 1.45,
+            maxWidth: "500px",
+            margin: "0 auto 2rem",
+            lineHeight: 1.5,
           }}
         >
-          Discover the power of private AI conversations with cutting-edge
-          technology
+          Private AI conversations with cutting-edge technology
         </p>
 
         {/* Tabs Navigation */}
@@ -113,7 +118,7 @@ function BentoGridSectionComponent() {
           style={{
             display: "flex",
             justifyContent: "center",
-            marginBottom: "2.5rem",
+            marginBottom: "2rem",
           }}
         >
           <div
@@ -121,48 +126,26 @@ function BentoGridSectionComponent() {
             style={{
               position: "relative",
               display: "inline-flex",
-              gap: "0.25rem",
-              background: "rgba(255, 255, 255, 0.08)",
-              backdropFilter: "blur(20px)",
-              border: "1px solid rgba(255, 255, 255, 0.15)",
-              borderRadius: "16px",
-              padding: "0.375rem 0.5rem",
-              boxShadow:
-                "0 8px 32px 0 rgba(0, 0, 0, 0.37), inset 0 1px 1px rgba(255, 255, 255, 0.1)",
+              gap: "0.125rem",
+              background: "rgba(255, 255, 255, 0.04)",
+              border: "1px solid rgba(255, 255, 255, 0.06)",
+              borderRadius: "9999px",
+              padding: "4px",
             }}
           >
-            {/* Sliding indicator - shows only on hover */}
-            {hoveredTab !== null && hoveredTab !== activeTab && (
-              <div
-                style={{
-                  position: "absolute",
-                  top: "0.375rem",
-                  bottom: "0.375rem",
-                  left: getIndicatorStyle().left,
-                  width: getIndicatorStyle().width,
-                  background: "rgba(255, 255, 255, 0.08)",
-                  borderRadius: "12px",
-                  transition: "all 0.4s cubic-bezier(0.4, 0, 0.2, 1)",
-                  pointerEvents: "none",
-                  zIndex: 0,
-                }}
-              />
-            )}
-
             {/* Active tab indicator */}
             <div
               style={{
                 position: "absolute",
-                top: "0.375rem",
-                bottom: "0.375rem",
+                top: "4px",
+                bottom: "4px",
                 left: tabRefs.current[activeTab]?.offsetLeft ?? 0,
                 width: tabRefs.current[activeTab]?.offsetWidth ?? 0,
-                background: "rgba(255, 255, 255, 0.15)",
-                borderRadius: "12px",
-                transition: "all 0.4s cubic-bezier(0.4, 0, 0.2, 1)",
+                background: "rgba(255, 255, 255, 0.1)",
+                borderRadius: "9999px",
+                transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
                 pointerEvents: "none",
                 zIndex: 0,
-                boxShadow: "inset 0 1px 2px rgba(255, 255, 255, 0.2)",
               }}
             />
 
@@ -176,18 +159,18 @@ function BentoGridSectionComponent() {
                 }}
                 style={{
                   position: "relative",
-                  padding: "0.375rem 1rem",
-                  fontSize: "0.8125rem",
-                  fontWeight: activeTab === index ? 600 : 500,
+                  padding: "8px 20px",
+                  fontSize: "14px",
+                  fontWeight: activeTab === index ? 500 : 400,
                   color:
                     activeTab === index
                       ? "rgba(255, 255, 255, 1)"
-                      : "rgba(255, 255, 255, 0.55)",
+                      : "rgba(255, 255, 255, 0.5)",
                   background: "transparent",
                   border: "none",
-                  borderRadius: "12px",
+                  borderRadius: "9999px",
                   cursor: "pointer",
-                  transition: "all 0.3s ease",
+                  transition: "color 0.2s ease",
                   zIndex: 1,
                   whiteSpace: "nowrap",
                 }}
@@ -241,7 +224,7 @@ const SkeletonOne = () => {
   ];
 
   return (
-    <motion.div className="flex h-full min-h-[6rem] w-full flex-1 items-center justify-center bg-dot-white/[0.2] p-4">
+    <motion.div className="flex h-full min-h-[6rem] w-full flex-1 items-center justify-center rounded-xl bg-dot-white/[0.15] p-4">
       <div className="relative flex h-32 w-32 items-center justify-center">
         {/* Animated protective layers */}
         {layers.map((layer, index) => {
@@ -396,7 +379,7 @@ const SkeletonTwo = () => {
   }));
 
   return (
-    <motion.div className="relative flex h-full min-h-[6rem] w-full flex-1 items-center justify-center bg-dot-white/[0.2] p-4">
+    <motion.div className="relative flex h-full min-h-[6rem] w-full flex-1 items-center justify-center rounded-xl bg-dot-white/[0.15] p-4">
       <div className="relative h-32 w-full max-w-sm">
         {/* Left side: Original transaction data as a grid */}
         <div className="-translate-y-1/2 absolute top-1/2 left-0">
@@ -586,7 +569,7 @@ const SkeletonThree = () => {
   ];
 
   return (
-    <motion.div className="flex h-full min-h-[6rem] w-full flex-1 items-center justify-center bg-dot-white/[0.2] p-4">
+    <motion.div className="flex h-full min-h-[6rem] w-full flex-1 items-center justify-center rounded-xl bg-dot-white/[0.15] p-4">
       <div className="relative h-28 w-28">
         {/* Circular progress track */}
         <svg className="-rotate-90 absolute inset-0" viewBox="0 0 100 100">
@@ -737,7 +720,7 @@ const SkeletonFour = () => {
   }));
 
   return (
-    <motion.div className="relative flex h-full min-h-[6rem] w-full flex-1 items-center justify-center bg-dot-white/[0.2] p-4">
+    <motion.div className="relative flex h-full min-h-[6rem] w-full flex-1 items-center justify-center rounded-xl bg-dot-white/[0.15] p-4">
       <div className="relative flex w-full items-center justify-between gap-6 px-4">
         {/* Left: Repetitive tasks stacking up */}
         <div className="flex flex-col items-center gap-2">
@@ -946,7 +929,7 @@ const SkeletonFiveApp = () => {
   ];
 
   return (
-    <motion.div className="flex h-full min-h-[6rem] w-full flex-1 flex-col items-center justify-center gap-3 bg-dot-white/[0.2] p-4">
+    <motion.div className="flex h-full min-h-[6rem] w-full flex-1 flex-col items-center justify-center gap-3 rounded-xl bg-dot-white/[0.15] p-4">
       {/* Center - Wallet as storage */}
       <div className="relative flex flex-col items-center">
         {/* Wallet container */}
@@ -1104,7 +1087,7 @@ const SkeletonFive = () => {
   ];
 
   return (
-    <motion.div className="flex h-full min-h-[6rem] w-full flex-1 items-center justify-between gap-4 bg-dot-white/[0.2] p-4">
+    <motion.div className="flex h-full min-h-[6rem] w-full flex-1 items-center justify-between gap-4 rounded-xl bg-dot-white/[0.15] p-4">
       {/* Left side - Smart Contracts */}
       <div className="flex flex-col justify-center gap-5">
         {contracts.map((contract, index) => (
@@ -1266,7 +1249,7 @@ const SkeletonNine = () => {
   }, []);
 
   return (
-    <motion.div className="flex h-full min-h-[6rem] w-full flex-1 items-center justify-center bg-dot-white/[0.2] p-4">
+    <motion.div className="flex h-full min-h-[6rem] w-full flex-1 items-center justify-center rounded-xl bg-dot-white/[0.15] p-4">
       <div className="flex w-full flex-col gap-1">
         {/* Nodes and flow lines row */}
         <div className="flex w-full items-center justify-between gap-2">
@@ -1421,7 +1404,7 @@ const SkeletonEight = () => {
   }, []);
 
   return (
-    <motion.div className="flex h-full min-h-[6rem] w-full flex-1 flex-col justify-between bg-dot-white/[0.2] px-4 pt-4 pb-3">
+    <motion.div className="flex h-full min-h-[6rem] w-full flex-1 flex-col justify-between rounded-xl bg-dot-white/[0.15] px-4 pt-4 pb-3">
       {/* Sender bubble */}
       <motion.div
         animate={{
@@ -1535,7 +1518,7 @@ const SkeletonSeven = () => {
   };
 
   return (
-    <motion.div className="relative flex h-full min-h-[6rem] w-full flex-1 items-center justify-center overflow-hidden bg-dot-white/[0.2]">
+    <motion.div className="relative flex h-full min-h-[6rem] w-full flex-1 items-center justify-center overflow-hidden rounded-xl bg-dot-white/[0.15]">
       {/* Central Shield Container */}
       <div className="relative flex h-24 w-24 items-center justify-center">
         {/* Glowing shield background */}
@@ -1674,7 +1657,7 @@ const SkeletonSix = () => {
 
   return (
     <motion.div
-      className="flex h-full min-h-[6rem] w-full flex-1 flex-col justify-between bg-dot-white/[0.2] p-2"
+      className="flex h-full min-h-[6rem] w-full flex-1 flex-col justify-between rounded-xl bg-dot-white/[0.15] p-2"
       initial="initial"
     >
       {/* Animated coins dropping */}

@@ -1,4 +1,4 @@
-import { useSolana, usePhantom } from "@phantom/react-sdk";
+import { usePhantom, useSolana } from "@phantom/react-sdk";
 import {
   type ParsedAccountData,
   PublicKey,

@@ -261,7 +261,9 @@ const SkillsInput = React.forwardRef<HTMLTextAreaElement, SkillsInputProps>(
       toCurrencyMint: null,
       toCurrencyDecimals: null,
     });
-    const [nlpIntent, setNlpIntent] = React.useState<"send" | "swap" | null>(null);
+    const [nlpIntent, setNlpIntent] = React.useState<"send" | "swap" | null>(
+      null
+    );
 
     const hasSwapSkill = value.some((skill) => skill.id === "swap");
     const hasSendSkill = value.some((skill) => skill.id === "send");
@@ -342,7 +344,7 @@ const SkillsInput = React.forwardRef<HTMLTextAreaElement, SkillsInputProps>(
                   toCurrency: null,
                   toCurrencyMint: null,
                   toCurrencyDecimals: null,
-                }
+                },
               });
             };
           }
@@ -401,7 +403,7 @@ const SkillsInput = React.forwardRef<HTMLTextAreaElement, SkillsInputProps>(
                   toCurrency: null,
                   toCurrencyMint: null,
                   toCurrencyDecimals: null,
-                }
+                },
               });
 
               // Add the new skill and set flow state
@@ -425,14 +427,16 @@ const SkillsInput = React.forwardRef<HTMLTextAreaElement, SkillsInputProps>(
             };
           }
           if (prop === "activateNlpMode") {
-            return (initialText: string = "send ") => {
+            return (initialText = "send ") => {
               setPendingInput(initialText);
               setIsNlpMode(true);
 
               // Immediately notify parent
               onNlpStateChange?.({
                 isActive: true,
-                intent: initialText.trim().toLowerCase().startsWith("swap") ? "swap" : "send",
+                intent: initialText.trim().toLowerCase().startsWith("swap")
+                  ? "swap"
+                  : "send",
                 parsedData: {
                   amount: null,
                   currency: null,
@@ -442,14 +446,17 @@ const SkillsInput = React.forwardRef<HTMLTextAreaElement, SkillsInputProps>(
                   toCurrency: null,
                   toCurrencyMint: null,
                   toCurrencyDecimals: null,
-                }
+                },
               });
 
               // Focus the textarea
               setTimeout(() => {
                 textarea.focus();
                 // Move cursor to end
-                textarea.setSelectionRange(initialText.length, initialText.length);
+                textarea.setSelectionRange(
+                  initialText.length,
+                  initialText.length
+                );
               }, 0);
             };
           }
@@ -457,7 +464,12 @@ const SkillsInput = React.forwardRef<HTMLTextAreaElement, SkillsInputProps>(
           return typeof value === "function" ? value.bind(target) : value;
         },
         has(target, prop) {
-          if (prop === "clear" || prop === "addSkill" || prop === "resetAndAddSkill" || prop === "activateNlpMode") {
+          if (
+            prop === "clear" ||
+            prop === "addSkill" ||
+            prop === "resetAndAddSkill" ||
+            prop === "activateNlpMode"
+          ) {
             return true;
           }
           return prop in target;
@@ -558,7 +570,7 @@ const SkillsInput = React.forwardRef<HTMLTextAreaElement, SkillsInputProps>(
       const foundTokens: { skill: LoyalSkill; index: number }[] = [];
 
       for (const skill of CURRENCY_SKILLS) {
-        const match = new RegExp(`\\b${skill.label}\\b`, 'i').exec(textLower);
+        const match = new RegExp(`\\b${skill.label}\\b`, "i").exec(textLower);
         if (match) {
           foundTokens.push({ skill, index: match.index });
         }
@@ -580,8 +592,12 @@ const SkillsInput = React.forwardRef<HTMLTextAreaElement, SkillsInputProps>(
           if (toMatch) {
             const potentialToToken = toMatch[1];
             // Ensure it's not the same as fromToken
-            if (potentialToToken.toLowerCase() !== fromToken.label.toLowerCase()) {
-              const matchedSkill = CURRENCY_SKILLS.find(s => s.label.toLowerCase() === potentialToToken.toLowerCase());
+            if (
+              potentialToToken.toLowerCase() !== fromToken.label.toLowerCase()
+            ) {
+              const matchedSkill = CURRENCY_SKILLS.find(
+                (s) => s.label.toLowerCase() === potentialToToken.toLowerCase()
+              );
               if (matchedSkill) {
                 toCurrency = matchedSkill.label;
                 toCurrencyMint = matchedSkill.mint || null;
@@ -593,7 +609,10 @@ const SkillsInput = React.forwardRef<HTMLTextAreaElement, SkillsInputProps>(
           // If not found via "to", check if we have a second token in our found list
           if (!toCurrency && foundTokens.length > 1) {
             // Find the first token that is NOT the fromToken
-            const toTokenEntry = foundTokens.find(t => t.skill.label.toLowerCase() !== fromToken.label.toLowerCase());
+            const toTokenEntry = foundTokens.find(
+              (t) =>
+                t.skill.label.toLowerCase() !== fromToken.label.toLowerCase()
+            );
             if (toTokenEntry) {
               const toToken = toTokenEntry.skill;
               toCurrency = toToken.label;
@@ -635,7 +654,13 @@ const SkillsInput = React.forwardRef<HTMLTextAreaElement, SkillsInputProps>(
           parsedData: newData,
         });
       }
-    }, [pendingInput, isNlpMode, CURRENCY_SKILLS, onNlpStateChange, nlpParsedData]);
+    }, [
+      pendingInput,
+      isNlpMode,
+      CURRENCY_SKILLS,
+      onNlpStateChange,
+      nlpParsedData,
+    ]);
 
     const addSkill = (skill: LoyalSkill) => {
       // Handle swap flow
@@ -777,7 +802,11 @@ const SkillsInput = React.forwardRef<HTMLTextAreaElement, SkillsInputProps>(
         e.preventDefault();
 
         // Handle Send
-        if (nlpParsedData.amount && nlpParsedData.currency && nlpParsedData.walletAddress) {
+        if (
+          nlpParsedData.amount &&
+          nlpParsedData.currency &&
+          nlpParsedData.walletAddress
+        ) {
           const completedSend = {
             currency: nlpParsedData.currency,
             currencyMint: nlpParsedData.currencyMint,
@@ -792,7 +821,11 @@ const SkillsInput = React.forwardRef<HTMLTextAreaElement, SkillsInputProps>(
         }
 
         // Handle Swap
-        if (nlpParsedData.amount && nlpParsedData.currency && nlpParsedData.toCurrency) {
+        if (
+          nlpParsedData.amount &&
+          nlpParsedData.currency &&
+          nlpParsedData.toCurrency
+        ) {
           const completedSwap = {
             fromCurrency: nlpParsedData.currency,
             fromCurrencyMint: nlpParsedData.currencyMint,
@@ -807,7 +840,7 @@ const SkillsInput = React.forwardRef<HTMLTextAreaElement, SkillsInputProps>(
           // equivalent to onSendComplete.
           // However, page.tsx reads from nlpState directly in handleSubmit, so we just need to trigger submit.
 
-          // We should ensure the parent knows about the swap data. 
+          // We should ensure the parent knows about the swap data.
           // The parent reads nlpState, which is already up to date.
 
           setShouldSubmitForm(true);
@@ -1105,7 +1138,14 @@ const SkillsInput = React.forwardRef<HTMLTextAreaElement, SkillsInputProps>(
       const isSwapStart = lowerValue.startsWith("swap ");
 
       if (isSendStart || isSwapStart) {
-        if (!isNlpMode) {
+        if (isNlpMode) {
+          // Update intent if already in NLP mode but intent changed
+          onNlpStateChange?.({
+            isActive: true,
+            intent: isSendStart ? "send" : "swap",
+            parsedData: nlpParsedData,
+          });
+        } else {
           setIsNlpMode(true);
           // Clear other flows if active
           setSendStep(null);
@@ -1125,17 +1165,14 @@ const SkillsInput = React.forwardRef<HTMLTextAreaElement, SkillsInputProps>(
               toCurrency: null,
               toCurrencyMint: null,
               toCurrencyDecimals: null,
-            }
-          });
-        } else {
-          // Update intent if already in NLP mode but intent changed
-          onNlpStateChange?.({
-            isActive: true,
-            intent: isSendStart ? "send" : "swap",
-            parsedData: nlpParsedData
+            },
           });
         }
-      } else if (isNlpMode && !lowerValue.startsWith("send") && !lowerValue.startsWith("swap")) {
+      } else if (
+        isNlpMode &&
+        !lowerValue.startsWith("send") &&
+        !lowerValue.startsWith("swap")
+      ) {
         // Exit NLP mode if user deletes prefix
         setIsNlpMode(false);
         setNlpParsedData({
@@ -1160,7 +1197,7 @@ const SkillsInput = React.forwardRef<HTMLTextAreaElement, SkillsInputProps>(
             toCurrency: null,
             toCurrencyMint: null,
             toCurrencyDecimals: null,
-          }
+          },
         });
       } else if (isDropdownOpen) {
         // Filter skills based on input
@@ -1208,8 +1245,8 @@ const SkillsInput = React.forwardRef<HTMLTextAreaElement, SkillsInputProps>(
         const query = newValue.slice(1).toLowerCase();
         const filtered = query
           ? RECIPIENT_SKILLS.filter((skill) =>
-            skill.label.toLowerCase().includes(query)
-          )
+              skill.label.toLowerCase().includes(query)
+            )
           : RECIPIENT_SKILLS;
         setFilteredSkills(filtered);
         setIsDropdownOpen(true);
@@ -1519,9 +1556,9 @@ const SkillsInput = React.forwardRef<HTMLTextAreaElement, SkillsInputProps>(
             >
               {sendData.walletAddress.length > 12
                 ? `${sendData.walletAddress.slice(
-                  0,
-                  6
-                )}...${sendData.walletAddress.slice(-4)}`
+                    0,
+                    6
+                  )}...${sendData.walletAddress.slice(-4)}`
                 : sendData.walletAddress}
               <button
                 className="ml-1 h-3 w-3 cursor-pointer border-0 bg-transparent p-0 transition-transform duration-200 hover:scale-125"

@@ -256,6 +256,7 @@ export function Footer() {
         {/* Copyright and Status */}
         <div
           className={ibmPlexSans.className}
+          id="footer-copyright"
           style={{
             display: "flex",
             justifyContent: "space-between",

@@ -1,10 +1,10 @@
+import { usePhantom, useSolana } from "@phantom/react-sdk";
 import {
   createAssociatedTokenAccountInstruction,
   createTransferInstruction,
   getAccount,
   getAssociatedTokenAddress,
 } from "@solana/spl-token";
-import { useSolana, usePhantom } from "@phantom/react-sdk";
 import {
   ComputeBudgetProgram,
   LAMPORTS_PER_SOL,

@@ -5,7 +5,6 @@ import { IBM_Plex_Sans } from "next/font/google";
 import localFont from "next/font/local";
 import { memo, useState } from "react";
 import { roadmapEvents } from "@/data/roadmap";
-import { GlowingEffect } from "./ui/glowing-effect";
 
 const instrumentSerif = localFont({
   src: [
@@ -111,7 +110,7 @@ function RoadmapSectionComponent() {
     inactive: {
       scale: 0.9,
       opacity: 0.5,
-      zIndex: 0,
+      zIndex: 2,
     },
   };
 
@@ -123,7 +122,8 @@ function RoadmapSectionComponent() {
       style={{
         padding: "4rem 1rem",
         background: "#000",
-        borderTop: "1px solid rgba(255, 255, 255, 0.1)",
+        position: "relative",
+        overflow: "visible",
       }}
     >
       <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
@@ -156,24 +156,27 @@ function RoadmapSectionComponent() {
         </p>
 
         <div style={{ position: "relative" }}>
-          {/* Navigation buttons */}
+          {/* Navigation buttons - inside relative container for proper positioning */}
           <button
-            onClick={prevSlide}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              prevSlide();
+            }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.background = "rgba(255, 255, 255, 0.12)";
+              e.currentTarget.style.background = "rgba(255, 255, 255, 0.1)";
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.background = "rgba(255, 255, 255, 0.08)";
+              e.currentTarget.style.background = "rgba(255, 255, 255, 0.05)";
             }}
             style={{
               position: "absolute",
-              left: "-1rem",
+              left: "-4rem",
               top: "50%",
               transform: "translateY(-50%)",
-              zIndex: 20,
-              background: "rgba(255, 255, 255, 0.08)",
-              backdropFilter: "blur(20px)",
-              border: "1px solid rgba(255, 255, 255, 0.15)",
+              zIndex: 100,
+              background: "rgba(255, 255, 255, 0.05)",
+              border: "1px solid rgba(255, 255, 255, 0.1)",
               borderRadius: "50%",
               width: "3rem",
               height: "3rem",
@@ -181,15 +184,18 @@ function RoadmapSectionComponent() {
               alignItems: "center",
               justifyContent: "center",
               cursor: "pointer",
-              transition: "all 0.3s ease",
-              boxShadow:
-                "0 8px 32px 0 rgba(0, 0, 0, 0.37), inset 0 1px 1px rgba(255, 255, 255, 0.1)",
+              transition: "all 0.2s ease",
+              pointerEvents: "auto",
             }}
+            type="button"
           >
             <svg
               fill="none"
               height="24"
-              style={{ transform: "rotate(180deg)", color: "#fff" }}
+              style={{
+                transform: "rotate(180deg)",
+                color: "rgba(255, 255, 255, 0.7)",
+              }}
               viewBox="0 0 24 24"
               width="24"
               xmlns="http://www.w3.org/2000/svg"
@@ -204,22 +210,25 @@ function RoadmapSectionComponent() {
             </svg>
           </button>
           <button
-            onClick={nextSlide}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              nextSlide();
+            }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.background = "rgba(255, 255, 255, 0.12)";
+              e.currentTarget.style.background = "rgba(255, 255, 255, 0.1)";
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.background = "rgba(255, 255, 255, 0.08)";
+              e.currentTarget.style.background = "rgba(255, 255, 255, 0.05)";
             }}
             style={{
               position: "absolute",
-              right: "-1rem",
+              right: "-4rem",
               top: "50%",
               transform: "translateY(-50%)",
-              zIndex: 20,
-              background: "rgba(255, 255, 255, 0.08)",
-              backdropFilter: "blur(20px)",
-              border: "1px solid rgba(255, 255, 255, 0.15)",
+              zIndex: 100,
+              background: "rgba(255, 255, 255, 0.05)",
+              border: "1px solid rgba(255, 255, 255, 0.1)",
               borderRadius: "50%",
               width: "3rem",
               height: "3rem",
@@ -227,15 +236,15 @@ function RoadmapSectionComponent() {
               alignItems: "center",
               justifyContent: "center",
               cursor: "pointer",
-              transition: "all 0.3s ease",
-              boxShadow:
-                "0 8px 32px 0 rgba(0, 0, 0, 0.37), inset 0 1px 1px rgba(255, 255, 255, 0.1)",
+              transition: "all 0.2s ease",
+              pointerEvents: "auto",
             }}
+            type="button"
           >
             <svg
               fill="none"
               height="24"
-              style={{ color: "#fff" }}
+              style={{ color: "rgba(255, 255, 255, 0.7)" }}
               viewBox="0 0 24 24"
               width="24"
               xmlns="http://www.w3.org/2000/svg"
@@ -249,20 +258,6 @@ function RoadmapSectionComponent() {
               />
             </svg>
           </button>
-
-          {/* Timeline line */}
-          <div
-            style={{
-              position: "absolute",
-              left: 0,
-              right: 0,
-              top: "50%",
-              height: "2px",
-              background:
-                "linear-gradient(to right, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.1) 20%, rgba(255, 255, 255, 0.1) 80%, rgba(255, 255, 255, 0) 100%)",
-              zIndex: 0,
-            }}
-          />
 
           {/* Carousel container */}
           <div
@@ -273,6 +268,95 @@ function RoadmapSectionComponent() {
               touchAction: "pan-y",
             }}
           >
+            {/* Fade overlays with mobile navigation */}
+            <div
+              onClick={prevSlide}
+              style={{
+                position: "absolute",
+                left: 0,
+                top: 0,
+                bottom: 0,
+                width: "8rem",
+                background:
+                  "linear-gradient(to right, #000 0%, transparent 100%)",
+                zIndex: 5,
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "flex-start",
+                paddingLeft: "0.75rem",
+              }}
+            >
+              {/* Mobile chevron - hidden on desktop via media query */}
+              <svg
+                className="mobile-nav-chevron"
+                fill="none"
+                height="32"
+                style={{
+                  color: "rgba(255, 255, 255, 0.5)",
+                  transform: "rotate(180deg)",
+                }}
+                viewBox="0 0 24 24"
+                width="32"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M10.75 8.75L14.25 12L10.75 15.25"
+                  stroke="currentColor"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="1.5"
+                />
+              </svg>
+            </div>
+            <div
+              onClick={nextSlide}
+              style={{
+                position: "absolute",
+                right: 0,
+                top: 0,
+                bottom: 0,
+                width: "8rem",
+                background:
+                  "linear-gradient(to left, #000 0%, transparent 100%)",
+                zIndex: 5,
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "flex-end",
+                paddingRight: "0.75rem",
+              }}
+            >
+              {/* Mobile chevron - hidden on desktop via media query */}
+              <svg
+                className="mobile-nav-chevron"
+                fill="none"
+                height="32"
+                style={{
+                  color: "rgba(255, 255, 255, 0.5)",
+                }}
+                viewBox="0 0 24 24"
+                width="32"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M10.75 8.75L14.25 12L10.75 15.25"
+                  stroke="currentColor"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="1.5"
+                />
+              </svg>
+            </div>
+            {/* CSS for hiding mobile chevrons on desktop */}
+            <style jsx>{`
+              @media (min-width: 768px) {
+                .mobile-nav-chevron {
+                  display: none;
+                }
+              }
+            `}</style>
+
             <div
               style={{
                 display: "flex",
@@ -308,28 +392,6 @@ function RoadmapSectionComponent() {
                     }}
                     variants={cardVariants}
                   >
-                    {/* Timeline dot */}
-                    <motion.div
-                      animate={index === currentIndex ? "active" : "inactive"}
-                      initial="inactive"
-                      style={{
-                        position: "absolute",
-                        left: "calc(50% - 0.75rem)",
-                        top: "-0.5rem",
-                        width: "1.5rem",
-                        height: "1.5rem",
-                        borderRadius: "50%",
-                        zIndex: 10,
-                        background:
-                          index === currentIndex
-                            ? "rgba(255, 255, 255, 0.9)"
-                            : "transparent",
-                        border: "2px solid rgba(255, 255, 255, 0.5)",
-                        willChange: "transform",
-                      }}
-                      variants={cardVariants}
-                    />
-
                     {/* Card */}
                     <motion.div
                       layout
@@ -337,245 +399,266 @@ function RoadmapSectionComponent() {
                       transition={{ duration: 0.3, ease: "easeInOut" }}
                     >
                       <div
+                        className={ibmPlexSans.className}
                         style={{
                           position: "relative",
-                          border: "1px solid transparent",
-                          borderRadius: "20px",
-                          padding: "2px",
+                          background: "rgba(38, 38, 38, 0.5)",
+                          backdropFilter: "blur(24px) saturate(180%)",
+                          WebkitBackdropFilter: "blur(24px) saturate(180%)",
+                          border: "1px solid rgba(255, 255, 255, 0.08)",
+                          borderRadius: "24px",
+                          overflow: "visible",
+                          boxShadow:
+                            "0px 4px 8px 0px rgba(0, 0, 0, 0.04), 0px 2px 4px 0px rgba(0, 0, 0, 0.02)",
                         }}
                       >
-                        <GlowingEffect
-                          blur={0}
-                          borderWidth={3}
-                          disabled={true}
-                          glow={true}
-                          inactiveZone={0.01}
-                          proximity={64}
-                          spread={40}
-                        />
-                        <div
-                          className={ibmPlexSans.className}
+                        {/* Red dot indicator on active card */}
+                        <motion.div
+                          animate={{
+                            scale: index === currentIndex ? [0, 1.4, 1] : 0,
+                            opacity: index === currentIndex ? 1 : 0,
+                          }}
+                          initial={false}
                           style={{
-                            position: "relative",
-                            background: "rgba(255, 255, 255, 0.08)",
-                            backdropFilter: "blur(20px)",
-                            border: "1px solid rgba(255, 255, 255, 0.15)",
-                            borderRadius: "18px",
+                            position: "absolute",
+                            top: "-8px",
+                            left: "calc(50% - 8px)",
+                            width: "16px",
+                            height: "16px",
+                            borderRadius: "50%",
+                            background: "#ef4444",
+                            zIndex: 10,
+                          }}
+                          transition={{
+                            scale: {
+                              duration: 0.4,
+                              ease: [0.34, 1.56, 0.64, 1],
+                              delay: index === currentIndex ? 0.2 : 0,
+                            },
+                            opacity: {
+                              duration: 0.15,
+                              delay: index === currentIndex ? 0.2 : 0,
+                            },
+                          }}
+                        />
+                        {/* Red glow clipped to card surface */}
+                        <div
+                          style={{
+                            position: "absolute",
+                            inset: 0,
                             overflow: "hidden",
-                            boxShadow:
-                              "0 8px 32px 0 rgba(0, 0, 0, 0.37), inset 0 1px 1px rgba(255, 255, 255, 0.1)",
+                            borderRadius: "24px",
+                            pointerEvents: "none",
                           }}
                         >
-                          {/* Card header */}
-                          <div
-                            onClick={() => toggleExpand(index)}
+                          <motion.div
+                            animate={{
+                              opacity: index === currentIndex ? 1 : 0,
+                              scale: index === currentIndex ? 1 : 0.5,
+                            }}
+                            initial={false}
                             style={{
-                              padding: "1.5rem",
-                              display: "flex",
-                              flexDirection: "column",
-                              alignItems: "center",
-                              textAlign: "center",
-                              cursor:
-                                index === currentIndex ? "pointer" : "default",
+                              position: "absolute",
+                              top: "-50px",
+                              left: "calc(50% - 80px)",
+                              width: "160px",
+                              height: "100px",
+                              background:
+                                "radial-gradient(ellipse at center top, rgba(239, 68, 68, 0.4) 0%, rgba(239, 68, 68, 0.15) 40%, transparent 70%)",
+                              pointerEvents: "none",
+                            }}
+                            transition={{
+                              opacity: {
+                                duration: 0.4,
+                                delay: index === currentIndex ? 0.2 : 0,
+                              },
+                              scale: {
+                                duration: 0.4,
+                                ease: [0.34, 1.56, 0.64, 1],
+                                delay: index === currentIndex ? 0.2 : 0,
+                              },
+                            }}
+                          />
+                        </div>
+                        {/* Card header */}
+                        <div
+                          onClick={() => toggleExpand(index)}
+                          style={{
+                            padding: "1.5rem",
+                            display: "flex",
+                            flexDirection: "column",
+                            alignItems: "center",
+                            textAlign: "center",
+                            cursor:
+                              index === currentIndex ? "pointer" : "default",
+                          }}
+                        >
+                          {/* Period badge */}
+                          <div
+                            style={{
+                              padding: "0.375rem 0.875rem",
+                              fontSize: "0.75rem",
+                              fontWeight: 500,
+                              color: "rgba(255, 255, 255, 0.7)",
+                              background: "rgba(255, 255, 255, 0.06)",
+                              border: "1px solid rgba(255, 255, 255, 0.1)",
+                              borderRadius: "999px",
+                              marginBottom: "0.75rem",
                             }}
                           >
-                            {/* Period badge */}
+                            {item.year}
+                          </div>
+
+                          <h3
+                            style={{
+                              fontSize: "1.25rem",
+                              fontWeight: 600,
+                              color: "rgba(255, 255, 255, 0.95)",
+                              marginBottom: "0.5rem",
+                            }}
+                          >
+                            {`${formatPeriod(item)} Goals`}
+                          </h3>
+
+                          {/* Status */}
+                          <div
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              fontSize: "0.875rem",
+                              color: "rgba(255, 255, 255, 0.6)",
+                              marginTop: "0.5rem",
+                            }}
+                          >
                             <div
                               style={{
-                                padding: "0.375rem 0.875rem",
-                                fontSize: "0.75rem",
-                                fontWeight: 500,
-                                color: "rgba(255, 255, 255, 0.95)",
-                                background: "rgba(255, 255, 255, 0.12)",
-                                border: "1px solid rgba(255, 255, 255, 0.2)",
-                                borderRadius: "999px",
-                                marginBottom: "0.75rem",
+                                width: "0.5rem",
+                                height: "0.5rem",
+                                marginRight: "0.5rem",
+                                borderRadius: "50%",
+                                background: status.color,
                               }}
-                            >
-                              {item.year}
-                            </div>
+                            />
+                            {status.label}
+                          </div>
 
-                            <h3
-                              style={{
-                                fontSize: "1.25rem",
-                                fontWeight: 600,
-                                color: "rgba(255, 255, 255, 0.95)",
-                                marginBottom: "0.5rem",
+                          {/* Expand indicator */}
+                          {index === currentIndex && (
+                            <motion.div
+                              animate={{
+                                rotate: isDetailsExpanded ? 180 : 0,
                               }}
+                              style={{ marginTop: "0.75rem" }}
+                              transition={{ duration: 0.3 }}
                             >
-                              {`${formatPeriod(item)} Goals`}
-                            </h3>
+                              <svg
+                                fill="none"
+                                height="20"
+                                style={{ color: "rgba(255, 255, 255, 0.4)" }}
+                                viewBox="0 0 24 24"
+                                width="20"
+                                xmlns="http://www.w3.org/2000/svg"
+                              >
+                                <path
+                                  d="M6 9L12 15L18 9"
+                                  stroke="currentColor"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth="2"
+                                />
+                              </svg>
+                            </motion.div>
+                          )}
+                        </div>
 
-                            {/* Status */}
-                            <div
-                              style={{
-                                display: "flex",
-                                alignItems: "center",
-                                fontSize: "0.875rem",
-                                color: "rgba(255, 255, 255, 0.6)",
-                                marginTop: "0.5rem",
+                        {/* Expanded content */}
+                        <AnimatePresence>
+                          {isDetailsExpanded && index === currentIndex && (
+                            <motion.div
+                              animate={{ height: "auto", opacity: 1 }}
+                              exit={{ height: 0, opacity: 0 }}
+                              initial={{ height: 0, opacity: 0 }}
+                              style={{ overflow: "hidden" }}
+                              transition={{
+                                duration: 0.3,
+                                ease: "easeInOut",
                               }}
                             >
                               <div
                                 style={{
-                                  width: "1rem",
-                                  height: "1rem",
-                                  marginRight: "0.5rem",
-                                  borderRadius: "50%",
-                                  background: status.color,
-                                }}
-                              />
-                              {status.label}
-                            </div>
-
-                            {/* Expand indicator */}
-                            {index === currentIndex && (
-                              <motion.div
-                                animate={{
-                                  rotate: isDetailsExpanded ? 180 : 0,
-                                }}
-                                style={{ marginTop: "0.75rem" }}
-                                transition={{ duration: 0.3 }}
-                              >
-                                <svg
-                                  fill="none"
-                                  height="20"
-                                  style={{ color: "rgba(255, 255, 255, 0.5)" }}
-                                  viewBox="0 0 24 24"
-                                  width="20"
-                                  xmlns="http://www.w3.org/2000/svg"
-                                >
-                                  <path
-                                    d="M6 9L12 15L18 9"
-                                    stroke="currentColor"
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth="2"
-                                  />
-                                </svg>
-                              </motion.div>
-                            )}
-                          </div>
-
-                          {/* Expanded content */}
-                          <AnimatePresence>
-                            {isDetailsExpanded && index === currentIndex && (
-                              <motion.div
-                                animate={{ height: "auto", opacity: 1 }}
-                                exit={{ height: 0, opacity: 0 }}
-                                initial={{ height: 0, opacity: 0 }}
-                                style={{ overflow: "hidden" }}
-                                transition={{
-                                  duration: 0.3,
-                                  ease: "easeInOut",
+                                  padding: "0 1.5rem 1.5rem",
+                                  borderTop:
+                                    "1px solid rgba(255, 255, 255, 0.06)",
+                                  paddingTop: "1rem",
                                 }}
                               >
-                                <div
+                                <h4
                                   style={{
-                                    padding: "0 1.5rem 1.5rem",
-                                    borderTop:
-                                      "1px solid rgba(255, 255, 255, 0.1)",
-                                    paddingTop: "1rem",
+                                    fontSize: "0.875rem",
+                                    fontWeight: 600,
+                                    color: "rgba(255, 255, 255, 0.8)",
+                                    textAlign: "center",
+                                    marginBottom: "1rem",
                                   }}
                                 >
-                                  <h4
-                                    style={{
-                                      fontSize: "0.875rem",
-                                      fontWeight: 600,
-                                      color: "rgba(255, 255, 255, 0.8)",
-                                      textAlign: "center",
-                                      marginBottom: "1rem",
-                                    }}
-                                  >
-                                    Events
-                                  </h4>
-                                  <ul
-                                    style={{
-                                      display: "grid",
-                                      gap: "0.75rem",
-                                    }}
-                                  >
-                                    {item.events.map((event, i) => (
-                                      <motion.li
-                                        animate={{ opacity: 1, x: 0 }}
-                                        initial={{ opacity: 0, x: -20 }}
-                                        key={i}
+                                  Events
+                                </h4>
+                                <ul
+                                  style={{
+                                    display: "grid",
+                                    gap: "0.75rem",
+                                  }}
+                                >
+                                  {item.events.map((event, i) => (
+                                    <motion.li
+                                      animate={{ opacity: 1, x: 0 }}
+                                      initial={{ opacity: 0, x: -20 }}
+                                      key={i}
+                                      style={{
+                                        display: "flex",
+                                        alignItems: "flex-start",
+                                      }}
+                                      transition={{
+                                        duration: 0.3,
+                                        delay: i * 0.1,
+                                        ease: "easeOut",
+                                      }}
+                                    >
+                                      <div
                                         style={{
-                                          display: "flex",
-                                          alignItems: "flex-start",
+                                          width: "0.5rem",
+                                          height: "0.5rem",
+                                          marginRight: "0.75rem",
+                                          marginTop: "0.35rem",
+                                          flexShrink: 0,
+                                          borderRadius: "50%",
+                                          background: event.isChecked
+                                            ? "rgba(34, 197, 94, 0.8)"
+                                            : "rgba(156, 163, 175, 0.5)",
                                         }}
-                                        transition={{
-                                          duration: 0.3,
-                                          delay: i * 0.1,
-                                          ease: "easeOut",
+                                      />
+                                      <span
+                                        style={{
+                                          fontSize: "0.875rem",
+                                          color: "rgba(255, 255, 255, 0.7)",
+                                          lineHeight: 1.5,
                                         }}
                                       >
-                                        <div
-                                          style={{
-                                            width: "1rem",
-                                            height: "1rem",
-                                            marginRight: "0.75rem",
-                                            marginTop: "0.125rem",
-                                            flexShrink: 0,
-                                            borderRadius: "50%",
-                                            background: event.isChecked
-                                              ? "rgba(34, 197, 94, 0.8)"
-                                              : "rgba(156, 163, 175, 0.5)",
-                                          }}
-                                        />
-                                        <span
-                                          style={{
-                                            fontSize: "0.875rem",
-                                            color: "rgba(255, 255, 255, 0.7)",
-                                            lineHeight: 1.5,
-                                          }}
-                                        >
-                                          {event.title}
-                                        </span>
-                                      </motion.li>
-                                    ))}
-                                  </ul>
-                                </div>
-                              </motion.div>
-                            )}
-                          </AnimatePresence>
-                        </div>
+                                        {event.title}
+                                      </span>
+                                    </motion.li>
+                                  ))}
+                                </ul>
+                              </div>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
                       </div>
                     </motion.div>
                   </motion.div>
                 );
               })}
             </div>
-
-            {/* Left fade overlay */}
-            <div
-              style={{
-                position: "absolute",
-                left: 0,
-                top: 0,
-                bottom: 0,
-                width: "8rem",
-                background:
-                  "linear-gradient(to right, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 0) 100%)",
-                pointerEvents: "none",
-                zIndex: 15,
-              }}
-            />
-
-            {/* Right fade overlay */}
-            <div
-              style={{
-                position: "absolute",
-                right: 0,
-                top: 0,
-                bottom: 0,
-                width: "8rem",
-                background:
-                  "linear-gradient(to left, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 0) 100%)",
-                pointerEvents: "none",
-                zIndex: 15,
-              }}
-            />
           </div>
 
           {/* Pagination dots */}
@@ -593,17 +676,18 @@ function RoadmapSectionComponent() {
                 key={index}
                 onClick={() => goToSlide(index)}
                 style={{
-                  width: "0.75rem",
-                  height: "0.75rem",
-                  borderRadius: "50%",
+                  width: index === currentIndex ? "1.5rem" : "0.375rem",
+                  height: "0.375rem",
+                  borderRadius: "999px",
                   background:
                     index === currentIndex
-                      ? "rgba(255, 255, 255, 0.9)"
-                      : "rgba(255, 255, 255, 0.2)",
+                      ? "rgba(255, 255, 255, 0.6)"
+                      : "rgba(255, 255, 255, 0.15)",
                   border: "none",
                   cursor: "pointer",
                   transition: "all 0.3s ease",
                 }}
+                type="button"
               />
             ))}
           </div>

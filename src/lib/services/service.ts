@@ -1,5 +1,5 @@
-import type { AnchorWallet } from "@/hooks/use-anchor-wallet";
 import { type Connection, PublicKey } from "@solana/web3.js";
+import type { AnchorWallet } from "@/hooks/use-anchor-wallet";
 
 import { generateCmk } from "../loyal/encryption";
 import { fetchIrysTransactionData } from "../loyal/http";

@@ -1,6 +1,6 @@
 import { BN } from "@coral-xyz/anchor";
-import type { AnchorWallet } from "@/hooks/use-anchor-wallet";
 import { type Connection, Keypair, PublicKey } from "@solana/web3.js";
+import type { AnchorWallet } from "@/hooks/use-anchor-wallet";
 
 import {
   getChatAccount,

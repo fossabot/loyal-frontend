@@ -1,7 +1,11 @@
 "use client";
 
-import { useSolana, usePhantom, useAccounts } from "@phantom/react-sdk";
-import { PublicKey, type Transaction, type VersionedTransaction } from "@solana/web3.js";
+import { useAccounts, usePhantom, useSolana } from "@phantom/react-sdk";
+import {
+  PublicKey,
+  type Transaction,
+  type VersionedTransaction,
+} from "@solana/web3.js";
 import { useMemo } from "react";
 
 /**
@@ -11,8 +15,12 @@ import { useMemo } from "react";
  */
 export interface AnchorWallet {
   publicKey: PublicKey;
-  signTransaction<T extends Transaction | VersionedTransaction>(tx: T): Promise<T>;
-  signAllTransactions<T extends Transaction | VersionedTransaction>(txs: T[]): Promise<T[]>;
+  signTransaction<T extends Transaction | VersionedTransaction>(
+    tx: T
+  ): Promise<T>;
+  signAllTransactions<T extends Transaction | VersionedTransaction>(
+    txs: T[]
+  ): Promise<T[]>;
 }
 
 /**
@@ -30,8 +38,8 @@ export function useAnchorWallet(): AnchorWallet | undefined {
   )?.address;
 
   return useMemo(() => {
-    if (!isConnected || !isAvailable || !solana || !solanaAddress) {
-      return undefined;
+    if (!(isConnected && isAvailable && solana && solanaAddress)) {
+      return;
     }
 
     const publicKey = new PublicKey(solanaAddress);

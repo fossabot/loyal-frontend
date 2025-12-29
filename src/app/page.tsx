@@ -8,6 +8,8 @@ import {
   ArrowUpToLine,
   MoreHorizontal,
   RefreshCw,
+  Repeat2,
+  Send,
   X,
 } from "lucide-react";
 import { IBM_Plex_Sans, Plus_Jakarta_Sans } from "next/font/google";
@@ -1364,6 +1366,7 @@ export default function LandingPage() {
               flexDirection: "column",
               justifyContent: "space-between",
               padding: "0",
+              pointerEvents: "none",
             }}
           >
             {/* Collapsed State - Icon Buttons */}
@@ -1624,12 +1627,32 @@ export default function LandingPage() {
                 }}
               >
                 {[
-                  { title: "Service 1", subtitle: "Subtitle" },
-                  { title: "Service 2", subtitle: "Subtitle" },
-                  { title: "Service 3", subtitle: "Subtitle" },
-                ].map((service, index) => (
+                  {
+                    id: "send",
+                    title: "Send",
+                    subtitle: "Transfer Solana tokens",
+                    icon: Send,
+                  },
+                  {
+                    id: "swap",
+                    title: "Swap",
+                    subtitle: "Swap tokens on Solana",
+                    icon: Repeat2,
+                  },
+                ].map((service) => (
                   <div
-                    key={index}
+                    key={service.id}
+                    onClick={() => {
+                      setIsSidebarOpen(false);
+                      if (
+                        inputRef.current &&
+                        "activateNlpMode" in inputRef.current
+                      ) {
+                        (inputRef.current as SkillsInputRef).activateNlpMode(
+                          `${service.id} `
+                        );
+                      }
+                    }}
                     style={{
                       display: "flex",
                       alignItems: "center",
@@ -1650,8 +1673,16 @@ export default function LandingPage() {
                           background: "rgba(255, 255, 255, 0.06)",
                           mixBlendMode: "lighten",
                           borderRadius: "8px",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
                         }}
-                      />
+                      >
+                        <service.icon
+                          size={20}
+                          style={{ color: "rgba(255, 255, 255, 0.6)" }}
+                        />
+                      </div>
                     </div>
                     <div
                       style={{

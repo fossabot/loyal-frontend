@@ -2287,7 +2287,7 @@ export default function LandingPage() {
                 alignItems: "center",
                 justifyContent: "center",
                 pointerEvents: "none",
-                zIndex: isInputStuckToBottom && !isChatMode ? 50 : "auto",
+                zIndex: !isChatMode ? 50 : "auto",
                 transition: isChatMode
                   ? "bottom 0.5s cubic-bezier(0.4, 0, 0.2, 1), transform 0.5s cubic-bezier(0.4, 0, 0.2, 1)"
                   : isInputStuckToBottom

@@ -8,6 +8,8 @@ import {
   ArrowUpToLine,
   MoreHorizontal,
   RefreshCw,
+  Repeat2,
+  Send,
   X,
 } from "lucide-react";
 import { IBM_Plex_Sans, Plus_Jakarta_Sans } from "next/font/google";
@@ -1359,11 +1361,12 @@ export default function LandingPage() {
               top: "8px",
               left: "8px",
               bottom: "8px",
-              zIndex: 50,
+              zIndex: 60,
               display: "flex",
               flexDirection: "column",
               justifyContent: "space-between",
               padding: "0",
+              pointerEvents: "none",
             }}
           >
             {/* Collapsed State - Icon Buttons */}
@@ -1624,12 +1627,32 @@ export default function LandingPage() {
                 }}
               >
                 {[
-                  { title: "Service 1", subtitle: "Subtitle" },
-                  { title: "Service 2", subtitle: "Subtitle" },
-                  { title: "Service 3", subtitle: "Subtitle" },
-                ].map((service, index) => (
+                  {
+                    id: "send",
+                    title: "Send",
+                    subtitle: "Transfer Solana tokens",
+                    icon: Send,
+                  },
+                  {
+                    id: "swap",
+                    title: "Swap",
+                    subtitle: "Swap tokens on Solana",
+                    icon: Repeat2,
+                  },
+                ].map((service) => (
                   <div
-                    key={index}
+                    key={service.id}
+                    onClick={() => {
+                      setIsSidebarOpen(false);
+                      if (
+                        inputRef.current &&
+                        "activateNlpMode" in inputRef.current
+                      ) {
+                        (inputRef.current as SkillsInputRef).activateNlpMode(
+                          `${service.id} `
+                        );
+                      }
+                    }}
                     style={{
                       display: "flex",
                       alignItems: "center",
@@ -1650,8 +1673,16 @@ export default function LandingPage() {
                           background: "rgba(255, 255, 255, 0.06)",
                           mixBlendMode: "lighten",
                           borderRadius: "8px",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
                         }}
-                      />
+                      >
+                        <service.icon
+                          size={20}
+                          style={{ color: "rgba(255, 255, 255, 0.6)" }}
+                        />
+                      </div>
                     </div>
                     <div
                       style={{
@@ -2309,6 +2340,58 @@ export default function LandingPage() {
                 />
               )}
 
+              {/* Skills selector buttons - above input when scrolled */}
+              {skillsEnabled && !isChatMode && isInputStuckToBottom && (
+                <div style={{ pointerEvents: "auto", marginBottom: "12px" }}>
+                  <SkillsSelector
+                    nlpState={nlpState}
+                    onSkillSelect={(skill) => {
+                      const currentActiveSkill = input.find(
+                        (s) => s.category === "action"
+                      );
+
+                      if (
+                        !skill ||
+                        (currentActiveSkill &&
+                          currentActiveSkill.id === skill.id)
+                      ) {
+                        if (inputRef.current && "clear" in inputRef.current) {
+                          (
+                            inputRef.current as HTMLTextAreaElement & {
+                              clear: () => void;
+                            }
+                          ).clear();
+                          setInput([]);
+                        }
+                      } else if (skill.id === "send" || skill.id === "swap") {
+                        if (
+                          inputRef.current &&
+                          "activateNlpMode" in inputRef.current
+                        ) {
+                          (inputRef.current as any).activateNlpMode(
+                            `${skill.id} `
+                          );
+                        }
+                      } else {
+                        if (
+                          inputRef.current &&
+                          "resetAndAddSkill" in inputRef.current
+                        ) {
+                          (
+                            inputRef.current as HTMLTextAreaElement & {
+                              resetAndAddSkill: (skill: LoyalSkill) => void;
+                            }
+                          ).resetAndAddSkill(skill);
+                        }
+                      }
+                    }}
+                    selectedSkillId={
+                      input.find((skill) => skill.category === "action")?.id
+                    }
+                  />
+                </div>
+              )}
+
               {/* Input form - liquid glass style with integrated send button */}
               <form
                 onSubmit={handleSubmit}
@@ -2443,6 +2526,39 @@ export default function LandingPage() {
                           if (isLoading) {
                             // TODO: Implement stop functionality
                           } else if (hasUsableInput) {
+                            // For NLP mode, ensure completion data is set before submitting
+                            // (same as what Enter key does in SkillsInput)
+                            if (nlpState?.isActive && nlpState?.intent === "send") {
+                              if (
+                                nlpState.parsedData.amount &&
+                                nlpState.parsedData.currency &&
+                                nlpState.parsedData.walletAddress
+                              ) {
+                                handleSendComplete({
+                                  currency: nlpState.parsedData.currency,
+                                  currencyMint: nlpState.parsedData.currencyMint,
+                                  currencyDecimals: nlpState.parsedData.currencyDecimals,
+                                  amount: nlpState.parsedData.amount,
+                                  walletAddress: nlpState.parsedData.walletAddress,
+                                });
+                              }
+                            } else if (nlpState?.isActive && nlpState?.intent === "swap") {
+                              if (
+                                nlpState.parsedData.amount &&
+                                nlpState.parsedData.currency &&
+                                nlpState.parsedData.toCurrency
+                              ) {
+                                handleSwapComplete({
+                                  fromCurrency: nlpState.parsedData.currency,
+                                  fromCurrencyMint: nlpState.parsedData.currencyMint,
+                                  fromCurrencyDecimals: nlpState.parsedData.currencyDecimals,
+                                  amount: nlpState.parsedData.amount,
+                                  toCurrency: nlpState.parsedData.toCurrency,
+                                  toCurrencyMint: nlpState.parsedData.toCurrencyMint,
+                                  toCurrencyDecimals: nlpState.parsedData.toCurrencyDecimals,
+                                });
+                              }
+                            }
                             handleSubmit(e as unknown as React.FormEvent);
                           }
                         }}
@@ -2498,61 +2614,65 @@ export default function LandingPage() {
                       </button>
                     </div>
                   </div>
-                  {skillsEnabled && (
-                    <SkillsSelector
-                      className="px-5 py-2"
-                      nlpState={nlpState}
-                      onSkillSelect={(skill) => {
-                        const currentActiveSkill = input.find(
-                          (s) => s.category === "action"
-                        );
-
-                        // If null or deselecting the same skill - clear everything
-                        if (
-                          !skill ||
-                          (currentActiveSkill &&
-                            currentActiveSkill.id === skill.id)
-                        ) {
-                          if (inputRef.current && "clear" in inputRef.current) {
-                            (
-                              inputRef.current as HTMLTextAreaElement & {
-                                clear: () => void;
-                              }
-                            ).clear();
-                            setInput([]);
-                          }
-                        } else if (skill.id === "send" || skill.id === "swap") {
-                          // For "send" and "swap" skills, activate NLP mode instead of adding the skill object
-                          if (
-                            inputRef.current &&
-                            "activateNlpMode" in inputRef.current
-                          ) {
-                            (inputRef.current as any).activateNlpMode(
-                              `${skill.id} `
-                            );
-                          }
-                        } else {
-                          // For other skills, use the old flow
-                          // Reset all state and add the selected skill
-                          if (
-                            inputRef.current &&
-                            "resetAndAddSkill" in inputRef.current
-                          ) {
-                            (
-                              inputRef.current as HTMLTextAreaElement & {
-                                resetAndAddSkill: (skill: LoyalSkill) => void;
-                              }
-                            ).resetAndAddSkill(skill);
-                          }
-                        }
-                      }}
-                      selectedSkillId={
-                        input.find((skill) => skill.category === "action")?.id
-                      }
-                    />
-                  )}
                 </div>
               </form>
+
+              {/* Skills selector buttons - below input when not scrolled */}
+              {skillsEnabled && !isChatMode && !isInputStuckToBottom && (
+                <div style={{ pointerEvents: "auto" }}>
+                  <SkillsSelector
+                    className="mt-4"
+                    nlpState={nlpState}
+                    onSkillSelect={(skill) => {
+                      const currentActiveSkill = input.find(
+                        (s) => s.category === "action"
+                      );
+
+                      // If null or deselecting the same skill - clear everything
+                      if (
+                        !skill ||
+                        (currentActiveSkill &&
+                          currentActiveSkill.id === skill.id)
+                      ) {
+                        if (inputRef.current && "clear" in inputRef.current) {
+                          (
+                            inputRef.current as HTMLTextAreaElement & {
+                              clear: () => void;
+                            }
+                          ).clear();
+                          setInput([]);
+                        }
+                      } else if (skill.id === "send" || skill.id === "swap") {
+                        // For "send" and "swap" skills, activate NLP mode instead of adding the skill object
+                        if (
+                          inputRef.current &&
+                          "activateNlpMode" in inputRef.current
+                        ) {
+                          (inputRef.current as any).activateNlpMode(
+                            `${skill.id} `
+                          );
+                        }
+                      } else {
+                        // For other skills, use the old flow
+                        // Reset all state and add the selected skill
+                        if (
+                          inputRef.current &&
+                          "resetAndAddSkill" in inputRef.current
+                        ) {
+                          (
+                            inputRef.current as HTMLTextAreaElement & {
+                              resetAndAddSkill: (skill: LoyalSkill) => void;
+                            }
+                          ).resetAndAddSkill(skill);
+                        }
+                      }
+                    }}
+                    selectedSkillId={
+                      input.find((skill) => skill.category === "action")?.id
+                    }
+                  />
+                </div>
+              )}
             </div>
           </div>
         </div>

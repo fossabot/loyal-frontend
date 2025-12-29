@@ -78,13 +78,28 @@ const ACTION_SKILLS = AVAILABLE_SKILLS.filter((s) => s.category === "action");
 const RECIPIENT_SKILLS = AVAILABLE_SKILLS.filter(
   (s) => s.category === "recipient"
 );
+// Hardcoded list of common "to" tokens for swap (user may not have these in wallet)
 const SWAP_TARGET_TOKENS: LoyalSkill[] = [
   {
-    id: "currency-bonk",
-    label: "BONK",
+    id: "currency-sol",
+    label: "SOL",
     category: "currency",
-    mint: "DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263",
-    decimals: 5,
+    mint: "So11111111111111111111111111111111111111112",
+    decimals: 9,
+  },
+  {
+    id: "currency-usdc",
+    label: "USDC",
+    category: "currency",
+    mint: "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+    decimals: 6,
+  },
+  {
+    id: "currency-usdt",
+    label: "USDT",
+    category: "currency",
+    mint: "Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB",
+    decimals: 6,
   },
   {
     id: "currency-loyal",
@@ -563,7 +578,7 @@ const SkillsInput = React.forwardRef<HTMLTextAreaElement, SkillsInputProps>(
         }
       }
 
-      // 2. Find Currency (From Token)
+      // 2. Find Currency (From Token) - from wallet tokens
       // We look for known currency symbols in the text
       // For swap, we need to be careful not to match the "to" token as the "from" token
       // A simple heuristic: the first token found is likely the "from" token
@@ -586,7 +601,11 @@ const SkillsInput = React.forwardRef<HTMLTextAreaElement, SkillsInputProps>(
         currencyDecimals = fromToken.decimals || null;
 
         // If swap, look for second token or "to [token]" pattern
+        // Check both wallet tokens (CURRENCY_SKILLS) and hardcoded swap targets (SWAP_TARGET_TOKENS)
         if (isSwap) {
+          // Combine wallet tokens and swap target tokens for "to" token matching
+          const allToTokens = [...CURRENCY_SKILLS, ...SWAP_TARGET_TOKENS];
+
           // Check for "to [token]" pattern first
           const toMatch = textLower.match(/\bto\s+([a-z0-9]+)\b/i);
           if (toMatch) {
@@ -595,7 +614,7 @@ const SkillsInput = React.forwardRef<HTMLTextAreaElement, SkillsInputProps>(
             if (
               potentialToToken.toLowerCase() !== fromToken.label.toLowerCase()
             ) {
-              const matchedSkill = CURRENCY_SKILLS.find(
+              const matchedSkill = allToTokens.find(
                 (s) => s.label.toLowerCase() === potentialToToken.toLowerCase()
               );
               if (matchedSkill) {
@@ -606,7 +625,25 @@ const SkillsInput = React.forwardRef<HTMLTextAreaElement, SkillsInputProps>(
             }
           }
 
-          // If not found via "to", check if we have a second token in our found list
+          // If not found via "to", look for any swap target token in the text
+          if (!toCurrency) {
+            // First check swap target tokens (they might not be in wallet)
+            for (const skill of SWAP_TARGET_TOKENS) {
+              if (skill.label.toLowerCase() === fromToken.label.toLowerCase()) {
+                continue; // Skip if it's the same as from token
+              }
+              const match = new RegExp(`\\b${skill.label}\\b`, "i").exec(textLower);
+              if (match && match.index > (foundTokens[0]?.index ?? 0)) {
+                // Only match if it appears after the from token
+                toCurrency = skill.label;
+                toCurrencyMint = skill.mint || null;
+                toCurrencyDecimals = skill.decimals || null;
+                break;
+              }
+            }
+          }
+
+          // If still not found, check wallet tokens as fallback
           if (!toCurrency && foundTokens.length > 1) {
             // Find the first token that is NOT the fromToken
             const toTokenEntry = foundTokens.find(
@@ -1348,22 +1385,11 @@ const SkillsInput = React.forwardRef<HTMLTextAreaElement, SkillsInputProps>(
       sendData.walletAddress;
 
     return (
-      <div style={{ position: "relative", width: "100%", flex: 1 }}>
-        <div
-          className={cn(
-            "flex min-h-[60px] w-full flex-wrap items-center gap-2 rounded-[20px] py-5 pr-16 pl-7 text-base ring-offset-white transition-all",
-            "bg-white/5 backdrop-blur-[40px]",
-            (hasSwapSkill && !isSwapComplete) ||
-              (hasSendSkill && !isSendComplete)
-              ? "shadow-[0_0_0_2px_rgba(255,255,255,0.6),0_0_20px_rgba(255,255,255,0.4),0_0_40px_rgba(255,255,255,0.2)]"
-              : "",
-            isSwapComplete || isSendComplete
-              ? "shadow-[0_0_0_2px_rgba(34,197,94,0.6),0_0_20px_rgba(34,197,94,0.4),0_0_40px_rgba(34,197,94,0.2)]"
-              : "",
-            className
-          )}
-          ref={containerRef}
-        >
+      <div
+        className={cn("flex w-full flex-wrap items-center gap-2", className)}
+        ref={containerRef}
+        style={{ position: "relative" }}
+      >
           {value.map((skill) => (
             <span
               className={cn(
@@ -1579,7 +1605,7 @@ const SkillsInput = React.forwardRef<HTMLTextAreaElement, SkillsInputProps>(
           <textarea
             {...props}
             className={cn(
-              "resize-none overflow-hidden bg-transparent text-white outline-none placeholder:text-white/50",
+              "resize-none overflow-hidden bg-transparent text-white outline-none placeholder:text-white/60",
               isSendComplete || isSwapComplete
                 ? "h-0 w-0 min-w-0"
                 : getPlaceholder()
@@ -1591,6 +1617,13 @@ const SkillsInput = React.forwardRef<HTMLTextAreaElement, SkillsInputProps>(
             placeholder={getPlaceholder()}
             ref={textareaRef}
             rows={1}
+            style={{
+              padding: "2px 0",
+              border: "none",
+              fontSize: "16px",
+              fontFamily: "var(--font-geist-sans), sans-serif",
+              lineHeight: "24px",
+            }}
             value={pendingInput}
           />
           {(walletAddressError || amountError) && (
@@ -1598,7 +1631,6 @@ const SkillsInput = React.forwardRef<HTMLTextAreaElement, SkillsInputProps>(
               {walletAddressError || amountError}
             </div>
           )}
-        </div>
         {isDropdownOpen && (
           <SkillDropdown
             onSelect={addSkill}

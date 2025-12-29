@@ -1,18 +1,8 @@
 "use client";
 
-import {
-  ArrowDown,
-  Check,
-  CheckCircle2,
-  Loader2,
-  Repeat2,
-  XCircle,
-} from "lucide-react";
+import { ArrowDown, CheckCircle2, Loader2, XCircle } from "lucide-react";
 import { useState } from "react";
 import type { SwapQuote } from "@/hooks/use-swap";
-
-const BUTTON_DISABLED_OPACITY = 0.5;
-const BUTTON_LOADING_OPACITY = 0.6;
 
 type SwapTransactionWidgetProps = {
   quote: SwapQuote;
@@ -45,536 +35,538 @@ export function SwapTransactionWidget({
     }
   };
 
-  return (
+  // Helper to render the swap cards
+  const renderSwapCards = (statusIcon: React.ReactNode) => (
     <div
       style={{
-        background: "rgba(15, 15, 15, 0.85)",
-        borderWidth: "1px",
-        borderStyle: "solid",
-        borderColor:
-          status === "success"
-            ? "rgba(134, 239, 172, 0.5)"
-            : status === "error"
-              ? "rgba(248, 113, 113, 0.5)"
-              : status === "pending"
-                ? "rgba(251, 191, 36, 0.5)"
-                : "rgba(255, 255, 255, 0.12)",
-        backdropFilter: "blur(24px) saturate(180%)",
-        WebkitBackdropFilter: "blur(24px) saturate(180%)",
-        boxShadow:
-          status === "success"
-            ? "0 8px 32px rgba(134, 239, 172, 0.3), 0 2px 8px rgba(134, 239, 172, 0.2), inset 0 1px 0 rgba(134, 239, 172, 0.1)"
-            : status === "error"
-              ? "0 8px 32px rgba(248, 113, 113, 0.3), 0 2px 8px rgba(248, 113, 113, 0.2), inset 0 1px 0 rgba(248, 113, 113, 0.1)"
-              : status === "pending"
-                ? "0 8px 32px rgba(251, 191, 36, 0.3), 0 2px 8px rgba(251, 191, 36, 0.2), inset 0 1px 0 rgba(251, 191, 36, 0.1)"
-                : "0 8px 32px rgba(0, 0, 0, 0.4), 0 2px 8px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.08)",
-        borderRadius: "20px",
-        padding: "1.75rem",
-        maxWidth: "420px",
-        width: "100%",
-        color: "rgba(255, 255, 255, 0.9)",
-        animation:
-          status === "success" || status === "error"
-            ? "borderBlink 0.6s ease-in-out 1"
-            : status === "pending"
-              ? "borderPulse 1.5s ease-in-out infinite"
-              : "none",
+        display: "flex",
+        flexDirection: "column",
+        gap: "6px",
+        position: "relative",
       }}
     >
-      {/* Header */}
+      {/* You swap card (top) */}
       <div
         style={{
+          background: "rgba(37, 37, 37, 0.6)",
+          backdropFilter: "blur(20px)",
+          WebkitBackdropFilter: "blur(20px)",
+          borderRadius: "16px 16px 8px 8px",
+          padding: "10px 12px",
           display: "flex",
-          alignItems: "center",
-          gap: "0.875rem",
-          marginBottom: "1.5rem",
-          paddingBottom: "1rem",
-          borderBottom: "1px solid rgba(255, 255, 255, 0.08)",
+          justifyContent: "space-between",
+          alignItems: "flex-end",
         }}
       >
         <div
           style={{
-            width: "44px",
-            height: "44px",
-            minWidth: "44px",
-            minHeight: "44px",
-            borderRadius: "14px",
-            background:
-              status === "success"
-                ? "linear-gradient(135deg, rgba(134, 239, 172, 0.15) 0%, rgba(34, 197, 94, 0.15) 100%)"
-                : status === "error"
-                  ? "linear-gradient(135deg, rgba(248, 113, 113, 0.15) 0%, rgba(239, 68, 68, 0.15) 100%)"
-                  : status === "pending"
-                    ? "linear-gradient(135deg, rgba(251, 191, 36, 0.15) 0%, rgba(245, 158, 11, 0.15) 100%)"
-                    : "linear-gradient(135deg, rgba(147, 197, 253, 0.15) 0%, rgba(99, 102, 241, 0.15) 100%)",
-            border:
-              status === "success"
-                ? "1px solid rgba(134, 239, 172, 0.25)"
-                : status === "error"
-                  ? "1px solid rgba(248, 113, 113, 0.25)"
-                  : status === "pending"
-                    ? "1px solid rgba(251, 191, 36, 0.25)"
-                    : "1px solid rgba(147, 197, 253, 0.25)",
             display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            flexShrink: 0,
-            boxShadow:
-              status === "success"
-                ? "0 2px 8px rgba(134, 239, 172, 0.15)"
-                : status === "error"
-                  ? "0 2px 8px rgba(248, 113, 113, 0.15)"
-                  : status === "pending"
-                    ? "0 2px 8px rgba(251, 191, 36, 0.15)"
-                    : "0 2px 8px rgba(147, 197, 253, 0.15)",
-          }}
-        >
-          {status === "success" ? (
-            <CheckCircle2
-              size={24}
-              style={{ color: "rgba(134, 239, 172, 0.9)" }}
-            />
-          ) : status === "error" ? (
-            <XCircle size={24} style={{ color: "rgba(248, 113, 113, 0.9)" }} />
-          ) : status === "pending" ? (
-            <Loader2
-              size={24}
-              style={{
-                color: "rgba(251, 191, 36, 0.9)",
-                animation: "spin 0.8s linear infinite",
-              }}
-            />
-          ) : (
-            <Repeat2 size={24} style={{ color: "rgba(147, 197, 253, 0.9)" }} />
-          )}
-        </div>
-        <div>
-          <h3
-            style={{
-              fontSize: "1.125rem",
-              fontWeight: 600,
-              margin: 0,
-              color: "rgba(255, 255, 255, 0.95)",
-              letterSpacing: "-0.01em",
-            }}
-          >
-            {status === "success"
-              ? "Swap Successful!"
-              : status === "error"
-                ? "Transaction Failed"
-                : status === "pending"
-                  ? "Processing Swap..."
-                  : "Swap Preview"}
-          </h3>
-          <p
-            style={{
-              fontSize: "0.8125rem",
-              color: "rgba(255, 255, 255, 0.5)",
-              margin: 0,
-              marginTop: "0.125rem",
-              wordBreak: "break-word",
-            }}
-          >
-            {status === "success"
-              ? "Transaction confirmed"
-              : status === "error"
-                ? result?.error || "Transaction failed"
-                : status === "pending"
-                  ? "Confirming transaction on blockchain..."
-                  : "Review transaction details"}
-          </p>
-        </div>
-      </div>
-
-      {/* Transaction Details */}
-      <div
-        style={{
-          background: "rgba(255, 255, 255, 0.04)",
-          border: "1px solid rgba(255, 255, 255, 0.08)",
-          borderRadius: "16px",
-          padding: "1.25rem",
-          marginBottom: "1rem",
-          boxShadow: "inset 0 1px 2px rgba(0, 0, 0, 0.1)",
-        }}
-      >
-        {/* From Token */}
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            marginBottom: "1rem",
+            flexDirection: "column",
+            gap: "4px",
           }}
         >
           <span
             style={{
-              fontSize: "0.8125rem",
-              color: "rgba(255, 255, 255, 0.5)",
-              fontWeight: 500,
-              textTransform: "uppercase",
-              letterSpacing: "0.05em",
+              color: "white",
+              opacity: 0.6,
+              fontSize: "14px",
+              lineHeight: "20px",
+              letterSpacing: "-0.154px",
             }}
           >
-            You pay
+            You swap
           </span>
-          <div style={{ textAlign: "right" }}>
-            <div
-              style={{
-                fontSize: "1.125rem",
-                fontWeight: 600,
-                color: "rgba(255, 255, 255, 0.95)",
-                letterSpacing: "-0.01em",
-              }}
-            >
-              {quote.inputAmount} {quote.inputToken}
-            </div>
-          </div>
+          <span
+            style={{
+              color: "white",
+              fontSize: "24px",
+              fontWeight: 600,
+              lineHeight: "24px",
+              letterSpacing: "-0.264px",
+            }}
+          >
+            {quote.inputAmount}
+          </span>
         </div>
+        <span
+          style={{
+            color: "white",
+            fontSize: "17px",
+            fontWeight: 500,
+            lineHeight: "22px",
+            letterSpacing: "-0.4px",
+          }}
+        >
+          {quote.inputToken}
+        </span>
+      </div>
 
-        {/* Arrow */}
+      {/* You receive card (bottom) */}
+      <div
+        style={{
+          background: "rgba(255, 255, 255, 0.06)",
+          backdropFilter: "blur(20px)",
+          WebkitBackdropFilter: "blur(20px)",
+          borderRadius: "8px 8px 16px 16px",
+          padding: "10px 12px",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "flex-end",
+        }}
+      >
         <div
           style={{
             display: "flex",
-            justifyContent: "center",
-            margin: "0.75rem 0",
+            flexDirection: "column",
+            gap: "4px",
           }}
         >
+          <span
+            style={{
+              color: "white",
+              opacity: 0.6,
+              fontSize: "14px",
+              lineHeight: "20px",
+              letterSpacing: "-0.154px",
+            }}
+          >
+            You receive
+          </span>
+          <span
+            style={{
+              color: "white",
+              fontSize: "24px",
+              fontWeight: 600,
+              lineHeight: "24px",
+              letterSpacing: "-0.264px",
+            }}
+          >
+            {quote.outputAmount}
+          </span>
+        </div>
+        <span
+          style={{
+            color: "white",
+            fontSize: "17px",
+            fontWeight: 500,
+            lineHeight: "22px",
+            letterSpacing: "-0.4px",
+          }}
+        >
+          {quote.outputToken}
+        </span>
+      </div>
+
+      {/* Status icon in the middle */}
+      {statusIcon}
+    </div>
+  );
+
+  // Success state
+  if (status === "success") {
+    return (
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          gap: "8px",
+          width: "320px",
+        }}
+      >
+        {renderSwapCards(
           <div
             style={{
-              width: "36px",
-              height: "36px",
-              borderRadius: "10px",
-              background:
-                "linear-gradient(135deg, rgba(147, 197, 253, 0.12) 0%, rgba(99, 102, 241, 0.12) 100%)",
-              border: "1px solid rgba(147, 197, 253, 0.2)",
+              position: "absolute",
+              top: "50%",
+              left: "50%",
+              transform: "translate(-50%, -50%)",
+              width: "28px",
+              height: "28px",
+              borderRadius: "25px",
+              background: "#28c281",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
             }}
           >
-            <ArrowDown
-              size={20}
-              style={{ color: "rgba(147, 197, 253, 0.9)" }}
-            />
+            <CheckCircle2 size={18} style={{ color: "white" }} />
           </div>
-        </div>
+        )}
 
-        {/* To Token */}
+        {/* Success message and link */}
         <div
           style={{
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
+            padding: "0 4px",
           }}
         >
           <span
             style={{
-              fontSize: "0.8125rem",
-              color: "rgba(255, 255, 255, 0.5)",
+              color: "#28c281",
+              fontSize: "14px",
               fontWeight: 500,
-              textTransform: "uppercase",
-              letterSpacing: "0.05em",
             }}
           >
-            You receive
+            Swap Successful
           </span>
-          <div style={{ textAlign: "right" }}>
-            <div
+          {result?.signature && (
+            <a
+              href={`https://solscan.io/tx/${result.signature}`}
+              rel="noopener noreferrer"
               style={{
-                fontSize: "1.125rem",
-                fontWeight: 600,
-                color: "rgba(147, 197, 253, 1)",
-                letterSpacing: "-0.01em",
+                color: "rgba(255, 255, 255, 0.6)",
+                fontSize: "13px",
+                textDecoration: "none",
               }}
+              target="_blank"
             >
-              {quote.outputAmount} {quote.outputToken}
-            </div>
-          </div>
+              View on Solscan →
+            </a>
+          )}
         </div>
       </div>
+    );
+  }
 
-      {/* Additional Details */}
-      {(quote.priceImpact || quote.fee) && (
+  // Error state
+  if (status === "error") {
+    return (
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          gap: "8px",
+          width: "320px",
+        }}
+      >
+        {renderSwapCards(
+          <div
+            style={{
+              position: "absolute",
+              top: "50%",
+              left: "50%",
+              transform: "translate(-50%, -50%)",
+              width: "28px",
+              height: "28px",
+              borderRadius: "25px",
+              background: "#ef4444",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <XCircle size={18} style={{ color: "white" }} />
+          </div>
+        )}
+
+        {/* Error message */}
         <div
           style={{
-            background: "rgba(255, 255, 255, 0.02)",
-            border: "1px solid rgba(255, 255, 255, 0.06)",
-            borderRadius: "12px",
-            padding: "0.875rem 1rem",
-            marginBottom: "1.25rem",
+            padding: "0 4px",
           }}
         >
-          {quote.priceImpact && (
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                fontSize: "0.8125rem",
-                marginBottom: quote.fee ? "0.5rem" : 0,
-              }}
-            >
-              <span
-                style={{
-                  color: "rgba(255, 255, 255, 0.45)",
-                  fontWeight: 500,
-                }}
-              >
-                Price Impact
-              </span>
-              <span
-                style={{
-                  color: "rgba(255, 255, 255, 0.85)",
-                  fontWeight: 600,
-                }}
-              >
-                {quote.priceImpact}
-              </span>
-            </div>
-          )}
-          {quote.fee && (
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                fontSize: "0.8125rem",
-              }}
-            >
-              <span
-                style={{
-                  color: "rgba(255, 255, 255, 0.45)",
-                  fontWeight: 500,
-                }}
-              >
-                Fee
-              </span>
-              <span
-                style={{
-                  color: "rgba(255, 255, 255, 0.85)",
-                  fontWeight: 600,
-                }}
-              >
-                {quote.fee}
-              </span>
-            </div>
-          )}
+          <span
+            style={{
+              color: "#ef4444",
+              fontSize: "14px",
+              fontWeight: 500,
+            }}
+          >
+            {result?.error || "Transaction Failed"}
+          </span>
         </div>
-      )}
+      </div>
+    );
+  }
 
-      {/* Transaction Signature (Success) */}
-      {status === "success" && result?.signature && (
+  // Pending state
+  if (status === "pending") {
+    return (
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          gap: "8px",
+          width: "320px",
+        }}
+      >
+        {renderSwapCards(
+          <div
+            style={{
+              position: "absolute",
+              top: "50%",
+              left: "50%",
+              transform: "translate(-50%, -50%)",
+              width: "28px",
+              height: "28px",
+              borderRadius: "25px",
+              background: "#fbbf24",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <Loader2
+              size={18}
+              style={{
+                color: "white",
+                animation: "spin 1s linear infinite",
+              }}
+            />
+          </div>
+        )}
+
+        {/* Pending message */}
         <div
           style={{
-            background: "rgba(134, 239, 172, 0.08)",
-            border: "1px solid rgba(134, 239, 172, 0.2)",
-            borderRadius: "12px",
-            padding: "0.875rem 1rem",
-            marginBottom: "1.25rem",
+            padding: "0 4px",
+          }}
+        >
+          <span
+            style={{
+              color: "#fbbf24",
+              fontSize: "14px",
+              fontWeight: 500,
+            }}
+          >
+            Processing swap...
+          </span>
+        </div>
+
+        <style>{`
+          @keyframes spin {
+            to { transform: rotate(360deg); }
+          }
+        `}</style>
+      </div>
+    );
+  }
+
+  // Default preview state
+  return (
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        gap: "8px",
+        width: "320px",
+        position: "relative",
+      }}
+    >
+      {/* Swap cards container */}
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          gap: "6px",
+          position: "relative",
+        }}
+      >
+        {/* You swap card (top) */}
+        <div
+          style={{
+            background: "rgba(37, 37, 37, 0.6)",
+            backdropFilter: "blur(20px)",
+            WebkitBackdropFilter: "blur(20px)",
+            borderRadius: "16px 16px 8px 8px",
+            padding: "10px 12px",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "flex-end",
           }}
         >
           <div
             style={{
               display: "flex",
               flexDirection: "column",
-              gap: "0.5rem",
-              fontSize: "0.8125rem",
+              gap: "4px",
             }}
           >
             <span
               style={{
-                color: "rgba(134, 239, 172, 0.9)",
-                fontWeight: 600,
+                color: "white",
+                opacity: 0.6,
+                fontSize: "14px",
+                lineHeight: "20px",
+                letterSpacing: "-0.154px",
               }}
             >
-              Transaction Signature
+              You swap
             </span>
-            <a
-              href={`https://solscan.io/tx/${result.signature}`}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.color = "rgba(134, 239, 172, 1)";
-                e.currentTarget.style.textDecoration = "underline";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.color = "rgba(147, 197, 253, 0.9)";
-                e.currentTarget.style.textDecoration = "none";
-              }}
-              rel="noopener noreferrer"
+            <span
               style={{
-                color: "rgba(147, 197, 253, 0.9)",
-                fontFamily: "monospace",
-                fontSize: "0.75rem",
-                wordBreak: "break-all",
-                textDecoration: "none",
-                transition: "all 0.2s ease",
-                cursor: "pointer",
+                color: "white",
+                fontSize: "24px",
+                fontWeight: 600,
+                lineHeight: "24px",
+                letterSpacing: "-0.264px",
               }}
-              target="_blank"
             >
-              {result.signature}
-            </a>
+              {quote.inputAmount}
+            </span>
           </div>
+          <span
+            style={{
+              color: "white",
+              fontSize: "17px",
+              fontWeight: 500,
+              lineHeight: "22px",
+              letterSpacing: "-0.4px",
+            }}
+          >
+            {quote.inputToken}
+          </span>
         </div>
-      )}
 
-      {/* Action Buttons */}
-      {!status || status === "pending" ? (
-        status === "pending" ? (
+        {/* You receive card (bottom) */}
+        <div
+          style={{
+            background: "rgba(255, 255, 255, 0.06)",
+            backdropFilter: "blur(20px)",
+            WebkitBackdropFilter: "blur(20px)",
+            borderRadius: "8px 8px 16px 16px",
+            padding: "10px 12px",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "flex-end",
+          }}
+        >
           <div
             style={{
               display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: "0.75rem",
-              padding: "1.25rem",
-              background: "rgba(251, 191, 36, 0.08)",
-              border: "1px solid rgba(251, 191, 36, 0.2)",
-              borderRadius: "14px",
-              color: "rgba(251, 191, 36, 0.9)",
-              fontSize: "0.875rem",
-              fontWeight: 600,
+              flexDirection: "column",
+              gap: "4px",
             }}
           >
-            <Loader2
-              size={18}
+            <span
               style={{
-                animation: "spin 0.8s linear infinite",
+                color: "white",
+                opacity: 0.6,
+                fontSize: "14px",
+                lineHeight: "20px",
+                letterSpacing: "-0.154px",
               }}
-            />
-            <span>Transaction in progress...</span>
-          </div>
-        ) : (
-          <div style={{ display: "flex", gap: "0.75rem" }}>
-            <button
-              disabled={isExecuting}
-              onClick={onCancel}
-              onMouseEnter={(e) => {
-                if (!isExecuting) {
-                  e.currentTarget.style.background =
-                    "rgba(255, 255, 255, 0.08)";
-                  e.currentTarget.style.borderColor =
-                    "rgba(255, 255, 255, 0.2)";
-                  e.currentTarget.style.transform = "translateY(-1px)";
-                  e.currentTarget.style.boxShadow =
-                    "0 4px 12px rgba(0, 0, 0, 0.15)";
-                }
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = "rgba(255, 255, 255, 0.04)";
-                e.currentTarget.style.borderColor = "rgba(255, 255, 255, 0.12)";
-                e.currentTarget.style.transform = "translateY(0)";
-                e.currentTarget.style.boxShadow =
-                  "0 2px 4px rgba(0, 0, 0, 0.1)";
-              }}
-              style={{
-                flex: 1,
-                padding: "0.875rem 1.5rem",
-                borderRadius: "14px",
-                fontSize: "0.875rem",
-                fontWeight: 600,
-                border: "1px solid rgba(255, 255, 255, 0.12)",
-                background: "rgba(255, 255, 255, 0.04)",
-                color: "rgba(255, 255, 255, 0.75)",
-                cursor: isExecuting ? "not-allowed" : "pointer",
-                transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
-                opacity: isExecuting ? BUTTON_DISABLED_OPACITY : 1,
-                boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
-                letterSpacing: "0.01em",
-              }}
-              type="button"
             >
-              Cancel
-            </button>
-            <button
-              disabled={isExecuting || loading}
-              onClick={handleApprove}
-              onMouseEnter={(e) => {
-                if (!(isExecuting || loading)) {
-                  e.currentTarget.style.background =
-                    "linear-gradient(135deg, rgba(147, 197, 253, 0.28) 0%, rgba(99, 102, 241, 0.28) 100%)";
-                  e.currentTarget.style.borderColor =
-                    "rgba(147, 197, 253, 0.5)";
-                  e.currentTarget.style.transform = "translateY(-2px)";
-                  e.currentTarget.style.boxShadow =
-                    "0 8px 24px rgba(147, 197, 253, 0.25), 0 4px 8px rgba(0, 0, 0, 0.15)";
-                }
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background =
-                  "linear-gradient(135deg, rgba(147, 197, 253, 0.18) 0%, rgba(99, 102, 241, 0.18) 100%)";
-                e.currentTarget.style.borderColor = "rgba(147, 197, 253, 0.35)";
-                e.currentTarget.style.transform = "translateY(0)";
-                e.currentTarget.style.boxShadow =
-                  "0 4px 12px rgba(147, 197, 253, 0.15), 0 2px 4px rgba(0, 0, 0, 0.1)";
-              }}
+              You receive
+            </span>
+            <span
               style={{
-                flex: 1,
-                padding: "0.875rem 1.5rem",
-                borderRadius: "14px",
-                fontSize: "0.875rem",
+                color: "white",
+                fontSize: "24px",
                 fontWeight: 600,
-                border: "1px solid rgba(147, 197, 253, 0.35)",
-                background:
-                  "linear-gradient(135deg, rgba(147, 197, 253, 0.18) 0%, rgba(99, 102, 241, 0.18) 100%)",
-                color: "rgba(147, 197, 253, 1)",
-                cursor: isExecuting || loading ? "not-allowed" : "pointer",
-                transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
-                opacity: isExecuting || loading ? BUTTON_LOADING_OPACITY : 1,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: "0.5rem",
-                boxShadow:
-                  "0 4px 12px rgba(147, 197, 253, 0.15), 0 2px 4px rgba(0, 0, 0, 0.1)",
-                letterSpacing: "0.01em",
-                whiteSpace: "nowrap",
+                lineHeight: "24px",
+                letterSpacing: "-0.264px",
               }}
-              type="button"
             >
-              {isExecuting || loading ? (
-                <>
-                  <Loader2
-                    size={16}
-                    style={{
-                      animation: "spin 0.8s linear infinite",
-                    }}
-                  />
-                  <span>Processing...</span>
-                </>
-              ) : (
-                <>
-                  <span>Approve</span>
-                  <Check size={16} />
-                </>
-              )}
-            </button>
+              {quote.outputAmount}
+            </span>
           </div>
-        )
-      ) : null}
+          <span
+            style={{
+              color: "white",
+              fontSize: "17px",
+              fontWeight: 500,
+              lineHeight: "22px",
+              letterSpacing: "-0.4px",
+            }}
+          >
+            {quote.outputToken}
+          </span>
+        </div>
 
-      {/* Loading Spinner Animation */}
+        {/* Arrow button in the middle */}
+        <div
+          style={{
+            position: "absolute",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+            width: "28px",
+            height: "28px",
+            borderRadius: "25px",
+            background: "white",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <ArrowDown size={20} style={{ color: "black" }} />
+        </div>
+      </div>
+
+      {/* Action buttons */}
+      <div
+        style={{
+          display: "flex",
+          gap: "8px",
+        }}
+      >
+        <button
+          disabled={isExecuting}
+          onClick={onCancel}
+          style={{
+            flex: 1,
+            height: "40px",
+            borderRadius: "59px",
+            background: "rgba(255, 255, 255, 0.1)",
+            backdropFilter: "blur(20px)",
+            border: "none",
+            color: "white",
+            fontSize: "14px",
+            fontWeight: 400,
+            lineHeight: "20px",
+            letterSpacing: "-0.154px",
+            cursor: isExecuting ? "not-allowed" : "pointer",
+            opacity: isExecuting ? 0.5 : 1,
+            transition: "all 0.2s ease",
+          }}
+          type="button"
+        >
+          Cancel
+        </button>
+        <button
+          disabled={isExecuting || loading}
+          onClick={handleApprove}
+          style={{
+            flex: 1,
+            height: "40px",
+            borderRadius: "59px",
+            background: "#28c281",
+            border: "none",
+            color: "white",
+            fontSize: "14px",
+            fontWeight: 400,
+            lineHeight: "20px",
+            letterSpacing: "-0.154px",
+            cursor: isExecuting || loading ? "not-allowed" : "pointer",
+            opacity: isExecuting || loading ? 0.7 : 1,
+            transition: "all 0.2s ease",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: "6px",
+          }}
+          type="button"
+        >
+          {isExecuting || loading ? (
+            <>
+              <Loader2
+                size={16}
+                style={{ animation: "spin 1s linear infinite" }}
+              />
+              Processing...
+            </>
+          ) : (
+            "Approve & Sign"
+          )}
+        </button>
+      </div>
+
       <style>{`
         @keyframes spin {
-          to {
-            transform: rotate(360deg);
-          }
-        }
-        @keyframes borderBlink {
-          0%, 100% {
-            opacity: 1;
-          }
-          50% {
-            opacity: 0.4;
-          }
-        }
-        @keyframes borderPulse {
-          0%, 100% {
-            border-color: rgba(251, 191, 36, 0.5);
-            box-shadow: 0 8px 32px rgba(251, 191, 36, 0.3), 0 2px 8px rgba(251, 191, 36, 0.2), inset 0 1px 0 rgba(251, 191, 36, 0.1);
-          }
-          50% {
-            border-color: rgba(251, 191, 36, 0.7);
-            box-shadow: 0 8px 40px rgba(251, 191, 36, 0.4), 0 4px 12px rgba(251, 191, 36, 0.3), inset 0 1px 0 rgba(251, 191, 36, 0.15);
-          }
+          to { transform: rotate(360deg); }
         }
       `}</style>
     </div>

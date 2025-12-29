@@ -57,6 +57,14 @@ export function SkillsSelector({
     }
   };
 
+  // Base styles for NLP flow pills - matching Send/Swap button styling
+  const basePillStyle =
+    "inline-flex items-center justify-center gap-1.5 rounded-[32px] px-4 py-1.5 text-sm transition-all text-white backdrop-blur-[24px]";
+  const filledPillStyle =
+    "shadow-[0px_4px_8px_0px_rgba(0,0,0,0.04),0px_4px_24px_0px_rgba(0,0,0,0.08)]";
+  const emptyPillStyle =
+    "border border-dashed border-white/20 bg-[rgba(38,38,38,0.5)] text-white/50 shadow-[0px_4px_8px_0px_rgba(0,0,0,0.04),0px_4px_24px_0px_rgba(0,0,0,0.08)]";
+
   if (nlpState?.isActive) {
     const isSwap = nlpState.intent === "swap";
     const isReady = isSwap
@@ -69,30 +77,31 @@ export function SkillsSelector({
 
     return (
       <div
-        className={cn("flex flex-col gap-1.5 md:flex-row md:gap-2", className)}
+        className={cn("flex flex-col gap-2 md:flex-row md:gap-2", className)}
       >
         {/* Intent Pill (Send or Swap) */}
         <span
           className={cn(
-            "inline-flex items-center gap-1 rounded-full border px-2.5 py-1 font-medium text-xs md:px-3 md:py-1.5 md:text-sm",
-            "shadow-lg backdrop-blur-[18px]",
-            isSwap
-              ? "border-red-400/40 bg-gradient-to-br from-red-400/25 to-red-500/50 text-white"
-              : "border-red-400/40 bg-gradient-to-br from-red-400/25 to-red-500/50 text-white"
+            basePillStyle,
+            filledPillStyle,
+            "bg-[rgba(127,29,29,0.6)]"
           )}
         >
-          {isSwap ? <Repeat2 size={14} /> : <Send size={14} />}
+          {isSwap ? (
+            <Repeat2 className="h-4 w-4 opacity-80" />
+          ) : (
+            <Send className="h-4 w-4 opacity-80" />
+          )}
           {isSwap ? "Swap" : "Send"}
         </span>
 
         {/* Amount Pill */}
         <span
           className={cn(
-            "inline-flex items-center gap-1 rounded-full border px-2.5 py-1 font-medium text-xs md:px-3 md:py-1.5 md:text-sm",
-            "shadow-lg backdrop-blur-[18px]",
+            basePillStyle,
             nlpState.parsedData.amount
-              ? "border-green-400/40 bg-green-400/25 text-white"
-              : "border-white/10 border-dashed bg-white/5 text-white/50"
+              ? cn(filledPillStyle, "bg-[rgba(22,101,52,0.6)]")
+              : emptyPillStyle
           )}
         >
           {nlpState.parsedData.amount || "Amount"}
@@ -101,11 +110,10 @@ export function SkillsSelector({
         {/* Currency Pill (From) */}
         <span
           className={cn(
-            "inline-flex items-center gap-1 rounded-full border px-2.5 py-1 font-medium text-xs md:px-3 md:py-1.5 md:text-sm",
-            "shadow-lg backdrop-blur-[18px]",
+            basePillStyle,
             nlpState.parsedData.currency
-              ? "border-white/25 bg-white/10 text-white"
-              : "border-white/10 border-dashed bg-white/5 text-white/50"
+              ? cn(filledPillStyle, "bg-[rgba(38,38,38,0.6)]")
+              : emptyPillStyle
           )}
         >
           {nlpState.parsedData.currency || "Currency"}
@@ -115,11 +123,10 @@ export function SkillsSelector({
         {isSwap ? (
           <span
             className={cn(
-              "inline-flex items-center gap-1 rounded-full border px-2.5 py-1 font-medium text-xs md:px-3 md:py-1.5 md:text-sm",
-              "shadow-lg backdrop-blur-[18px]",
+              basePillStyle,
               nlpState.parsedData.toCurrency
-                ? "border-blue-400/40 bg-blue-400/25 text-white"
-                : "border-white/10 border-dashed bg-white/5 text-white/50"
+                ? cn(filledPillStyle, "bg-[rgba(30,64,175,0.6)]")
+                : emptyPillStyle
             )}
           >
             {nlpState.parsedData.toCurrency || "To Token"}
@@ -127,11 +134,10 @@ export function SkillsSelector({
         ) : (
           <span
             className={cn(
-              "inline-flex items-center gap-1 rounded-full border px-2.5 py-1 font-medium text-xs md:px-3 md:py-1.5 md:text-sm",
-              "shadow-lg backdrop-blur-[18px]",
+              basePillStyle,
               nlpState.parsedData.walletAddress
-                ? "border-blue-400/40 bg-blue-400/25 text-white"
-                : "border-white/10 border-dashed bg-white/5 text-white/50"
+                ? cn(filledPillStyle, "bg-[rgba(30,64,175,0.6)]")
+                : emptyPillStyle
             )}
             title={nlpState.parsedData.walletAddress || undefined}
           >
@@ -145,8 +151,8 @@ export function SkillsSelector({
 
         {/* Ready Hint */}
         {isReady && (
-          <span className="flex animate-pulse items-center font-medium text-white text-xs md:ml-auto">
-            Ready to execute
+          <span className="flex animate-pulse items-center font-medium text-white/70 text-xs md:ml-auto">
+            Press Enter
           </span>
         )}
       </div>

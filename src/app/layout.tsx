@@ -103,7 +103,8 @@ export default function RootLayout({
             })(window);
 
             Productlane.init({
-              widgetKey: "a1926941-a6d8-47b8-baa8-794d3f75303d"
+              widgetKey: "a1926941-a6d8-47b8-baa8-794d3f75303d",
+              position: "left"
             });
           `}
         </Script>

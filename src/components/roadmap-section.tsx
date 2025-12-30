@@ -123,7 +123,7 @@ function RoadmapSectionComponent() {
         padding: "4rem 1rem",
         background: "#000",
         position: "relative",
-        overflow: "visible",
+        overflowX: "hidden",
       }}
     >
       <div style={{ maxWidth: "1200px", margin: "0 auto" }}>

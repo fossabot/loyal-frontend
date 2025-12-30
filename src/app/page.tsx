@@ -6,6 +6,7 @@ import { DefaultChatTransport, type UIMessage } from "ai";
 import {
   ArrowDownIcon,
   ArrowUpToLine,
+  MessageCircleQuestion,
   MoreHorizontal,
   RefreshCw,
   Repeat2,
@@ -1469,6 +1470,36 @@ export default function LandingPage() {
                     ref={plusIconRef}
                     size={24}
                   />
+                </button>
+
+                {/* Feedback Button */}
+                <button
+                  className="sidebar-icon-btn"
+                  onClick={() => {
+                    if (typeof window !== "undefined" && window.Productlane) {
+                      window.Productlane.open("INDEX");
+                    }
+                  }}
+                  style={{
+                    width: "36px",
+                    height: "36px",
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    background: "rgba(255, 255, 255, 0.06)",
+                    backdropFilter: "blur(48px)",
+                    border: "none",
+                    borderRadius: "9999px",
+                    cursor: "pointer",
+                    transition: "all 0.2s ease",
+                    boxShadow:
+                      "0px 4px 8px 0px rgba(0, 0, 0, 0.04), 0px 2px 4px 0px rgba(0, 0, 0, 0.02)",
+                    mixBlendMode: "lighten",
+                    color: "#fff",
+                  }}
+                  title="Feedback and support"
+                >
+                  <MessageCircleQuestion size={24} strokeWidth={1.5} />
                 </button>
               </div>
 

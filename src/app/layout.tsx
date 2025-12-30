@@ -5,7 +5,6 @@ import { Geist, Geist_Mono } from "next/font/google";
 import Script from "next/script";
 import { PhantomWalletProvider } from "@/components/solana/phantom-provider";
 import { Header } from "@/components/ui/header";
-import { ProductlaneButton } from "@/components/ui/productlane-button";
 import { ChatModeProvider } from "@/contexts/chat-mode-context";
 import { UserChatsProvider } from "@/providers/user-chats";
 
@@ -84,8 +83,6 @@ export default function RootLayout({
             </ChatModeProvider>
           </UserChatsProvider>
         </PhantomWalletProvider>
-
-        <ProductlaneButton />
 
         {/* Umami Analytics */}
         <Script

@@ -76,7 +76,7 @@ export function Header() {
           >
             {isConnected && truncatedAddress
               ? truncatedAddress
-              : "Connect Wallet"}
+              : "Sign in"}
           </span>
         </button>
       </header>

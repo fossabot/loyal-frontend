@@ -1499,7 +1499,7 @@ export default function LandingPage() {
                   }}
                   title="Feedback and support"
                 >
-                  <MessageCircleQuestion size={24} strokeWidth={1.5} />
+                  <MessageCircleQuestion size={24} strokeWidth={2} />
                 </button>
               </div>
 

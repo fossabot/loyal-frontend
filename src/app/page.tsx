@@ -6,11 +6,11 @@ import { DefaultChatTransport, type UIMessage } from "ai";
 import {
   ArrowDownIcon,
   ArrowUpToLine,
-  ShieldQuestionMark,
   MoreHorizontal,
   RefreshCw,
   Repeat2,
   Send,
+  ShieldQuestionMark,
   X,
 } from "lucide-react";
 import { IBM_Plex_Sans, Plus_Jakarta_Sans } from "next/font/google";
@@ -139,7 +139,7 @@ export default function LandingPage() {
   const navItemRefs = useRef<(HTMLButtonElement | null)[]>([]);
 
   // Wallet hooks
-  const { isConnected } = usePhantom();
+  const { isConnected, isLoading: isWalletLoading } = usePhantom();
   const { open } = useModal();
   const accounts = useAccounts();
   const solanaAddress = accounts?.find(
@@ -154,12 +154,16 @@ export default function LandingPage() {
   const [hasPromptedAuth, setHasPromptedAuth] = useState(false);
 
   // Prompt auth on first character typed (works for both SkillsInput and textarea)
+  // Wait until wallet loading is complete to avoid false triggers during initialization
   useEffect(() => {
-    if (!(hasPromptedAuth || isConnected) && pendingText.length > 0) {
+    if (
+      !(isWalletLoading || hasPromptedAuth || isConnected) &&
+      pendingText.length > 0
+    ) {
       setHasPromptedAuth(true);
       open();
     }
-  }, [hasPromptedAuth, isConnected, pendingText, open]);
+  }, [hasPromptedAuth, isConnected, isWalletLoading, pendingText, open]);
 
   // Toggle body class when sidebar opens (for header visibility on mobile)
   useEffect(() => {
@@ -349,11 +353,12 @@ export default function LandingPage() {
   }, [isSidebarOpen]);
 
   // Open Phantom modal when wallet disconnects in chat mode
+  // Wait until wallet loading is complete to avoid false triggers during initialization
   useEffect(() => {
-    if (isChatMode && !isConnected) {
+    if (!isWalletLoading && isChatMode && !isConnected) {
       open();
     }
-  }, [isChatMode, isConnected, open]);
+  }, [isChatMode, isConnected, isWalletLoading, open]);
 
   // Auto-focus on initial load (but not if there's a hash in URL)
   useEffect(() => {
@@ -2326,35 +2331,35 @@ export default function LandingPage() {
                 position: isChatMode
                   ? "absolute"
                   : isInputStuckToBottom
-                  ? "fixed"
-                  : "absolute",
+                    ? "fixed"
+                    : "absolute",
                 bottom: isChatMode
                   ? "16px"
                   : isInputStuckToBottom
-                  ? `${stickyInputBottomOffset}px`
-                  : "50%",
+                    ? `${stickyInputBottomOffset}px`
+                    : "50%",
                 left: isInputStuckToBottom && !isChatMode ? "0" : "16px",
                 right: isInputStuckToBottom && !isChatMode ? "0" : "16px",
                 transform: isChatMode
                   ? "translateY(0)"
                   : isInputStuckToBottom
-                  ? "translateY(0)"
-                  : `translateY(calc(50% + ${parallaxOffset}px))`,
+                    ? "translateY(0)"
+                    : `translateY(calc(50% + ${parallaxOffset}px))`,
                 display: "flex",
                 flexDirection: "column",
                 alignItems: "center",
                 justifyContent: "center",
                 pointerEvents: "none",
-                zIndex: !isChatMode ? 50 : "auto",
+                zIndex: isChatMode ? "auto" : 50,
                 transition: isChatMode
                   ? "bottom 0.5s cubic-bezier(0.4, 0, 0.2, 1), transform 0.5s cubic-bezier(0.4, 0, 0.2, 1)"
                   : isInputStuckToBottom
-                  ? "transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), left 0.3s ease, right 0.3s ease, max-width 0.3s ease"
-                  : "transform 0.3s ease-out",
+                    ? "transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), left 0.3s ease, right 0.3s ease, max-width 0.3s ease"
+                    : "transform 0.3s ease-out",
               }}
             >
               {/* Ask Loyal logo - only visible when not in chat mode */}
-              {!isChatMode && !isInputStuckToBottom && (
+              {!(isChatMode || isInputStuckToBottom) && (
                 <Image
                   alt="Ask Loyal"
                   height={64}
@@ -2372,6 +2377,17 @@ export default function LandingPage() {
                 <div style={{ pointerEvents: "auto", marginBottom: "12px" }}>
                   <SkillsSelector
                     nlpState={nlpState}
+                    onClose={() => {
+                      if (inputRef.current && "clear" in inputRef.current) {
+                        (
+                          inputRef.current as HTMLTextAreaElement & {
+                            clear: () => void;
+                          }
+                        ).clear();
+                        setInput([]);
+                        setPendingText("");
+                      }
+                    }}
                     onSkillSelect={(skill) => {
                       const currentActiveSkill = input.find(
                         (s) => s.category === "action"
@@ -2399,17 +2415,15 @@ export default function LandingPage() {
                             `${skill.id} `
                           );
                         }
-                      } else {
-                        if (
-                          inputRef.current &&
-                          "resetAndAddSkill" in inputRef.current
-                        ) {
-                          (
-                            inputRef.current as HTMLTextAreaElement & {
-                              resetAndAddSkill: (skill: LoyalSkill) => void;
-                            }
-                          ).resetAndAddSkill(skill);
-                        }
+                      } else if (
+                        inputRef.current &&
+                        "resetAndAddSkill" in inputRef.current
+                      ) {
+                        (
+                          inputRef.current as HTMLTextAreaElement & {
+                            resetAndAddSkill: (skill: LoyalSkill) => void;
+                          }
+                        ).resetAndAddSkill(skill);
                       }
                     }}
                     selectedSkillId={
@@ -2577,27 +2591,24 @@ export default function LandingPage() {
                               }
                             } else if (
                               nlpState?.isActive &&
-                              nlpState?.intent === "swap"
+                              nlpState?.intent === "swap" &&
+                              nlpState.parsedData.amount &&
+                              nlpState.parsedData.currency &&
+                              nlpState.parsedData.toCurrency
                             ) {
-                              if (
-                                nlpState.parsedData.amount &&
-                                nlpState.parsedData.currency &&
-                                nlpState.parsedData.toCurrency
-                              ) {
-                                handleSwapComplete({
-                                  fromCurrency: nlpState.parsedData.currency,
-                                  fromCurrencyMint:
-                                    nlpState.parsedData.currencyMint,
-                                  fromCurrencyDecimals:
-                                    nlpState.parsedData.currencyDecimals,
-                                  amount: nlpState.parsedData.amount,
-                                  toCurrency: nlpState.parsedData.toCurrency,
-                                  toCurrencyMint:
-                                    nlpState.parsedData.toCurrencyMint,
-                                  toCurrencyDecimals:
-                                    nlpState.parsedData.toCurrencyDecimals,
-                                });
-                              }
+                              handleSwapComplete({
+                                fromCurrency: nlpState.parsedData.currency,
+                                fromCurrencyMint:
+                                  nlpState.parsedData.currencyMint,
+                                fromCurrencyDecimals:
+                                  nlpState.parsedData.currencyDecimals,
+                                amount: nlpState.parsedData.amount,
+                                toCurrency: nlpState.parsedData.toCurrency,
+                                toCurrencyMint:
+                                  nlpState.parsedData.toCurrencyMint,
+                                toCurrencyDecimals:
+                                  nlpState.parsedData.toCurrencyDecimals,
+                              });
                             }
                             handleSubmit(e as unknown as React.FormEvent);
                           }
@@ -2663,6 +2674,17 @@ export default function LandingPage() {
                   <SkillsSelector
                     className="mt-4"
                     nlpState={nlpState}
+                    onClose={() => {
+                      if (inputRef.current && "clear" in inputRef.current) {
+                        (
+                          inputRef.current as HTMLTextAreaElement & {
+                            clear: () => void;
+                          }
+                        ).clear();
+                        setInput([]);
+                        setPendingText("");
+                      }
+                    }}
                     onSkillSelect={(skill) => {
                       const currentActiveSkill = input.find(
                         (s) => s.category === "action"

@@ -632,7 +632,9 @@ const SkillsInput = React.forwardRef<HTMLTextAreaElement, SkillsInputProps>(
               if (skill.label.toLowerCase() === fromToken.label.toLowerCase()) {
                 continue; // Skip if it's the same as from token
               }
-              const match = new RegExp(`\\b${skill.label}\\b`, "i").exec(textLower);
+              const match = new RegExp(`\\b${skill.label}\\b`, "i").exec(
+                textLower
+              );
               if (match && match.index > (foundTokens[0]?.index ?? 0)) {
                 // Only match if it appears after the from token
                 toCurrency = skill.label;
@@ -1390,247 +1392,247 @@ const SkillsInput = React.forwardRef<HTMLTextAreaElement, SkillsInputProps>(
         ref={containerRef}
         style={{ position: "relative" }}
       >
-          {value.map((skill) => (
-            <span
-              className={cn(
-                "inline-flex items-center gap-1 rounded-full border px-3 py-1.5 font-medium text-sm",
-                "shadow-lg backdrop-blur-[18px]",
-                getSkillColor(skill)
-              )}
-              key={skill.id}
-            >
-              {getSkillIcon(skill)}
-              {skill.label}
-              <button
-                className="ml-1 h-3 w-3 cursor-pointer border-0 bg-transparent p-0 transition-transform duration-200 hover:scale-125"
-                onClick={() => removeSkill(skill)}
-                onFocus={(e) => e.currentTarget.blur()} // Prevent button from stealing focus
-                tabIndex={-1} // Remove from tab order
-                type="button" // Prevent form submission
-              >
-                <XIcon className="h-2.5 w-2.5" />
-              </button>
-            </span>
-          ))}
-          {swapData.fromCurrency && (
-            <span
-              className={cn(
-                "inline-flex items-center gap-1 rounded-full border px-3 py-1.5 font-medium text-sm",
-                "shadow-lg backdrop-blur-[18px]",
-                "border-white/25 bg-white/10 text-white"
-              )}
-            >
-              {swapData.fromCurrency}
-              <button
-                className="ml-1 h-3 w-3 cursor-pointer border-0 bg-transparent p-0 transition-transform duration-200 hover:scale-125"
-                onClick={() => {
-                  setSwapData({
-                    fromCurrency: null,
-                    fromCurrencyMint: null,
-                    fromCurrencyDecimals: null,
-                    amount: null,
-                    toCurrency: null,
-                    toCurrencyMint: null,
-                    toCurrencyDecimals: null,
-                  });
-                  setSwapStep("from_currency");
-                  setFilteredSkills(CURRENCY_SKILLS);
-                  setIsDropdownOpen(CURRENCY_SKILLS.length > 0);
-                  setSelectedSkillIndex(0);
-                  calculateDropdownPosition();
-                }}
-                onFocus={(e) => e.currentTarget.blur()}
-                tabIndex={-1}
-                type="button"
-              >
-                <XIcon className="h-2.5 w-2.5" />
-              </button>
-            </span>
-          )}
-          {swapData.amount && (
-            <span
-              className={cn(
-                "inline-flex items-center gap-1 rounded-full border px-3 py-1.5 font-medium text-sm",
-                "shadow-lg backdrop-blur-[18px]",
-                "border-green-400/40 bg-green-400/25 text-white"
-              )}
-            >
-              {swapData.amount}
-              <button
-                className="ml-1 h-3 w-3 cursor-pointer border-0 bg-transparent p-0 transition-transform duration-200 hover:scale-125"
-                onClick={() => {
-                  setSwapData({
-                    ...swapData,
-                    amount: null,
-                    toCurrency: null,
-                    toCurrencyMint: null,
-                    toCurrencyDecimals: null,
-                  });
-                  setSwapStep("amount");
-                  setPendingInput("");
-                }}
-                onFocus={(e) => e.currentTarget.blur()}
-                tabIndex={-1}
-                type="button"
-              >
-                <XIcon className="h-2.5 w-2.5" />
-              </button>
-            </span>
-          )}
-          {swapData.toCurrency && (
-            <span
-              className={cn(
-                "inline-flex items-center gap-1 rounded-full border px-3 py-1.5 font-medium text-sm",
-                "shadow-lg backdrop-blur-[18px]",
-                "border-white/25 bg-white/10 text-white"
-              )}
-            >
-              {swapData.toCurrency}
-              <button
-                className="ml-1 h-3 w-3 cursor-pointer border-0 bg-transparent p-0 transition-transform duration-200 hover:scale-125"
-                onClick={() => {
-                  setSwapData({
-                    ...swapData,
-                    toCurrency: null,
-                    toCurrencyMint: null,
-                    toCurrencyDecimals: null,
-                  });
-                  setSwapStep("to_currency");
-                  // Allow swapping TO Bonk or Loyal tokens
-                  setFilteredSkills(SWAP_TARGET_TOKENS);
-                  setIsDropdownOpen(SWAP_TARGET_TOKENS.length > 0);
-                  setSelectedSkillIndex(0);
-                  calculateDropdownPosition();
-                }}
-                onFocus={(e) => e.currentTarget.blur()}
-                tabIndex={-1}
-                type="button"
-              >
-                <XIcon className="h-2.5 w-2.5" />
-              </button>
-            </span>
-          )}
-          {sendData.currency && (
-            <span
-              className={cn(
-                "inline-flex items-center gap-1 rounded-full border px-3 py-1.5 font-medium text-sm",
-                "shadow-lg backdrop-blur-[18px]",
-                "border-white/25 bg-white/10 text-white"
-              )}
-            >
-              {sendData.currency}
-              <button
-                className="ml-1 h-3 w-3 cursor-pointer border-0 bg-transparent p-0 transition-transform duration-200 hover:scale-125"
-                onClick={() => {
-                  setSendData({
-                    currency: null,
-                    currencyMint: null,
-                    currencyDecimals: null,
-                    amount: null,
-                    walletAddress: null,
-                  });
-                  setSendStep("currency");
-                  setFilteredSkills(CURRENCY_SKILLS);
-                  setIsDropdownOpen(CURRENCY_SKILLS.length > 0);
-                  setSelectedSkillIndex(0);
-                  calculateDropdownPosition();
-                }}
-                onFocus={(e) => e.currentTarget.blur()}
-                tabIndex={-1}
-                type="button"
-              >
-                <XIcon className="h-2.5 w-2.5" />
-              </button>
-            </span>
-          )}
-          {sendData.amount && (
-            <span
-              className={cn(
-                "inline-flex items-center gap-1 rounded-full border px-3 py-1.5 font-medium text-sm",
-                "shadow-lg backdrop-blur-[18px]",
-                "border-green-400/40 bg-green-400/25 text-white"
-              )}
-            >
-              {sendData.amount}
-              <button
-                className="ml-1 h-3 w-3 cursor-pointer border-0 bg-transparent p-0 transition-transform duration-200 hover:scale-125"
-                onClick={() => {
-                  setSendData({
-                    ...sendData,
-                    amount: null,
-                    walletAddress: null,
-                  });
-                  setSendStep("amount");
-                  setPendingInput("");
-                }}
-                onFocus={(e) => e.currentTarget.blur()}
-                tabIndex={-1}
-                type="button"
-              >
-                <XIcon className="h-2.5 w-2.5" />
-              </button>
-            </span>
-          )}
-          {sendData.walletAddress && (
-            <span
-              className={cn(
-                "inline-flex items-center gap-1 rounded-full border px-3 py-1.5 font-medium text-sm",
-                "shadow-lg backdrop-blur-[18px]",
-                "border-blue-400/40 bg-blue-400/25 text-white"
-              )}
-              title={sendData.walletAddress}
-            >
-              {sendData.walletAddress.length > 12
-                ? `${sendData.walletAddress.slice(
-                    0,
-                    6
-                  )}...${sendData.walletAddress.slice(-4)}`
-                : sendData.walletAddress}
-              <button
-                className="ml-1 h-3 w-3 cursor-pointer border-0 bg-transparent p-0 transition-transform duration-200 hover:scale-125"
-                onClick={() => {
-                  setSendData({ ...sendData, walletAddress: null });
-                  setSendStep("wallet_address");
-                  setPendingInput("");
-                  setWalletAddressError(null);
-                }}
-                onFocus={(e) => e.currentTarget.blur()}
-                tabIndex={-1}
-                type="button"
-              >
-                <XIcon className="h-2.5 w-2.5" />
-              </button>
-            </span>
-          )}
-          <textarea
-            {...props}
+        {value.map((skill) => (
+          <span
             className={cn(
-              "resize-none overflow-hidden bg-transparent text-white outline-none placeholder:text-white/60",
-              isSendComplete || isSwapComplete
-                ? "h-0 w-0 min-w-0"
-                : getPlaceholder()
-                  ? "w-full md:w-auto md:min-w-[100px] md:flex-1"
-                  : "min-w-[100px] flex-1"
+              "inline-flex items-center gap-1 rounded-full border px-3 py-1.5 font-medium text-sm",
+              "shadow-lg backdrop-blur-[18px]",
+              getSkillColor(skill)
             )}
-            onChange={handleInputChange}
-            onKeyDown={handleKeyDown}
-            placeholder={getPlaceholder()}
-            ref={textareaRef}
-            rows={1}
-            style={{
-              padding: "2px 0",
-              border: "none",
-              fontSize: "16px",
-              fontFamily: "var(--font-geist-sans), sans-serif",
-              lineHeight: "24px",
-            }}
-            value={pendingInput}
-          />
-          {(walletAddressError || amountError) && (
-            <div className="mt-2 w-full rounded-md bg-red-500/20 px-3 py-2 text-sm text-white">
-              {walletAddressError || amountError}
-            </div>
+            key={skill.id}
+          >
+            {getSkillIcon(skill)}
+            {skill.label}
+            <button
+              className="ml-1 h-3 w-3 cursor-pointer border-0 bg-transparent p-0 transition-transform duration-200 hover:scale-125"
+              onClick={() => removeSkill(skill)}
+              onFocus={(e) => e.currentTarget.blur()} // Prevent button from stealing focus
+              tabIndex={-1} // Remove from tab order
+              type="button" // Prevent form submission
+            >
+              <XIcon className="h-2.5 w-2.5" />
+            </button>
+          </span>
+        ))}
+        {swapData.fromCurrency && (
+          <span
+            className={cn(
+              "inline-flex items-center gap-1 rounded-full border px-3 py-1.5 font-medium text-sm",
+              "shadow-lg backdrop-blur-[18px]",
+              "border-white/25 bg-white/10 text-white"
+            )}
+          >
+            {swapData.fromCurrency}
+            <button
+              className="ml-1 h-3 w-3 cursor-pointer border-0 bg-transparent p-0 transition-transform duration-200 hover:scale-125"
+              onClick={() => {
+                setSwapData({
+                  fromCurrency: null,
+                  fromCurrencyMint: null,
+                  fromCurrencyDecimals: null,
+                  amount: null,
+                  toCurrency: null,
+                  toCurrencyMint: null,
+                  toCurrencyDecimals: null,
+                });
+                setSwapStep("from_currency");
+                setFilteredSkills(CURRENCY_SKILLS);
+                setIsDropdownOpen(CURRENCY_SKILLS.length > 0);
+                setSelectedSkillIndex(0);
+                calculateDropdownPosition();
+              }}
+              onFocus={(e) => e.currentTarget.blur()}
+              tabIndex={-1}
+              type="button"
+            >
+              <XIcon className="h-2.5 w-2.5" />
+            </button>
+          </span>
+        )}
+        {swapData.amount && (
+          <span
+            className={cn(
+              "inline-flex items-center gap-1 rounded-full border px-3 py-1.5 font-medium text-sm",
+              "shadow-lg backdrop-blur-[18px]",
+              "border-green-400/40 bg-green-400/25 text-white"
+            )}
+          >
+            {swapData.amount}
+            <button
+              className="ml-1 h-3 w-3 cursor-pointer border-0 bg-transparent p-0 transition-transform duration-200 hover:scale-125"
+              onClick={() => {
+                setSwapData({
+                  ...swapData,
+                  amount: null,
+                  toCurrency: null,
+                  toCurrencyMint: null,
+                  toCurrencyDecimals: null,
+                });
+                setSwapStep("amount");
+                setPendingInput("");
+              }}
+              onFocus={(e) => e.currentTarget.blur()}
+              tabIndex={-1}
+              type="button"
+            >
+              <XIcon className="h-2.5 w-2.5" />
+            </button>
+          </span>
+        )}
+        {swapData.toCurrency && (
+          <span
+            className={cn(
+              "inline-flex items-center gap-1 rounded-full border px-3 py-1.5 font-medium text-sm",
+              "shadow-lg backdrop-blur-[18px]",
+              "border-white/25 bg-white/10 text-white"
+            )}
+          >
+            {swapData.toCurrency}
+            <button
+              className="ml-1 h-3 w-3 cursor-pointer border-0 bg-transparent p-0 transition-transform duration-200 hover:scale-125"
+              onClick={() => {
+                setSwapData({
+                  ...swapData,
+                  toCurrency: null,
+                  toCurrencyMint: null,
+                  toCurrencyDecimals: null,
+                });
+                setSwapStep("to_currency");
+                // Allow swapping TO Bonk or Loyal tokens
+                setFilteredSkills(SWAP_TARGET_TOKENS);
+                setIsDropdownOpen(SWAP_TARGET_TOKENS.length > 0);
+                setSelectedSkillIndex(0);
+                calculateDropdownPosition();
+              }}
+              onFocus={(e) => e.currentTarget.blur()}
+              tabIndex={-1}
+              type="button"
+            >
+              <XIcon className="h-2.5 w-2.5" />
+            </button>
+          </span>
+        )}
+        {sendData.currency && (
+          <span
+            className={cn(
+              "inline-flex items-center gap-1 rounded-full border px-3 py-1.5 font-medium text-sm",
+              "shadow-lg backdrop-blur-[18px]",
+              "border-white/25 bg-white/10 text-white"
+            )}
+          >
+            {sendData.currency}
+            <button
+              className="ml-1 h-3 w-3 cursor-pointer border-0 bg-transparent p-0 transition-transform duration-200 hover:scale-125"
+              onClick={() => {
+                setSendData({
+                  currency: null,
+                  currencyMint: null,
+                  currencyDecimals: null,
+                  amount: null,
+                  walletAddress: null,
+                });
+                setSendStep("currency");
+                setFilteredSkills(CURRENCY_SKILLS);
+                setIsDropdownOpen(CURRENCY_SKILLS.length > 0);
+                setSelectedSkillIndex(0);
+                calculateDropdownPosition();
+              }}
+              onFocus={(e) => e.currentTarget.blur()}
+              tabIndex={-1}
+              type="button"
+            >
+              <XIcon className="h-2.5 w-2.5" />
+            </button>
+          </span>
+        )}
+        {sendData.amount && (
+          <span
+            className={cn(
+              "inline-flex items-center gap-1 rounded-full border px-3 py-1.5 font-medium text-sm",
+              "shadow-lg backdrop-blur-[18px]",
+              "border-green-400/40 bg-green-400/25 text-white"
+            )}
+          >
+            {sendData.amount}
+            <button
+              className="ml-1 h-3 w-3 cursor-pointer border-0 bg-transparent p-0 transition-transform duration-200 hover:scale-125"
+              onClick={() => {
+                setSendData({
+                  ...sendData,
+                  amount: null,
+                  walletAddress: null,
+                });
+                setSendStep("amount");
+                setPendingInput("");
+              }}
+              onFocus={(e) => e.currentTarget.blur()}
+              tabIndex={-1}
+              type="button"
+            >
+              <XIcon className="h-2.5 w-2.5" />
+            </button>
+          </span>
+        )}
+        {sendData.walletAddress && (
+          <span
+            className={cn(
+              "inline-flex items-center gap-1 rounded-full border px-3 py-1.5 font-medium text-sm",
+              "shadow-lg backdrop-blur-[18px]",
+              "border-blue-400/40 bg-blue-400/25 text-white"
+            )}
+            title={sendData.walletAddress}
+          >
+            {sendData.walletAddress.length > 12
+              ? `${sendData.walletAddress.slice(
+                  0,
+                  6
+                )}...${sendData.walletAddress.slice(-4)}`
+              : sendData.walletAddress}
+            <button
+              className="ml-1 h-3 w-3 cursor-pointer border-0 bg-transparent p-0 transition-transform duration-200 hover:scale-125"
+              onClick={() => {
+                setSendData({ ...sendData, walletAddress: null });
+                setSendStep("wallet_address");
+                setPendingInput("");
+                setWalletAddressError(null);
+              }}
+              onFocus={(e) => e.currentTarget.blur()}
+              tabIndex={-1}
+              type="button"
+            >
+              <XIcon className="h-2.5 w-2.5" />
+            </button>
+          </span>
+        )}
+        <textarea
+          {...props}
+          className={cn(
+            "resize-none overflow-hidden bg-transparent text-white outline-none placeholder:text-white/60",
+            isSendComplete || isSwapComplete
+              ? "h-0 w-0 min-w-0"
+              : getPlaceholder()
+                ? "w-full md:w-auto md:min-w-[100px] md:flex-1"
+                : "min-w-[100px] flex-1"
           )}
+          onChange={handleInputChange}
+          onKeyDown={handleKeyDown}
+          placeholder={getPlaceholder()}
+          ref={textareaRef}
+          rows={1}
+          style={{
+            padding: "2px 0",
+            border: "none",
+            fontSize: "16px",
+            fontFamily: "var(--font-geist-sans), sans-serif",
+            lineHeight: "24px",
+          }}
+          value={pendingInput}
+        />
+        {(walletAddressError || amountError) && (
+          <div className="mt-2 w-full rounded-md bg-red-500/20 px-3 py-2 text-sm text-white">
+            {walletAddressError || amountError}
+          </div>
+        )}
         {isDropdownOpen && (
           <SkillDropdown
             onSelect={addSkill}

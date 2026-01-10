@@ -16,7 +16,6 @@ import {
 import { IBM_Plex_Sans, Plus_Jakarta_Sans } from "next/font/google";
 import localFont from "next/font/local";
 import Image from "next/image";
-import { useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { BentoGridSection } from "@/components/bento-grid-section";
 import { Footer } from "@/components/footer";
@@ -110,9 +109,6 @@ export default function LandingPage() {
 
   // Check Skills feature flag
   const skillsEnabled = isSkillsEnabled();
-
-  // Read URL query parameters for pre-filled input
-  const searchParams = useSearchParams();
 
   // Sync local state with context
   useEffect(() => {
@@ -366,7 +362,8 @@ export default function LandingPage() {
 
   // Pre-fill input from URL query parameter (e.g., ?req=swap%20100%20sol%20to%20usdc)
   useEffect(() => {
-    const reqParam = searchParams.get("req");
+    const params = new URLSearchParams(window.location.search);
+    const reqParam = params.get("req");
     if (reqParam) {
       setPendingText(reqParam);
       // Focus the input after setting the text
@@ -374,13 +371,14 @@ export default function LandingPage() {
         inputRef.current?.focus();
       }, 100);
     }
-  }, [searchParams]);
+  }, []);
 
   // Auto-focus on initial load (but not if there's a hash in URL or req param)
   useEffect(() => {
     // Don't auto-focus if there's a hash - let the hash scroll complete first
     const hasHash = window.location.hash;
-    const hasReqParam = searchParams.get("req");
+    const params = new URLSearchParams(window.location.search);
+    const hasReqParam = params.get("req");
     // Skip if req param exists - the effect above handles focus
     if (!(hasHash || hasReqParam)) {
       const timer = setTimeout(() => {
@@ -388,7 +386,7 @@ export default function LandingPage() {
       }, 500);
       return () => clearTimeout(timer);
     }
-  }, [searchParams]); // Added searchParams dependency
+  }, []); // Run once on mount
 
   // Handle initial page load with hash in URL
   useEffect(() => {

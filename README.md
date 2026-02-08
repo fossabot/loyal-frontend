@@ -7,6 +7,7 @@ Fully private, on-chain AI platform built on Solana.
 Loyal is a web application that provides AI chat capabilities with end-to-end encryption and on-chain data storage. Every message is encrypted and facilitated on-chain with AI running in confidential compute environments. Neither Loyal developers nor compute node owners can access your data.
 
 [![Better Stack Badge](https://uptime.betterstack.com/status-badges/v2/monitor/29j20.svg)](https://uptime.betterstack.com/?utm_source=status_badge)
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Falialobidm%2Floyal-frontend.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Falialobidm%2Floyal-frontend?ref=badge_shield)
 
 ## Key Features
 
@@ -90,6 +91,9 @@ src/
 ## License
 
 This project is licensed under the GNU Affero General Public License v3.0 (AGPL-3.0) - see the [LICENSE.md](LICENSE.md) file for details.
+
+
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Falialobidm%2Floyal-frontend.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Falialobidm%2Floyal-frontend?ref=badge_large)
 
 ### What this means
 
